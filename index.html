@@ -35,7 +35,7 @@
 </script>
 <style>
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0;background:#1A1A1A;color:#EDEDED;font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased}
+  html,body{margin:0;padding:0;background:#1A1A1A;color:#EDEDED;font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:clip}
   /* Fluid type scale */
   .t-h1{font-size:clamp(36px,7vw,120px);line-height:.85;letter-spacing:-.025em}
   .t-h2{font-size:clamp(28px,4.5vw,52px);line-height:.95;letter-spacing:-.005em}
@@ -192,8 +192,43 @@
   }
 
   /* Service finder tile */
-  .finder-tile{cursor:pointer;border:2px solid #3a3a3e;background:#1A1A1A;color:#EDEDED;}
+  .finder-tile{cursor:pointer;border:2px solid #3a3a3e;background:#1A1A1A;color:#EDEDED;
+    transition:transform .15s cubic-bezier(.2,.7,.3,1.4),border-color .15s ease,background-color .15s ease,box-shadow .2s ease;}
+  .finder-tile:hover:not(.active){border-color:#27E0F5;background:#202023;transform:translateY(-3px);
+    box-shadow:0 8px 20px -10px rgba(39,224,245,.65);}
+  .finder-tile:hover:not(.active) svg{color:#27E0F5;}
+  .finder-tile:active{transform:translateY(0);}
   .finder-tile.active{background:#27E0F5;color:#1A1A1A;border-color:#27E0F5;}
+
+  /* Dispatch plan — fixed footprint so it never jumps between services */
+  .dispatch-plan{display:flex;flex-direction:column;min-height:440px;}
+  .dispatch-plan #planList{flex:1 1 auto;}
+  @media(min-width:640px){ .dispatch-plan{min-height:280px;} }
+  @media(min-width:1024px){ .dispatch-plan{min-height:320px;} }
+
+  /* Floating call button — pulsing beacon */
+  @keyframes callRing{
+    0%  {transform:scale(1);opacity:.5;}
+    70% {opacity:0;}
+    100%{transform:scale(2);opacity:0;}
+  }
+  #callFab{
+    position:fixed;right:24px;bottom:84px;z-index:999;
+    width:48px;height:48px;
+    display:flex;align-items:center;justify-content:center;
+    background:#27E0F5;color:#1A1A1A;
+    border-radius:999px !important;
+    box-shadow:0 8px 22px -6px rgba(39,224,245,.7), 0 3px 10px -3px rgba(0,0,0,.6);
+    transition:transform .15s cubic-bezier(.2,.7,.3,1.4), background-color .15s ease;
+  }
+  #callFab::before{
+    content:"";position:absolute;inset:0;z-index:-1;
+    border-radius:999px !important;background:#27E0F5;
+    animation:callRing 1.9s ease-out infinite;
+  }
+  #callFab:hover{background:#1cb8c9;transform:scale(1.07);}
+  #callFab:active{transform:scale(.96);}
+  #callFab:focus-visible{outline:2px solid #27E0F5;outline-offset:3px;}
 
   /* No-rounded — brutalist */
   *{border-radius:0 !important}
@@ -365,7 +400,7 @@
       </div>
     </div>
 
-    <!-- Right column: ETA + hero photo -->
+    <!-- Right column: ETA + zone check -->
     <div class="flex flex-col gap-4">
       <!-- ETA widget -->
       <div style="position:relative;background:#242427;border:2px solid #27E0F5;padding:22px 22px;">
@@ -391,16 +426,22 @@
         </div>
       </div>
 
-      <!-- Hero photo placeholder -->
-      <div class="relative">
-        <div class="photo-slot" style="aspect-ratio:620/420;">
-          <div class="label">HERO PHOTO · VAN AT LOADING DOCK</div>
+      <!-- Zone check (moved here, under the ETA indicator) -->
+      <form id="zipForm" style="background:#242427;border:2px solid #EDEDED;">
+        <div class="flex justify-between items-center px-4 sm:px-5 py-3" style="background:#EDEDED;color:#1A1A1A;">
+          <div class="font-display uppercase" style="font-size:16px;letter-spacing:.04em;">ZONE CHECK</div>
+          <div class="font-mono t-cap-sm" style="opacity:.7;">BY POSTAL</div>
         </div>
-        <div class="caution-stripe absolute bottom-0 left-0 right-0" style="height:6px"></div>
-        <div class="absolute top-3 left-3">
-          <span class="hazard" style="color:#1A1A1A;background:#f4c20a;border-color:#1A1A1A;">UNIT 04</span>
+        <div class="p-5">
+          <div class="font-body t-body mb-3" style="color:#9a9a9a;">We dispatch across Toronto & GTA. Enter your postal code.</div>
+          <div class="flex">
+            <input id="zipInput" data-format="postal" placeholder="A0A 0A0" maxlength="7" autocomplete="postal-code" inputmode="text" autocapitalize="characters" spellcheck="false" style="flex:1;min-width:0;border-right:none;font-family:'Archivo Black',sans-serif;font-size:clamp(18px,2.4vw,24px);letter-spacing:.08em;padding:14px 18px;text-transform:uppercase;"/>
+            <button type="submit" class="btn-hivis font-display uppercase shrink-0" style="padding:0 20px;background:#27E0F5;color:#1A1A1A;border:2px solid #EDEDED;font-size:14px;letter-spacing:.06em;cursor:pointer;">Check</button>
+          </div>
+          <div id="zipResult"></div>
+          <div class="font-mono t-cap-sm mt-2.5" style="color:#9a9a9a;opacity:.7;">Format: A0A 0A0 · Try M5V 1A1 · L4W 0E1</div>
         </div>
-      </div>
+      </form>
     </div>
   </div>
 </section>
@@ -479,7 +520,7 @@
           </button>
         </div>
         <!-- Dispatch plan -->
-        <div style="margin-top:22px;padding:18px 20px;background:#1A1A1A;border:2px solid #27E0F5;position:relative;">
+        <div class="dispatch-plan" style="margin-top:22px;padding:18px 20px;background:#1A1A1A;border:2px solid #27E0F5;position:relative;">
           <div class="caution-stripe" style="position:absolute;top:0;left:0;right:0;height:4px;"></div>
           <div class="flex justify-between flex-wrap gap-3 mb-3 pt-1.5">
             <div>
@@ -506,23 +547,16 @@
       </div>
     </div>
 
-    <!-- Zone check + guarantee -->
+    <!-- Hero photo + guarantee (photo moved here, sized to match the finder card) -->
     <div class="flex flex-col gap-4">
-      <form id="zipForm" style="background:#242427;border:2px solid #EDEDED;">
-        <div class="flex justify-between items-center px-4 sm:px-5 py-3" style="background:#EDEDED;color:#1A1A1A;">
-          <div class="font-display uppercase" style="font-size:16px;letter-spacing:.04em;">ZONE CHECK</div>
-          <div class="font-mono t-cap-sm" style="opacity:.7;">BY POSTAL</div>
+      <div class="relative flex-1">
+        <div class="photo-slot" style="height:100%;min-height:240px;">
+          <div class="label">HERO PHOTO · VAN AT LOADING DOCK</div>
         </div>
-        <div class="p-5">
-          <div class="font-body t-body mb-3" style="color:#9a9a9a;">We dispatch across Toronto & GTA. Enter your postal code.</div>
-          <div class="flex">
-            <input id="zipInput" data-format="postal" placeholder="A0A 0A0" maxlength="7" autocomplete="postal-code" inputmode="text" autocapitalize="characters" spellcheck="false" style="flex:1;min-width:0;border-right:none;font-family:'Archivo Black',sans-serif;font-size:clamp(18px,2.4vw,24px);letter-spacing:.08em;padding:14px 18px;text-transform:uppercase;"/>
-            <button type="submit" class="btn-hivis font-display uppercase shrink-0" style="padding:0 20px;background:#27E0F5;color:#1A1A1A;border:2px solid #EDEDED;font-size:14px;letter-spacing:.06em;cursor:pointer;">Check</button>
-          </div>
-          <div id="zipResult"></div>
-          <div class="font-mono t-cap-sm mt-2.5" style="color:#9a9a9a;opacity:.7;">Format: A0A 0A0 · Try M5V 1A1 · L4W 0E1</div>
+        <div class="absolute top-3 left-3">
+          <span class="hazard" style="color:#1A1A1A;background:#f4c20a;border-color:#1A1A1A;">UNIT 04</span>
         </div>
-      </form>
+      </div>
       <div style="background:#0f0f10;color:#EDEDED;padding:20px 22px;position:relative;">
         <div class="caution-stripe absolute top-0 left-0 right-0" style="height:4px;"></div>
         <div class="font-mono t-cap mt-1.5" style="color:#27E0F5;">FAIR PRICE GUARANTEE</div>
@@ -810,9 +844,21 @@
   </div>
 </section>
 
+<!-- ───── FLOATING CALL BUTTON ───── -->
+<a href="tel:+14165550000" id="callFab" aria-label="Call dispatch — (416) 555-0000">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5 3h4l2 5-2 2a12 12 0 005 5l2-2 5 2v4a2 2 0 01-2 2A18 18 0 013 5a2 2 0 012-2z"/>
+  </svg>
+</a>
+
 <!-- ───── SCROLL TO TOP ───── -->
-<button id="scrollTop" class="fixed bottom-6 right-6 w-12 h-12 bg-hivis text-bg flex items-center justify-center hover:bg-hivisDk transition-all duration-300 opacity-0 pointer-events-none" style="z-index:999;border:2px solid #27E0F5;">
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 15l5-5 5 5M12 20V4"/></svg>
+<button id="scrollTop" aria-label="Scroll to top" class="fixed bottom-6 right-6 w-12 h-12 bg-hivis text-bg flex items-center justify-center hover:bg-hivisDk transition-opacity duration-300 opacity-0 pointer-events-none" style="z-index:999;border:2px solid #27E0F5;">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3.2 16.2 7.4M12 3.2 7.8 7.4"/>
+    <path d="M12 3.2v13.2"/>
+    <path d="M12 11.4h4.2"/>
+    <path d="M12 15.2h3"/>
+  </svg>
 </button>
 
 <!-- ───── BOTTOM CTA ───── -->
@@ -974,8 +1020,29 @@
   const zipForm = document.getElementById('zipForm');
   const zipInput = document.getElementById('zipInput');
   const zipResult = document.getElementById('zipResult');
-  const COVERED = ['M5V','M5H','M5J','M5K','M5L','M4W','M4V','M6G','M6H','M6J','M6K','M5T','M5A','M5B','M5C','M5E','M5G','M5R','M5S','M5X'];
-  const GTA_FRINGE_FSA = ['L4W','L4X','L4Y','L4Z','L5A','L5B','L5C','L5R','L6A','L6B','L6C','L7A','L7B','M9A','M9B','M9C','M9R','M9V','M9W'];
+  // Every Toronto FSA starts with "M" (covers Toronto, North York, Scarborough,
+  // Etobicoke, East York, York) — all covered. Plus the 905-belt GTA cities below.
+  const GTA_905 = [
+    // Mississauga
+    'L4T','L4V','L4W','L4X','L4Y','L4Z','L5A','L5B','L5C','L5E','L5G','L5H','L5J','L5K','L5L','L5M','L5N','L5P','L5R','L5S','L5T','L5V','L5W',
+    // Brampton
+    'L6P','L6R','L6S','L6T','L6V','L6W','L6X','L6Y','L6Z','L7A',
+    // Vaughan / Woodbridge / Maple / Concord / Thornhill
+    'L4H','L4J','L4K','L4L','L6A',
+    // Markham / Unionville
+    'L3P','L3R','L3S','L3T','L6B','L6C','L6E','L6G',
+    // Richmond Hill
+    'L4B','L4C','L4E','L4S',
+    // Aurora / Newmarket / Stouffville / King City
+    'L4G','L3X','L3Y','L4A','L7B',
+    // Pickering / Ajax / Whitby / Oshawa (Durham)
+    'L1V','L1W','L1X','L1Y','L1S','L1T','L1Z','L1M','L1N','L1P','L1R','L1G','L1H','L1J','L1K','L1L',
+    // Oakville / Burlington / Milton (Halton)
+    'L6H','L6J','L6K','L6L','L6M','L7L','L7M','L7N','L7P','L7R','L7S','L7T','L9E','L9T',
+    // Caledon / Halton Hills / Bolton / Bradford
+    'L7C','L7E','L7K','L7G','L7J','L3Z',
+  ];
+  const isCoveredFSA = (fsa) => fsa[0] === 'M' || GTA_905.includes(fsa);
 
   function renderZipPanel({ tone, title, body }) {
     const colors = {
@@ -1013,12 +1080,10 @@
     }
     zipInput.classList.remove('invalid');
     const fsa = v.slice(0, 3);
-    if (COVERED.includes(fsa)) {
-      zipResult.innerHTML = renderZipPanel({ tone:'good', title:`${v} · COVERED`, body:'In primary service area — Toronto & GTA.' });
-    } else if (GTA_FRINGE_FSA.includes(fsa)) {
-      zipResult.innerHTML = renderZipPanel({ tone:'warn', title:`${v} · FRINGE`, body:'Outside primary area — call for a surcharge quote.' });
+    if (isCoveredFSA(fsa)) {
+      zipResult.innerHTML = renderZipPanel({ tone:'good', title:`${v} · COVERED`, body:'In our service area — Toronto & the GTA. Call dispatch and we\'ll roll a tech your way.' });
     } else {
-      zipResult.innerHTML = renderZipPanel({ tone:'out', title:`${v} · OUT OF AREA`, body:'Sorry — not in our service zone right now.' });
+      zipResult.innerHTML = renderZipPanel({ tone:'out', title:`${v} · OUTSIDE GTA`, body:'That code is outside our Toronto & GTA service zone right now.' });
     }
   });
 
