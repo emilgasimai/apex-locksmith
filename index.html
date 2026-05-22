@@ -1,0 +1,1095 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Apex Locksmith — Open. Fast. 24/7. Toronto | GTA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          bg:      '#1A1A1A',
+          bg2:     '#242427',
+          bg3:     '#2f2f33',
+          ink:     '#EDEDED',
+          inkDim:  '#9a9a9a',
+          rule:    '#3a3a3e',
+          hivis:   '#27E0F5',
+          hivisDk: '#1cb8c9',
+          caution: '#f4c20a',
+          green:   '#5cd97a',
+        },
+        fontFamily: {
+          display: ['"Archivo Black"', 'sans-serif'],
+          body:    ['"DM Sans"', 'sans-serif'],
+          mono:    ['"Space Grotesk"', 'sans-serif'],
+        },
+      },
+    },
+  };
+</script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#1A1A1A;color:#EDEDED;font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased}
+  /* Fluid type scale */
+  .t-h1{font-size:clamp(36px,7vw,120px);line-height:.85;letter-spacing:-.025em}
+  .t-h2{font-size:clamp(28px,4.5vw,52px);line-height:.95;letter-spacing:-.005em}
+  .t-h3{font-size:clamp(18px,2.2vw,28px);line-height:1;letter-spacing:.01em}
+  .t-phone-xl{font-size:clamp(28px,4.6vw,52px);line-height:1;letter-spacing:-.02em;white-space:nowrap}
+  .t-phone-md{font-size:clamp(20px,3.2vw,30px);line-height:1;letter-spacing:.02em;white-space:nowrap}
+  .t-num-xl{font-size:clamp(40px,6vw,90px);line-height:.9;letter-spacing:-.02em}
+  .t-num-lg{font-size:clamp(32px,5vw,68px);line-height:.9;letter-spacing:-.02em}
+  .t-num-md{font-size:clamp(28px,4vw,52px);line-height:1;letter-spacing:-.02em}
+  .t-body-lg{font-size:clamp(14px,1.5vw,18px);line-height:1.5}
+  .t-body{font-size:clamp(13px,1.3vw,15px);line-height:1.55}
+  .t-cap{font-size:11px;letter-spacing:.22em;text-transform:uppercase}
+  .t-cap-sm{font-size:10px;letter-spacing:.22em;text-transform:uppercase}
+
+  /* Caution stripe pattern — HIDDEN */
+  .caution-stripe{
+    display:none !important;
+  }
+  .hivis-stripe{
+    background-image:repeating-linear-gradient(135deg,#27E0F5 0 10px,#1cb8c9 10px 20px);
+  }
+
+  /* Hazard tag */
+  .hazard{
+    display:inline-block;padding:4px 10px;border:2px solid currentColor;
+    font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;
+    letter-spacing:.22em;text-transform:uppercase;line-height:1;
+  }
+
+  /* Interactive states */
+  a, button { transition: transform .15s cubic-bezier(.2,.7,.3,1.4), background-color .15s ease, color .15s ease, border-color .15s ease, opacity .15s ease; }
+  a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offset:2px; }
+  .btn-hivis:hover { background:#1cb8c9; }
+  .btn-hivis:active { transform:translateY(1px); }
+  .nav-link:hover { color:#27E0F5; }
+  .svc-card:hover { background:#2f2f33; }
+
+  /* Pulse */
+  @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.35} }
+  .pulse-dot { animation:pulse-dot 1.6s ease-in-out infinite; }
+
+  /* ── MENU lock-toggle button (mobile) ── */
+  .menu-lock-btn{
+    position:relative;z-index:5;
+    display:inline-flex;align-items:center;gap:7px;
+    padding:7px 17px 7px 9px;
+    background:#2c2c34;            /* dark by default */
+    color:#27E0F5;                 /* cyan lock + text by default */
+    border:none;cursor:pointer;
+    border-radius:999px !important;
+    font-family:'Archivo Black',sans-serif;font-size:14px;letter-spacing:.06em;
+    box-shadow:0 4px 11px -6px rgba(0,0,0,.6);
+    overflow:visible;
+    transition:transform .15s cubic-bezier(.2,.7,.3,1.4),
+               box-shadow .25s ease, background-color .24s ease, color .2s ease;
+  }
+  .menu-lock-btn.lock-open{ background:#27E0F5;color:#1A1A1A; }   /* active → cyan button, dark content */
+  .menu-lock-btn:active{ transform:translateY(1px); }
+  .menu-lock-btn:focus-visible{ outline:2px solid #27E0F5;outline-offset:3px; }
+  /* hover — cyan-filled highlight + glow */
+  .menu-lock-btn:hover{
+    background:#27E0F5;color:#1A1A1A;
+    box-shadow:0 0 22px rgba(39,224,245,.62), 0 0 9px rgba(39,224,245,.55),
+               0 4px 11px -6px rgba(0,0,0,.6);
+  }
+  /* click bloom — fires once per tap, then fades away (never persistent) */
+  .menu-lock-btn::after{
+    content:"";position:absolute;inset:-45%;
+    border-radius:999px;pointer-events:none;z-index:-1;opacity:0;
+    background:radial-gradient(closest-side, rgba(39,224,245,.72), rgba(39,224,245,0) 78%);
+  }
+  @keyframes bloomPulse{
+    0%  { opacity:0;   transform:scale(.55); }
+    28% { opacity:.95; transform:scale(.95); }
+    100%{ opacity:0;   transform:scale(1.5); }
+  }
+  .menu-lock-btn.lk-bloom::after{ animation:bloomPulse .62s ease-out; }
+  .menu-lock-ico{ width:24px;height:31px;flex-shrink:0;transition:opacity .22s ease; }
+  .menu-lock-ico svg{ width:100%;height:100%;display:block;overflow:visible; }
+  .menu-lock-txt{ line-height:1;padding-top:2px; }
+
+  /* padlock — shackle unlocks (left leg hinged to body), lock falls & vanishes mid-air; swings on hover */
+  .lk-swing{ transform-box:view-box;transform-origin:17px 13px; }
+  .lk-shackle{ transform-box:view-box;transform-origin:11px 20px; }
+  @keyframes lkSwing{
+    0%,100%{ transform:rotate(0deg); }
+    25%{ transform:rotate(7deg); }
+    75%{ transform:rotate(-7deg); }
+  }
+  @keyframes lkUnlock{
+    0%   { transform:rotate(0deg); }
+    100% { transform:rotate(-44deg); }
+  }
+  @keyframes lkFall{
+    0%   { transform:translateY(0); }
+    100% { transform:translateY(32px); }
+  }
+  .menu-lock-btn:hover:not(.lock-open) .lk-swing{ animation:lkSwing 1.4s ease-in-out infinite; }
+  .lock-open .lk-shackle{ animation:lkUnlock .28s cubic-bezier(.34,1.3,.6,1) forwards; }
+  .lock-open .lk-drop{ animation:lkFall .52s cubic-bezier(.55,0,.85,.55) .16s forwards; }
+  /* lock fades out mid-fall — gone before it lands; fades back in on close */
+  .menu-lock-btn.lock-open .menu-lock-ico{ opacity:0;transition:opacity .22s ease .3s; }
+
+  /* Mobile menu animation */
+  .mobile-menu{max-height:0;overflow:hidden;transition:max-height .45s cubic-bezier(.2,.8,.2,1), opacity .3s ease;opacity:0;}
+  .mobile-menu.open{max-height:520px;opacity:1;}
+
+  /* Hide scrollbars on horizontal scroll */
+  .no-scrollbar::-webkit-scrollbar{display:none}
+  .no-scrollbar{scrollbar-width:none}
+
+  /* Logo container */
+  .logo-img{height:48px;width:auto;display:block}
+  @media (max-width: 640px){ .logo-img{height:38px} }
+
+  /* Header — 21st.dev floating-pill style (Apex palette + fonts) */
+  #header{
+    position:sticky;top:0;z-index:1000;width:100%;
+    border-bottom:1px solid transparent;
+    transition:background-color .3s ease, border-color .3s ease;
+  }
+  #headerContent{height:64px;transition:height .35s cubic-bezier(.2,.7,.3,1);}
+  #header .logo-img{height:40px;transition:height .35s cubic-bezier(.2,.7,.3,1);}
+  #header .nav-link{border-radius:9px !important;}
+  #header nav .nav-link:hover{background:#2f2f33;}
+  #header .btn-hivis{border-radius:9px !important;}
+  #mobileMenu{background:#1A1A1A;}
+
+  /* scrolled — glassy */
+  #header.scrolled{
+    background:rgba(26,26,26,.85);
+    -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+    border-bottom-color:#3a3a3e;
+  }
+  #header.scrolled #headerContent{height:56px;}
+  #header.scrolled .logo-img{height:32px;}
+
+  /* desktop — floating, contained, rounded pill */
+  @media (min-width:768px){
+    #header{
+      max-width:1180px;margin-left:auto;margin-right:auto;
+      border:1px solid transparent;border-radius:12px !important;
+      transition:max-width .4s cubic-bezier(.2,.7,.3,1),
+                 top .4s cubic-bezier(.2,.7,.3,1),
+                 background-color .3s ease, border-color .3s ease,
+                 box-shadow .3s ease;
+    }
+    #header.scrolled{
+      top:16px;max-width:1048px;
+      background:rgba(26,26,26,.62);
+      border-color:#3a3a3e;
+      box-shadow:0 16px 40px -12px rgba(0,0,0,.62), 0 4px 14px -4px rgba(0,0,0,.5);
+    }
+  }
+
+  /* Service finder tile */
+  .finder-tile{cursor:pointer;border:2px solid #3a3a3e;background:#1A1A1A;color:#EDEDED;}
+  .finder-tile.active{background:#27E0F5;color:#1A1A1A;border-color:#27E0F5;}
+
+  /* No-rounded — brutalist */
+  *{border-radius:0 !important}
+
+  /* Section divider */
+  .section-divider{border-top:3px solid #EDEDED;}
+
+  /* Form inputs */
+  input,textarea,select{
+    background:#1A1A1A;color:#EDEDED;border:2px solid #3a3a3e;
+    padding:14px 18px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;width:100%;
+    transition:border-color .15s ease, background-color .15s ease;
+  }
+  input::placeholder,textarea::placeholder{color:#6a6a6e;}
+  input:hover,textarea:hover,select:hover{border-color:#55555a;}
+  input:focus,textarea:focus,select:focus{border-color:#27E0F5;background:#202023;}
+  input.invalid,textarea.invalid{border-color:#ff5d3b;background:rgba(255,93,59,.06);}
+  .form-error{display:none;margin-top:7px;font-family:'Space Grotesk',sans-serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#ff5d3b;font-weight:700;line-height:1.2;}
+  .form-error.show{display:flex;align-items:center;gap:6px;}
+  .form-error::before{content:"";display:inline-block;width:6px;height:6px;background:#ff5d3b;flex-shrink:0;}
+  .form-success{display:none;margin-top:14px;padding:14px 18px;border:2px solid #5cd97a;background:rgba(92,217,122,.10);align-items:center;gap:12px;}
+  .form-success.show{display:flex;}
+
+  /* Progress bar */
+  .eta-bar{height:14px;background:#1A1A1A;position:relative;border:1px solid #3a3a3e;}
+  .eta-fill{position:absolute;inset:0;background-image:repeating-linear-gradient(135deg,#27E0F5 0 10px,#1cb8c9 10px 20px);}
+
+  /* Photo placeholder */
+  .photo-slot{
+    position:relative;width:100%;
+    background-image:repeating-linear-gradient(45deg,#2a2a28 0 7px,#1f1f1d 7px 14px);
+    border:1px dashed rgba(154,154,154,.4);
+  }
+  .photo-slot .label{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;
+    font-family:'Space Grotesk',sans-serif;font-size:11px;letter-spacing:.12em;color:#9a9a9a;text-align:center;
+    text-transform:uppercase;font-weight:600;
+  }
+
+  /* Smooth section scroll */
+  html{scroll-behavior:smooth;}
+</style>
+</head>
+<body class="bg-bg text-ink">
+
+<!-- ───── TOP STRIPE + DISPATCH BAR ───── -->
+<div class="bg-ink text-bg" style="background:#0f0f10;color:#EDEDED;border-top:3px solid #27E0F5;">
+  <div class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between font-mono t-cap-sm">
+    <div class="flex items-center gap-3 sm:gap-4">
+      <span class="inline-flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 bg-green pulse-dot" style="background:#5cd97a;border-radius:50%!important;"></span>
+        <span class="hidden xs:inline">ON-DUTY · 24/7</span>
+        <span class="xs:hidden">24/7</span>
+      </span>
+      <span class="opacity-60 hidden sm:inline">LIC #LSM-7791</span>
+    </div>
+    <a href="tel:+14165550000" class="text-hivis font-display flex items-center gap-2 hover:underline" style="font-size:14px;letter-spacing:.06em;">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 3h4l2 5-2 2a12 12 0 005 5l2-2 5 2v4a2 2 0 01-2 2A18 18 0 013 5a2 2 0 012-2z"/></svg>
+      (416) 555-0000
+    </a>
+  </div>
+</div>
+
+<!-- ───── HEADER ───── -->
+<header id="header">
+  <div id="headerContent" class="px-5 sm:px-6 flex items-center justify-between">
+    <a href="#home" class="flex items-center gap-3">
+      <img src="brand_assets/withoutbg.png" alt="Apex Locksmith" class="logo-img"/>
+    </a>
+
+    <!-- Desktop nav -->
+    <nav class="hidden lg:flex items-center gap-1">
+      <a href="#home" class="nav-link" data-nav style="padding:9px 14px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:14px;letter-spacing:.01em;text-decoration:none;color:#EDEDED;">Home</a>
+      <a href="#services" class="nav-link" data-nav style="padding:9px 14px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:14px;letter-spacing:.01em;text-decoration:none;color:#EDEDED;">Services</a>
+      <a href="#about" class="nav-link" data-nav style="padding:9px 14px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:14px;letter-spacing:.01em;text-decoration:none;color:#EDEDED;">About</a>
+      <a href="#reviews" class="nav-link" data-nav style="padding:9px 14px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:14px;letter-spacing:.01em;text-decoration:none;color:#EDEDED;">Reviews</a>
+      <a href="#contact" class="nav-link" data-nav style="padding:9px 14px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:14px;letter-spacing:.01em;text-decoration:none;color:#EDEDED;">Contact</a>
+      <a href="tel:+14165550000" class="btn-hivis ml-2 inline-flex items-center gap-2" style="padding:10px 18px;background:#27E0F5;color:#1A1A1A;text-decoration:none;font-family:'Archivo Black',sans-serif;font-size:13px;letter-spacing:.04em;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 3h4l2 5-2 2a12 12 0 005 5l2-2 5 2v4a2 2 0 01-2 2A18 18 0 013 5a2 2 0 012-2z"/></svg>
+        CALL NOW
+      </a>
+    </nav>
+
+    <!-- Mobile/Tablet lock button -->
+    <button id="lockBtn" class="menu-lock-btn lg:hidden" aria-label="Toggle menu" aria-expanded="false">
+      <span class="menu-lock-ico">
+        <svg id="lockSvg" viewBox="0 0 34 40" fill="none" aria-hidden="true">
+          <defs>
+            <mask id="lkKeyhole">
+              <rect x="8" y="18" width="18" height="15" rx="4" fill="#fff"/>
+              <circle cx="17" cy="24.4" r="2.4" fill="#000"/>
+              <rect x="15.75" y="24.4" width="2.5" height="4.9" rx="1.25" fill="#000"/>
+            </mask>
+          </defs>
+          <g class="lk-drop">
+            <g class="lk-swing">
+              <path class="lk-shackle" d="M11 27 V13 a6 6 0 0 1 12 0 V19" stroke="currentColor" stroke-width="3.9" stroke-linecap="round" fill="none"/>
+              <rect x="8" y="18" width="18" height="15" rx="4" fill="currentColor" mask="url(#lkKeyhole)"/>
+            </g>
+          </g>
+        </svg>
+      </span>
+      <span class="menu-lock-txt">MENU</span>
+    </button>
+  </div>
+
+  <!-- Mobile menu -->
+  <div id="mobileMenu" class="mobile-menu lg:hidden" style="border-top:1px solid #3a3a3e;">
+    <nav class="flex flex-col px-4 sm:px-6 py-3 gap-1">
+      <a href="#home" class="mobile-link nav-link" style="padding:12px 12px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:15px;letter-spacing:.01em;text-decoration:none;color:#EDEDED;">Home</a>
+      <a href="#services" class="mobile-link nav-link" style="padding:12px 12px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:15px;letter-spacing:.01em;text-decoration:none;color:#EDEDED;">Services</a>
+      <a href="#about" class="mobile-link nav-link" style="padding:12px 12px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:15px;letter-spacing:.01em;text-decoration:none;color:#EDEDED;">About</a>
+      <a href="#reviews" class="mobile-link nav-link" style="padding:12px 12px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:15px;letter-spacing:.01em;text-decoration:none;color:#EDEDED;">Reviews</a>
+      <a href="#contact" class="mobile-link nav-link" style="padding:12px 12px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:15px;letter-spacing:.01em;text-decoration:none;color:#EDEDED;">Contact</a>
+      <a href="tel:+14165550000" class="btn-hivis mt-2 inline-flex items-center justify-center gap-2" style="padding:14px 18px;background:#27E0F5;color:#1A1A1A;text-decoration:none;font-family:'Archivo Black',sans-serif;font-size:14px;letter-spacing:.04em;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 3h4l2 5-2 2a12 12 0 005 5l2-2 5 2v4a2 2 0 01-2 2A18 18 0 013 5a2 2 0 012-2z"/></svg>
+        CALL NOW · (416) 555-0000
+      </a>
+    </nav>
+  </div>
+</header>
+
+<!-- ───── HERO ───── -->
+<section id="home" class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14 lg:py-16">
+  <div class="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-8 lg:gap-10">
+    <div>
+      <div class="flex flex-wrap gap-2 mb-4">
+        <span class="hazard" style="color:#1A1A1A;background:#f4c20a;border-color:#1A1A1A;">EMERGENCY · 24/7</span>
+        <span class="hazard" style="color:#EDEDED;">TORONTO · GTA</span>
+      </div>
+      <h1 class="font-display t-h1 uppercase" style="text-wrap:balance;margin:0 0 16px;">
+        We open<br/>
+        <span style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;margin-right:6px;">locked</span>
+        things.
+      </h1>
+      <p class="font-body t-body-lg" style="color:#9a9a9a;max-width:540px;margin-top:18px;">
+        Doors. Cars. Safes. Offices. Front gates of warehouses at three in the morning. Apex Locksmith has answered the phone across Toronto & the GTA since 2008.
+      </p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 mt-6 lg:mt-8" style="border:3px solid #EDEDED;">
+        <a href="tel:+14165550000" class="btn-hivis flex flex-col gap-1 sm:border-r-[3px] border-b-[3px] sm:border-b-0 items-center justify-center" style="padding:18px 14px;background:#27E0F5;color:#1A1A1A;text-decoration:none;border-color:#EDEDED;min-height:100px;">
+          <span class="font-mono t-cap" style="opacity:.85;font-size:11px;">TAP TO CALL</span>
+          <span class="font-display t-phone-md">(416) 555-0000</span>
+        </a>
+        <button class="flex flex-col justify-center gap-1 text-left" style="padding:20px 22px;background:#1A1A1A;color:#EDEDED;border:none;cursor:pointer;">
+          <span class="font-mono t-cap" style="opacity:.6;">OR</span>
+          <span class="font-display uppercase" style="font-size:16px;letter-spacing:.06em;">Get a quote ↗</span>
+        </button>
+      </div>
+      <!-- Trust row -->
+      <div class="mt-7 flex flex-wrap gap-5 items-center">
+        <div class="flex items-center gap-2">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#27E0F5" stroke-width="2.2"><path d="M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z"/></svg>
+          <span class="font-mono t-cap" style="font-weight:600;">LICENSED · BONDED · INSURED</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="inline-flex gap-0.5" style="color:#27E0F5;">
+            <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
+          </span>
+          <span class="font-mono t-cap" style="font-weight:600;">4.9 · 847 GOOGLE</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#27E0F5" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          <span class="font-mono t-cap" style="font-weight:600;">18 YRS · EST. 2008</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right column: ETA + hero photo -->
+    <div class="flex flex-col gap-4">
+      <!-- ETA widget -->
+      <div style="position:relative;background:#242427;border:2px solid #27E0F5;padding:22px 22px;">
+        <div class="caution-stripe" style="position:absolute;top:-6px;left:0;right:0;height:6px;"></div>
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2">
+            <span class="pulse-dot" style="width:10px;height:10px;background:#5cd97a;box-shadow:0 0 0 3px rgba(92,217,122,.25);"></span>
+            <span class="font-mono t-cap" style="font-weight:700;">LIVE · DISPATCH OPEN</span>
+          </div>
+          <span class="font-mono t-cap-sm" style="color:#9a9a9a;"><span id="techs">4</span> ON ROAD</span>
+        </div>
+        <div class="flex items-baseline gap-2 mt-1.5">
+          <div class="font-display" style="font-size:clamp(64px,11vw,104px);line-height:.85;color:#27E0F5;letter-spacing:-.04em;" id="eta">14</div>
+          <div class="font-display uppercase" style="font-size:clamp(20px,3vw,32px);line-height:1;letter-spacing:.02em;">MIN</div>
+          <div class="font-body hidden sm:block" style="font-size:13px;color:#9a9a9a;flex:1;padding-left:14px;padding-bottom:6px;letter-spacing:.05em;">to your door, anywhere in Toronto & GTA</div>
+        </div>
+        <div class="eta-bar mt-3">
+          <div class="eta-fill" id="etaFill" style="width:70%;"></div>
+        </div>
+        <div class="flex justify-between mt-1.5 font-mono" style="font-size:10px;color:#9a9a9a;letter-spacing:.18em;">
+          <span>FASTEST · 11 MIN</span>
+          <span>NIGHT MAX · 24 MIN</span>
+        </div>
+      </div>
+
+      <!-- Hero photo placeholder -->
+      <div class="relative">
+        <div class="photo-slot" style="aspect-ratio:620/420;">
+          <div class="label">HERO PHOTO · VAN AT LOADING DOCK</div>
+        </div>
+        <div class="caution-stripe absolute bottom-0 left-0 right-0" style="height:6px"></div>
+        <div class="absolute top-3 left-3">
+          <span class="hazard" style="color:#1A1A1A;background:#f4c20a;border-color:#1A1A1A;">UNIT 04</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ───── TRUST STRIP ───── -->
+<section style="background:#0f0f10;position:relative;border-top:3px solid #27E0F5;">
+  <div class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-9 grid grid-cols-2 lg:grid-cols-4 gap-y-6 gap-x-0">
+    <div class="lg:border-r border-rule px-0 lg:pr-6 flex flex-col items-center lg:items-start">
+      <div class="font-display t-num-lg counter" data-target="18" style="color:#27E0F5;">0</div>
+      <div class="font-display mt-1.5" style="font-size:14px;letter-spacing:.06em;">YRS / TORONTO</div>
+      <div class="font-mono t-cap-sm mt-1" style="color:#9a9a9a;">EST. 2008</div>
+    </div>
+    <div class="lg:border-r border-rule px-0 lg:px-6 flex flex-col items-center lg:items-start">
+      <div class="font-display t-num-lg counter" data-target="4.9" style="color:#27E0F5;">0</div>
+      <div class="font-display mt-1.5" style="font-size:14px;letter-spacing:.06em;">847 REVIEWS</div>
+      <div class="font-mono t-cap-sm mt-1" style="color:#9a9a9a;">GOOGLE / 5-STAR AVG</div>
+    </div>
+    <div class="lg:border-r border-rule px-0 lg:px-6 flex flex-col items-center lg:items-start">
+      <div class="font-display t-num-lg counter" data-target="15" style="color:#27E0F5;">0</div>
+      <div class="font-display mt-1.5" style="font-size:14px;letter-spacing:.06em;">M MEDIAN ETA</div>
+      <div class="font-mono t-cap-sm mt-1" style="color:#9a9a9a;">24/7 DISPATCH</div>
+    </div>
+    <div class="px-0 lg:pl-6 flex flex-col items-center lg:items-start">
+      <div class="font-display t-num-lg counter" data-target="5" style="color:#27E0F5;">0</div>
+      <div class="font-display mt-1.5" style="font-size:14px;letter-spacing:.06em;">FIELD TECHS</div>
+      <div class="font-mono t-cap-sm mt-1" style="color:#9a9a9a;">OWNER-OPERATED</div>
+    </div>
+  </div>
+</section>
+
+<!-- ───── SERVICE FINDER + ZIP ───── -->
+<section class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-16">
+  <!-- Section heading -->
+  <div class="flex items-end justify-between gap-4 pb-3 mb-7" style="border-bottom:3px solid #EDEDED;">
+    <div class="flex gap-3 items-end">
+      <span class="hazard" style="color:#EDEDED;">NO.02</span>
+      <div>
+        <div class="font-mono t-cap" style="opacity:.6;">Triage</div>
+        <div class="font-display t-h2 uppercase mt-1">What's locked?</div>
+      </div>
+    </div>
+  </div>
+  <div class="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-5">
+    <!-- Finder card -->
+    <div style="background:#242427;border:2px solid #EDEDED;">
+      <div class="flex justify-between items-center px-4 sm:px-5 py-3" style="background:#EDEDED;color:#1A1A1A;">
+        <div class="font-display uppercase" style="font-size:18px;letter-spacing:.04em;">SERVICE FINDER</div>
+        <div class="font-mono t-cap-sm" style="opacity:.7;">STEP 1 OF 1</div>
+      </div>
+      <div class="p-5 sm:p-6">
+        <div class="font-body t-body" style="color:#9a9a9a;margin-bottom:12px;">What did you lock yourself out of?</div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+          <button class="finder-tile active" data-finder="home">
+            <div class="px-3 py-3.5 flex flex-col gap-2.5 items-start">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7v9h-6v-6h-6v6H3z"/></svg>
+              <div class="font-display uppercase" style="font-size:13px;letter-spacing:.04em;">House / Apt</div>
+            </div>
+          </button>
+          <button class="finder-tile" data-finder="car">
+            <div class="px-3 py-3.5 flex flex-col gap-2.5 items-start">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 14l2-6h14l2 6v5h-3v-2H6v2H3z"/><circle cx="7" cy="17" r="1.5"/><circle cx="17" cy="17" r="1.5"/></svg>
+              <div class="font-display uppercase" style="font-size:13px;letter-spacing:.04em;">Car / Truck</div>
+            </div>
+          </button>
+          <button class="finder-tile" data-finder="office">
+            <div class="px-3 py-3.5 flex flex-col gap-2.5 items-start">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18"/><path d="M8 7h2M14 7h2M8 11h2M14 11h2M8 15h2M14 15h2"/></svg>
+              <div class="font-display uppercase" style="font-size:13px;letter-spacing:.04em;">Office</div>
+            </div>
+          </button>
+          <button class="finder-tile" data-finder="safe">
+            <div class="px-3 py-3.5 flex flex-col gap-2.5 items-start">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16"/><circle cx="14" cy="12" r="3.5"/></svg>
+              <div class="font-display uppercase" style="font-size:13px;letter-spacing:.04em;">Safe</div>
+            </div>
+          </button>
+        </div>
+        <!-- Dispatch plan -->
+        <div style="margin-top:22px;padding:18px 20px;background:#1A1A1A;border:2px solid #27E0F5;position:relative;">
+          <div class="caution-stripe" style="position:absolute;top:0;left:0;right:0;height:4px;"></div>
+          <div class="flex justify-between flex-wrap gap-3 mb-3 pt-1.5">
+            <div>
+              <div class="font-mono t-cap-sm" style="color:#27E0F5;">▸ DISPATCH PLAN</div>
+              <div class="font-display uppercase mt-1" id="planLabel" style="font-size:clamp(20px,2.4vw,28px);letter-spacing:.02em;line-height:1;">House / Apt lockout</div>
+            </div>
+            <div class="flex gap-4">
+              <div class="text-right">
+                <div class="font-mono t-cap-sm" style="color:#9a9a9a;">ETA</div>
+                <div class="font-display mt-1" id="planEta" style="font-size:22px;">15 min</div>
+              </div>
+              <div class="text-right">
+                <div class="font-mono t-cap-sm" style="color:#9a9a9a;">PRICE</div>
+                <div class="font-display mt-1" id="planPrice" style="font-size:22px;color:#27E0F5;">$65–$95</div>
+              </div>
+            </div>
+          </div>
+          <ul id="planList" class="list-none p-0 m-0 grid gap-2"></ul>
+          <a href="tel:+14165550000" class="btn-hivis flex items-center justify-center gap-2.5 mt-4" style="background:#EDEDED;color:#1A1A1A;padding:14px 20px;text-decoration:none;font-family:'Archivo Black',sans-serif;font-size:16px;letter-spacing:.06em;text-transform:uppercase;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 3h4l2 5-2 2a12 12 0 005 5l2-2 5 2v4a2 2 0 01-2 2A18 18 0 013 5a2 2 0 012-2z"/></svg>
+            Dispatch · (416) 555-0000
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Zone check + guarantee -->
+    <div class="flex flex-col gap-4">
+      <form id="zipForm" style="background:#242427;border:2px solid #EDEDED;">
+        <div class="flex justify-between items-center px-4 sm:px-5 py-3" style="background:#EDEDED;color:#1A1A1A;">
+          <div class="font-display uppercase" style="font-size:16px;letter-spacing:.04em;">ZONE CHECK</div>
+          <div class="font-mono t-cap-sm" style="opacity:.7;">BY POSTAL</div>
+        </div>
+        <div class="p-5">
+          <div class="font-body t-body mb-3" style="color:#9a9a9a;">We dispatch across Toronto & GTA. Enter your postal code.</div>
+          <div class="flex">
+            <input id="zipInput" data-format="postal" placeholder="A0A 0A0" maxlength="7" autocomplete="postal-code" inputmode="text" autocapitalize="characters" spellcheck="false" style="flex:1;min-width:0;border-right:none;font-family:'Archivo Black',sans-serif;font-size:clamp(18px,2.4vw,24px);letter-spacing:.08em;padding:14px 18px;text-transform:uppercase;"/>
+            <button type="submit" class="btn-hivis font-display uppercase shrink-0" style="padding:0 20px;background:#27E0F5;color:#1A1A1A;border:2px solid #EDEDED;font-size:14px;letter-spacing:.06em;cursor:pointer;">Check</button>
+          </div>
+          <div id="zipResult"></div>
+          <div class="font-mono t-cap-sm mt-2.5" style="color:#9a9a9a;opacity:.7;">Format: A0A 0A0 · Try M5V 1A1 · L4W 0E1</div>
+        </div>
+      </form>
+      <div style="background:#0f0f10;color:#EDEDED;padding:20px 22px;position:relative;">
+        <div class="caution-stripe absolute top-0 left-0 right-0" style="height:4px;"></div>
+        <div class="font-mono t-cap mt-1.5" style="color:#27E0F5;">FAIR PRICE GUARANTEE</div>
+        <p class="font-body mt-2 m-0" style="font-size:14px;line-height:1.55;">The number you hear on the phone is the number on the receipt. No "discovery fee", no upsell at the door.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ───── SERVICES ───── -->
+<section id="services" class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-16 section-divider">
+  <div class="flex items-end justify-between gap-4 pb-3 mb-7" style="border-bottom:3px solid #EDEDED;">
+    <div class="flex gap-3 items-end">
+      <span class="hazard" style="color:#EDEDED;">NO.03</span>
+      <div>
+        <div class="font-mono t-cap" style="opacity:.6;">Service catalogue</div>
+        <div class="font-display t-h2 uppercase mt-1">Five trades</div>
+      </div>
+    </div>
+  </div>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style="gap:10px;">
+    <!-- 5 services + 1 CTA -->
+    <article class="svc-card relative flex flex-col justify-between p-6" style="background:#242427;min-height:240px;border:2px solid #EDEDED;">
+      <div class="absolute top-0 left-0 px-2.5 py-1 font-mono t-cap-sm" style="background:#EDEDED;color:#1A1A1A;">01</div>
+      <div class="mt-6">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#27E0F5" stroke-width="2.2"><path d="M5 3h4l2 5-2 2a12 12 0 005 5l2-2 5 2v4a2 2 0 01-2 2A18 18 0 013 5a2 2 0 012-2z"/></svg>
+        <h3 class="font-display t-h3 uppercase mt-3.5 mb-2.5" style="text-wrap:balance;">24/7 Emergency Lockouts</h3>
+        <p class="font-body t-body m-0" style="color:#9a9a9a;">Home, office, car. 15-minute average response across Toronto & GTA.</p>
+      </div>
+      <div class="flex justify-between items-end mt-4 pt-3" style="border-top:1px solid #3a3a3e;">
+        <div class="font-display" style="font-size:22px;color:#27E0F5;letter-spacing:.02em;">FROM $65</div>
+        <div class="font-mono t-cap-sm" style="color:#9a9a9a;">~15 min</div>
+      </div>
+    </article>
+    <article class="svc-card relative flex flex-col justify-between p-6" style="background:#242427;min-height:240px;border:2px solid #EDEDED;">
+      <div class="absolute top-0 left-0 px-2.5 py-1 font-mono t-cap-sm" style="background:#EDEDED;color:#1A1A1A;">02</div>
+      <div class="mt-6">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#27E0F5" stroke-width="2.2"><path d="M3 11l9-7 9 7v9h-6v-6h-6v6H3z"/></svg>
+        <h3 class="font-display t-h3 uppercase mt-3.5 mb-2.5">Residential Rekey & Install</h3>
+        <p class="font-body t-body m-0" style="color:#9a9a9a;">Rekey existing locks, install deadbolts, smart locks, mortise sets.</p>
+      </div>
+      <div class="flex justify-between items-end mt-4 pt-3" style="border-top:1px solid #3a3a3e;">
+        <div class="font-display" style="font-size:22px;color:#27E0F5;letter-spacing:.02em;">FROM $89</div>
+        <div class="font-mono t-cap-sm" style="color:#9a9a9a;">Same day</div>
+      </div>
+    </article>
+    <article class="svc-card relative flex flex-col justify-between p-6" style="background:#242427;min-height:240px;border:2px solid #EDEDED;">
+      <div class="absolute top-0 left-0 px-2.5 py-1 font-mono t-cap-sm" style="background:#EDEDED;color:#1A1A1A;">03</div>
+      <div class="mt-6">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#27E0F5" stroke-width="2.2"><rect x="4" y="3" width="16" height="18"/><path d="M8 7h2M14 7h2M8 11h2M14 11h2"/></svg>
+        <h3 class="font-display t-h3 uppercase mt-3.5 mb-2.5">Commercial & Business</h3>
+        <p class="font-body t-body m-0" style="color:#9a9a9a;">Master key systems, panic bars, high-security restricted keyways.</p>
+      </div>
+      <div class="flex justify-between items-end mt-4 pt-3" style="border-top:1px solid #3a3a3e;">
+        <div class="font-display" style="font-size:22px;color:#27E0F5;letter-spacing:.02em;">FROM $135</div>
+        <div class="font-mono t-cap-sm" style="color:#9a9a9a;">Same day</div>
+      </div>
+    </article>
+    <article class="svc-card relative flex flex-col justify-between p-6" style="background:#242427;min-height:240px;border:2px solid #EDEDED;">
+      <div class="absolute top-0 left-0 px-2.5 py-1 font-mono t-cap-sm" style="background:#EDEDED;color:#1A1A1A;">04</div>
+      <div class="mt-6">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#27E0F5" stroke-width="2.2"><rect x="5" y="11" width="14" height="10"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
+        <h3 class="font-display t-h3 uppercase mt-3.5 mb-2.5">Smart Locks & Access</h3>
+        <p class="font-body t-body m-0" style="color:#9a9a9a;">Z-Wave, keypad, biometric. Integration with existing security.</p>
+      </div>
+      <div class="flex justify-between items-end mt-4 pt-3" style="border-top:1px solid #3a3a3e;">
+        <div class="font-display" style="font-size:22px;color:#27E0F5;letter-spacing:.02em;">FROM $159</div>
+        <div class="font-mono t-cap-sm" style="color:#9a9a9a;">By appointment</div>
+      </div>
+    </article>
+    <article class="svc-card relative flex flex-col justify-between p-6" style="background:#242427;min-height:240px;border:2px solid #EDEDED;">
+      <div class="absolute top-0 left-0 px-2.5 py-1 font-mono t-cap-sm" style="background:#EDEDED;color:#1A1A1A;">05</div>
+      <div class="mt-6">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#27E0F5" stroke-width="2.2"><rect x="3" y="4" width="18" height="16"/><circle cx="14" cy="12" r="3.5"/></svg>
+        <h3 class="font-display t-h3 uppercase mt-3.5 mb-2.5">Safes — Open, Move, Install</h3>
+        <p class="font-body t-body m-0" style="color:#9a9a9a;">Combination recovery, electronic safe opening, in-floor installs.</p>
+      </div>
+      <div class="flex justify-between items-end mt-4 pt-3" style="border-top:1px solid #3a3a3e;">
+        <div class="font-display" style="font-size:22px;color:#27E0F5;letter-spacing:.02em;">FROM $115</div>
+        <div class="font-mono t-cap-sm" style="color:#9a9a9a;">Same day</div>
+      </div>
+    </article>
+    <!-- CTA tile -->
+    <article class="relative flex flex-col justify-between p-6" style="background:#27E0F5;color:#1A1A1A;min-height:240px;border:2px solid #EDEDED;">
+      <div class="absolute top-0 left-0 px-2.5 py-1 font-mono t-cap-sm" style="background:#1A1A1A;color:#EDEDED;">HELP</div>
+      <div class="mt-6">
+        <h3 class="font-display uppercase m-0" style="font-size:clamp(22px,2.6vw,30px);line-height:.95;">Not sure which? We'll figure it out.</h3>
+        <p class="font-body mt-2.5" style="font-size:14px;line-height:1.5;">One phone call. Ninety seconds of triage.</p>
+      </div>
+      <a href="tel:+14165550000" class="font-display mt-4" style="color:#1A1A1A;text-decoration:none;font-size:clamp(20px,2.6vw,28px);letter-spacing:.02em;">(416) 555-0000 →</a>
+    </article>
+  </div>
+</section>
+
+<!-- ───── PROCESS ───── -->
+<section class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-16">
+  <div class="flex items-end justify-between gap-4 pb-3 mb-7" style="border-bottom:3px solid #EDEDED;">
+    <div class="flex gap-3 items-end">
+      <span class="hazard" style="color:#EDEDED;">NO.04</span>
+      <div>
+        <div class="font-mono t-cap" style="opacity:.6;">Procedure</div>
+        <div class="font-display t-h2 uppercase mt-1">Three steps</div>
+      </div>
+    </div>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="relative p-6 pt-5" style="background:#242427;border:2px solid #EDEDED;">
+      <div class="caution-stripe absolute top-0 left-0 right-0" style="height:6px"></div>
+      <div class="font-display t-num-xl mt-3" style="color:#27E0F5;">01</div>
+      <div class="font-display uppercase mt-3" style="font-size:22px;letter-spacing:.02em;">Call dispatch</div>
+      <p class="font-body t-body mt-2" style="color:#9a9a9a;">Real human picks up 24/7. Tell us where, what, and how urgent.</p>
+    </div>
+    <div class="relative p-6 pt-5" style="background:#242427;border:2px solid #EDEDED;">
+      <div class="caution-stripe absolute top-0 left-0 right-0" style="height:6px"></div>
+      <div class="font-display t-num-xl mt-3" style="color:#27E0F5;">02</div>
+      <div class="font-display uppercase mt-3" style="font-size:22px;letter-spacing:.02em;">Tech routed</div>
+      <p class="font-body t-body mt-2" style="color:#9a9a9a;">We assign the nearest licensed tech and text you their name, photo, and ETA.</p>
+    </div>
+    <div class="relative p-6 pt-5" style="background:#242427;border:2px solid #EDEDED;">
+      <div class="caution-stripe absolute top-0 left-0 right-0" style="height:6px"></div>
+      <div class="font-display t-num-xl mt-3" style="color:#27E0F5;">03</div>
+      <div class="font-display uppercase mt-3" style="font-size:22px;letter-spacing:.02em;">On-site fix</div>
+      <p class="font-body t-body mt-2" style="color:#9a9a9a;">Upfront pricing before any work. Pay after, by card or tap.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ───── REVIEWS ───── -->
+<section id="reviews" class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-16 section-divider">
+  <div class="flex flex-wrap items-end justify-between gap-4 pb-3 mb-7" style="border-bottom:3px solid #EDEDED;">
+    <div class="flex gap-3 items-end">
+      <span class="hazard" style="color:#EDEDED;">NO.05</span>
+      <div>
+        <div class="font-mono t-cap" style="opacity:.6;">847 Google reviews</div>
+        <div class="font-display t-h2 uppercase mt-1">4.9★ on Google</div>
+      </div>
+    </div>
+    <a href="#" class="font-mono t-cap" style="text-decoration:none;color:#EDEDED;border-bottom:2px solid #27E0F5;padding-bottom:2px;">READ ALL 847 ↗</a>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <article class="flex flex-col p-5" style="background:#242427;border:2px solid #EDEDED;">
+      <div class="flex justify-between items-center">
+        <span class="inline-flex gap-0.5" style="color:#27E0F5;">
+          <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
+        </span>
+        <span class="font-mono t-cap-sm" style="color:#9a9a9a;">2 weeks ago</span>
+      </div>
+      <p class="font-body mt-3.5 flex-1" style="font-size:15px;line-height:1.55;text-wrap:pretty;">"Got locked out at 11pm with my dog inside. Tech was at my door in 14 minutes flat and had me back in within 5 more. Clean job, no damage to the lock, fair price. Saved as a contact."</p>
+      <div class="font-display uppercase mt-3 pt-2.5" style="font-size:16px;letter-spacing:.03em;border-top:1px solid #3a3a3e;">DANA R.</div>
+    </article>
+    <article class="flex flex-col p-5" style="background:#242427;border:2px solid #EDEDED;">
+      <div class="flex justify-between items-center">
+        <span class="inline-flex gap-0.5" style="color:#27E0F5;">
+          <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
+        </span>
+        <span class="font-mono t-cap-sm" style="color:#9a9a9a;">1 month ago</span>
+      </div>
+      <p class="font-body mt-3.5 flex-1" style="font-size:15px;line-height:1.55;text-wrap:pretty;">"Had Apex rekey the whole house after closing. Marcus walked through every door and recommended swapping two deadbolts that were past their service life. No upsell pressure. Two-year warranty on the work."</p>
+      <div class="font-display uppercase mt-3 pt-2.5" style="font-size:16px;letter-spacing:.03em;border-top:1px solid #3a3a3e;">ELI K.</div>
+    </article>
+    <article class="flex flex-col p-5" style="background:#242427;border:2px solid #EDEDED;">
+      <div class="flex justify-between items-center">
+        <span class="inline-flex gap-0.5" style="color:#27E0F5;">
+          <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
+        </span>
+        <span class="font-mono t-cap-sm" style="color:#9a9a9a;">1 month ago</span>
+      </div>
+      <p class="font-body mt-3.5 flex-1" style="font-size:15px;line-height:1.55;text-wrap:pretty;">"Used them for our coffee shop — master key system across four doors plus a safe combination change. Took maybe 90 minutes. Receipt was exactly the quote."</p>
+      <div class="font-display uppercase mt-3 pt-2.5" style="font-size:16px;letter-spacing:.03em;border-top:1px solid #3a3a3e;">PRIYA S.</div>
+    </article>
+  </div>
+</section>
+
+<!-- ───── ABOUT ───── -->
+<section id="about" class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-16">
+  <div class="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-10 lg:gap-12 items-center">
+    <div>
+      <div class="flex items-end gap-3 pb-3 mb-6" style="border-bottom:3px solid #EDEDED;">
+        <span class="hazard" style="color:#EDEDED;">NO.06</span>
+        <div>
+          <div class="font-mono t-cap" style="opacity:.6;">The shop</div>
+          <div class="font-display t-h2 uppercase mt-1">Owner-operated</div>
+        </div>
+      </div>
+      <p class="font-body" style="font-size:clamp(15px,1.7vw,17px);line-height:1.55;margin:0 0 14px;">
+        Five techs. One dispatcher. Every truck owned by Apex, every tech on staff. The person at your door is the person we'd send to our mom's house at 2 AM.
+      </p>
+      <div class="flex gap-2 flex-wrap mt-4">
+        <span class="hazard" style="color:#EDEDED;background:#242427;">LICENSED #LSM-7791</span>
+        <span class="hazard" style="color:#EDEDED;background:#242427;">BONDED $1M</span>
+        <span class="hazard" style="color:#EDEDED;background:#242427;">INSURED</span>
+        <span class="hazard" style="color:#EDEDED;background:#242427;">ALOA MEMBER</span>
+        <span class="hazard" style="color:#EDEDED;background:#242427;">BBB A+ SINCE 2011</span>
+      </div>
+    </div>
+    <div class="relative">
+      <div class="photo-slot" style="aspect-ratio:520/620;">
+        <div class="label">OWNER · MARCUS, IN SHOP</div>
+      </div>
+      <div class="absolute top-3 left-3">
+        <span class="hazard" style="color:#1A1A1A;background:#27E0F5;border-color:#1A1A1A;">FOUNDER · HOLLOWAY</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ───── CONTACT ───── -->
+<section id="contact" class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-16 section-divider">
+  <div class="flex items-end justify-between gap-4 pb-3 mb-7" style="border-bottom:3px solid #EDEDED;">
+    <div class="flex gap-3 items-end">
+      <span class="hazard" style="color:#EDEDED;">NO.07</span>
+      <div>
+        <div class="font-mono t-cap" style="opacity:.6;">Reach us</div>
+        <div class="font-display t-h2 uppercase mt-1">Pick up the phone.</div>
+      </div>
+    </div>
+  </div>
+  <div class="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6 lg:gap-8">
+    <div>
+      <a href="tel:+14165550000" class="btn-hivis relative flex flex-col" style="padding:26px 28px;background:#27E0F5;color:#1A1A1A;text-decoration:none;border:3px solid #EDEDED;">
+        <div class="caution-stripe absolute top-0 left-0 right-0" style="height:6px"></div>
+        <span class="font-mono t-cap mt-2" style="font-weight:700;">DISPATCH · OPEN NOW</span>
+        <span class="font-display t-phone-xl mt-2">(416) 555-0000</span>
+        <span class="font-body mt-2" style="font-size:14px;">Real human · 24 hours · 365 days</span>
+      </a>
+      <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="p-4" style="background:#242427;border:2px solid #EDEDED;">
+          <span class="hazard" style="color:#EDEDED;">HOURS</span>
+          <div class="font-body mt-2.5" style="font-size:14px;line-height:1.7;">Dispatch: <strong>24/7</strong><br/>Shop walk-ins: Mon–Sat 8a–6p</div>
+        </div>
+        <div class="p-4" style="background:#242427;border:2px solid #EDEDED;">
+          <span class="hazard" style="color:#EDEDED;">SHOP</span>
+          <div class="font-body mt-2.5" style="font-size:14px;line-height:1.7;">123 Queen St W<br/>Toronto, ON M5V 1A1</div>
+        </div>
+        <div class="p-4" style="background:#242427;border:2px solid #EDEDED;">
+          <span class="hazard" style="color:#EDEDED;">EMAIL</span>
+          <div class="font-body mt-2.5" style="font-size:14px;line-height:1.7;">dispatch@apexlocksmith.co</div>
+        </div>
+        <div class="p-4" style="background:#242427;border:2px solid #EDEDED;">
+          <span class="hazard" style="color:#EDEDED;">CREDENTIALS</span>
+          <div class="font-body mt-2.5" style="font-size:13px;line-height:1.55;">LIC #LSM-7791<br/>Bonded $1M · Insured · ALOA</div>
+        </div>
+      </div>
+    </div>
+    <form id="contactForm" class="grid gap-3.5 p-6" style="background:#242427;border:3px solid #EDEDED;" novalidate>
+      <span class="hazard" style="color:#1A1A1A;background:#f4c20a;border-color:#1A1A1A;width:fit-content;">NON-URGENT REQUEST</span>
+      <div class="font-display uppercase" style="font-size:clamp(22px,3vw,30px);line-height:1;letter-spacing:-.01em;">Send a note</div>
+      <label class="grid gap-1.5">
+        <span class="font-mono t-cap-sm" style="color:#9a9a9a;font-weight:700;">NAME</span>
+        <input id="contactName" placeholder="Marcus H." required/>
+        <div id="contactName-error" class="form-error">Enter your name</div>
+      </label>
+      <label class="grid gap-1.5">
+        <span class="font-mono t-cap-sm" style="color:#9a9a9a;font-weight:700;">PHONE</span>
+        <input id="contactPhone" data-format="phone" placeholder="(416) 555-1234" inputmode="numeric" maxlength="14" autocomplete="tel" required/>
+        <div id="contactPhone-error" class="form-error">Enter a valid 10-digit phone</div>
+      </label>
+      <label class="grid gap-1.5">
+        <span class="font-mono t-cap-sm" style="color:#9a9a9a;font-weight:700;">POSTAL CODE</span>
+        <input id="contactPostal" data-format="postal" placeholder="A0A 0A0" maxlength="7" autocomplete="postal-code" autocapitalize="characters" spellcheck="false" required/>
+        <div id="contactPostal-error" class="form-error">Use Canadian format: A0A 0A0</div>
+      </label>
+      <label class="grid gap-1.5">
+        <span class="font-mono t-cap-sm" style="color:#9a9a9a;font-weight:700;">WHAT'S UP?</span>
+        <textarea rows="4" placeholder="Rekey after move-in, smart lock install, etc."></textarea>
+      </label>
+      <button type="submit" class="btn-hivis font-display uppercase" style="padding:14px 22px;background:#27E0F5;color:#1A1A1A;border:2px solid #EDEDED;cursor:pointer;font-size:16px;letter-spacing:.06em;">Send →</button>
+      <div id="contactSuccess" class="form-success">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5cd97a" stroke-width="2.4" style="flex-shrink:0;"><path d="M4 12l5 5 11-12"/></svg>
+        <span class="font-display uppercase" style="font-size:13px;letter-spacing:.04em;">Note received. We'll be in touch shortly.</span>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- ───── SCROLL TO TOP ───── -->
+<button id="scrollTop" class="fixed bottom-6 right-6 w-12 h-12 bg-hivis text-bg flex items-center justify-center hover:bg-hivisDk transition-all duration-300 opacity-0 pointer-events-none" style="z-index:999;border:2px solid #27E0F5;">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 15l5-5 5 5M12 20V4"/></svg>
+</button>
+
+<!-- ───── BOTTOM CTA ───── -->
+<section class="relative" style="background:#0f0f10;color:#EDEDED;border-top:3px solid #27E0F5;">
+  <div class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-14 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 lg:gap-10">
+    <div class="flex-1 min-w-0">
+      <span class="hazard" style="color:#27E0F5;border-color:#27E0F5;background:transparent;">IF YOU'RE LOCKED OUT</span>
+      <div class="font-display uppercase mt-3.5" style="font-size:clamp(36px,5.6vw,64px);line-height:.92;letter-spacing:-.025em;">
+        Stop reading.<br/>Start dialing.
+      </div>
+    </div>
+    <a href="tel:+14165550000" class="btn-hivis inline-flex flex-col shrink-0" style="padding:18px 26px;background:#27E0F5;color:#1A1A1A;text-decoration:none;border:2px solid #f4c20a;">
+      <span class="font-mono" style="font-size:10px;letter-spacing:.24em;font-weight:700;">CALL DISPATCH</span>
+      <span class="font-display" style="font-size:clamp(26px,3.4vw,40px);line-height:1;letter-spacing:-.02em;white-space:nowrap;">(416) 555-0000</span>
+    </a>
+  </div>
+</section>
+
+<!-- ───── FOOTER ───── -->
+<footer style="background:#1A1A1A;border-top:3px solid #EDEDED;">
+  <div class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-wrap gap-3 justify-between items-center font-mono t-cap-sm" style="opacity:.7;font-weight:600;">
+    <span>© <span id="year"></span> APEX LOCKSMITH</span>
+    <span class="hidden sm:inline">LIC #LSM-7791</span>
+    <span>TORONTO · GTA</span>
+    <span>PRIVACY · TERMS · WARRANTY</span>
+  </div>
+</footer>
+
+<script>
+  // ── Lock icon dropdown ──
+  const lockBtn = document.getElementById('lockBtn');
+  const lockSvg = document.getElementById('lockSvg');
+  const mobileMenu = document.getElementById('mobileMenu');
+  let isOpen = false;
+
+  function toggleLock(forceState) {
+    isOpen = typeof forceState === 'boolean' ? forceState : !isOpen;
+    lockBtn.classList.toggle('lock-open', isOpen);
+    lockSvg.classList.toggle('lock-open', isOpen);
+    mobileMenu.classList.toggle('open', isOpen);
+    lockBtn.setAttribute('aria-expanded', String(isOpen));
+  }
+  lockBtn.addEventListener('click', () => {
+    // retrigger the one-shot bloom on every tap, then let it fade out
+    lockBtn.classList.remove('lk-bloom');
+    void lockBtn.offsetWidth;            // force reflow so the animation restarts
+    lockBtn.classList.add('lk-bloom');
+    toggleLock();
+  });
+  document.querySelectorAll('.mobile-link').forEach(a => a.addEventListener('click', () => toggleLock(false)));
+
+  // ── ETA drift ──
+  const etaEl = document.getElementById('eta');
+  const techsEl = document.getElementById('techs');
+  const fillEl = document.getElementById('etaFill');
+  let eta = 14, techs = 4;
+  function tick() {
+    eta = Math.max(11, Math.min(24, eta + (Math.random() < .5 ? -1 : 1)));
+    techs = Math.max(2, Math.min(7, techs + (Math.random() < .5 ? -1 : 1)));
+    etaEl.textContent = eta;
+    techsEl.textContent = techs;
+    fillEl.style.width = (((24 - eta) / (24 - 11)) * 100) + '%';
+  }
+  setInterval(tick, 5800);
+  tick();
+
+  // ── Service finder ──
+  const PLANS = {
+    home:   { label:'House / Apt lockout',  eta:'15 min', price:'$65–$95',  steps:['Stay near the door — tech will text on arrival','Have ID matching the address ready','Door opens in 5–10 minutes, no drilling on standard locks'] },
+    car:    { label:'Car / Truck lockout',  eta:'18 min', price:'$75–$135', steps:['Confirm vehicle make, model, year','Tech brings programmer for transponder keys','If keys are inside, we\'ll wait for you to verify ownership'] },
+    office: { label:'Office lockout',       eta:'22 min', price:'$135–$220',steps:['Bring proof of business affiliation','After-hours rate applies before 7am / after 7pm','Master keys can be cut on-site'] },
+    safe:   { label:'Safe lockout',         eta:'By appt',price:'$185+',    steps:['Photo of make/model speeds the quote','Most electronic safes open without drilling','Most mechanical safes do too — we manipulate, not destroy'] },
+  };
+  const planLabel = document.getElementById('planLabel');
+  const planEta = document.getElementById('planEta');
+  const planPrice = document.getElementById('planPrice');
+  const planList = document.getElementById('planList');
+  function renderPlan(key) {
+    const p = PLANS[key];
+    planLabel.textContent = p.label;
+    planEta.textContent = p.eta;
+    planPrice.textContent = p.price;
+    planList.innerHTML = p.steps.map((s, i) => `
+      <li class="flex gap-3 items-baseline font-body" style="font-size:14px;line-height:1.5;">
+        <span class="font-mono" style="background:#EDEDED;color:#1A1A1A;padding:2px 6px;font-size:10px;font-weight:700;letter-spacing:.1em;">${i+1}</span>
+        <span>${s}</span>
+      </li>`).join('');
+  }
+  document.querySelectorAll('[data-finder]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-finder]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderPlan(btn.dataset.finder);
+    });
+  });
+  renderPlan('home');
+
+  // ── Postal-code formatter (Canadian A0A 0A0) ──
+  // Position pattern: [Letter][Digit][Letter] [Digit][Letter][Digit]
+  function formatPostal(raw) {
+    const cleaned = (raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+    let out = '';
+    for (let i = 0; i < cleaned.length; i++) {
+      const c = cleaned[i];
+      const expectLetter = (i === 0 || i === 2 || i === 4);
+      if (expectLetter && !/[A-Z]/.test(c)) break;
+      if (!expectLetter && !/[0-9]/.test(c)) break;
+      if (i === 3) out += ' ';
+      out += c;
+    }
+    return out;
+  }
+  const POSTAL_RX = /^[A-Z]\d[A-Z]\s\d[A-Z]\d$/;
+  const isValidPostal = (v) => POSTAL_RX.test(v);
+
+  // ── Phone formatter (NANP (xxx) xxx-xxxx) ──
+  function formatPhone(raw) {
+    const d = (raw || '').replace(/\D/g, '').slice(0, 10);
+    if (d.length === 0) return '';
+    if (d.length <= 3) return '(' + d;
+    if (d.length <= 6) return '(' + d.slice(0, 3) + ') ' + d.slice(3);
+    return '(' + d.slice(0, 3) + ') ' + d.slice(3, 6) + '-' + d.slice(6);
+  }
+  const PHONE_RX = /^\(\d{3}\) \d{3}-\d{4}$/;
+  const isValidPhone = (v) => PHONE_RX.test(v);
+
+  function clearError(input) {
+    input.classList.remove('invalid');
+    const errEl = document.getElementById(input.id + '-error');
+    if (errEl) errEl.classList.remove('show');
+  }
+  function showError(input) {
+    input.classList.add('invalid');
+    const errEl = document.getElementById(input.id + '-error');
+    if (errEl) errEl.classList.add('show');
+  }
+
+  // Bind formatters to all marked inputs (live format + on-blur validation)
+  document.querySelectorAll('input[data-format="postal"]').forEach(input => {
+    input.addEventListener('input', (e) => {
+      e.target.value = formatPostal(e.target.value);
+      clearError(e.target);
+    });
+    input.addEventListener('blur', (e) => {
+      if (e.target.value && !isValidPostal(e.target.value)) showError(e.target);
+    });
+  });
+  document.querySelectorAll('input[data-format="phone"]').forEach(input => {
+    input.addEventListener('input', (e) => {
+      e.target.value = formatPhone(e.target.value);
+      clearError(e.target);
+    });
+    input.addEventListener('blur', (e) => {
+      if (e.target.value && !isValidPhone(e.target.value)) showError(e.target);
+    });
+  });
+
+  // ── ZIP / Postal coverage checker ──
+  const zipForm = document.getElementById('zipForm');
+  const zipInput = document.getElementById('zipInput');
+  const zipResult = document.getElementById('zipResult');
+  const COVERED = ['M5V','M5H','M5J','M5K','M5L','M4W','M4V','M6G','M6H','M6J','M6K','M5T','M5A','M5B','M5C','M5E','M5G','M5R','M5S','M5X'];
+  const GTA_FRINGE_FSA = ['L4W','L4X','L4Y','L4Z','L5A','L5B','L5C','L5R','L6A','L6B','L6C','L7A','L7B','M9A','M9B','M9C','M9R','M9V','M9W'];
+
+  function renderZipPanel({ tone, title, body }) {
+    const colors = {
+      bad:   { border:'#ff5d3b', tint:'rgba(255,93,59,.10)', iconStroke:'#ff5d3b' },
+      good:  { border:'#5cd97a', tint:'rgba(92,217,122,.12)', iconStroke:'#5cd97a' },
+      warn:  { border:'#f4c20a', tint:'rgba(244,194,10,.08)', iconStroke:'#f4c20a' },
+      out:   { border:'#3a3a3e', tint:'transparent',           iconStroke:'#EDEDED' },
+    }[tone];
+    const icon = {
+      bad:  '<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v.5"/>',
+      good: '<path d="M4 12l5 5 11-12"/>',
+      warn: '<path d="M12 21s7-6 7-12a7 7 0 10-14 0c0 6 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/>',
+      out:  '<path d="M5 5l14 14M19 5L5 19"/>',
+    }[tone];
+    return `<div style="margin-top:12px;padding:14px 16px;border:2px solid ${colors.border};background:${colors.tint};">
+      <div class="flex items-center gap-2.5">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${colors.iconStroke}" stroke-width="2.4">${icon}</svg>
+        <div class="font-display uppercase" style="font-size:15px;letter-spacing:.02em;">${title}</div>
+      </div>
+      <div class="font-body" style="font-size:13px;color:#9a9a9a;margin-top:6px;line-height:1.45;">${body}</div>
+    </div>`;
+  }
+
+  zipForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const v = zipInput.value.toUpperCase().trim();
+    if (!isValidPostal(v)) {
+      zipInput.classList.add('invalid');
+      zipResult.innerHTML = renderZipPanel({
+        tone: 'bad',
+        title: 'INVALID FORMAT',
+        body: 'Canadian postal code only — format <strong>A0A 0A0</strong> (e.g. M5V 1A1).'
+      });
+      return;
+    }
+    zipInput.classList.remove('invalid');
+    const fsa = v.slice(0, 3);
+    if (COVERED.includes(fsa)) {
+      zipResult.innerHTML = renderZipPanel({ tone:'good', title:`${v} · COVERED`, body:'In primary service area — Toronto & GTA.' });
+    } else if (GTA_FRINGE_FSA.includes(fsa)) {
+      zipResult.innerHTML = renderZipPanel({ tone:'warn', title:`${v} · FRINGE`, body:'Outside primary area — call for a surcharge quote.' });
+    } else {
+      zipResult.innerHTML = renderZipPanel({ tone:'out', title:`${v} · OUT OF AREA`, body:'Sorry — not in our service zone right now.' });
+    }
+  });
+
+  // ── Contact form (inline validation + inline success) ──
+  document.getElementById('contactForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const form = e.target;
+    let valid = true;
+    const name = document.getElementById('contactName');
+    const phone = document.getElementById('contactPhone');
+    const postal = document.getElementById('contactPostal');
+
+    if (!name.value.trim()) { showError(name); valid = false; } else { clearError(name); }
+    if (!isValidPhone(phone.value)) { showError(phone); valid = false; } else { clearError(phone); }
+    if (!isValidPostal(postal.value)) { showError(postal); valid = false; } else { clearError(postal); }
+
+    if (!valid) return;
+
+    const success = document.getElementById('contactSuccess');
+    success.classList.add('show');
+    form.reset();
+    setTimeout(() => success.classList.remove('show'), 6000);
+  });
+
+  // ── Year ──
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // ── Header scroll-shrink ──
+  const headerEl = document.getElementById('header');
+  const onHeaderScroll = () => {
+    headerEl.classList.toggle('scrolled', window.scrollY > 8);
+  };
+  window.addEventListener('scroll', onHeaderScroll, { passive: true });
+  onHeaderScroll();
+
+  // ── Counter animation ──
+  const observerOpts = { threshold: .5 };
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && !entry.target.classList.contains('counted')) {
+        const target = parseFloat(entry.target.dataset.target);
+        const isDecimal = target !== Math.floor(target);
+        const duration = 2500;
+        const start = Date.now();
+        entry.target.classList.add('counted');
+        const tick = () => {
+          const now = Date.now();
+          const progress = Math.min((now - start) / duration, 1);
+          const val = target * progress;
+          entry.target.textContent = isDecimal ? val.toFixed(1) : Math.floor(val);
+          if (progress < 1) requestAnimationFrame(tick);
+          else entry.target.textContent = target;
+        };
+        tick();
+      }
+    });
+  }, observerOpts);
+  document.querySelectorAll('.counter').forEach(el => observer.observe(el));
+
+  // ── Scroll to top button ──
+  const scrollBtn = document.getElementById('scrollTop');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 400) {
+      scrollBtn.style.opacity = '1';
+      scrollBtn.style.pointerEvents = 'auto';
+    } else {
+      scrollBtn.style.opacity = '0';
+      scrollBtn.style.pointerEvents = 'none';
+    }
+  });
+  scrollBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+</script>
+</body>
+</html>

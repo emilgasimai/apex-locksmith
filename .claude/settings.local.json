@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(node serve.mjs)",
+      "PowerShell(node screenshot.mjs http://localhost:3000 updated-phone phone)",
+      "PowerShell(node screenshot.mjs http://localhost:3000)",
+      "PowerShell(node screenshot.mjs http://localhost:3000 header-top)",
+      "PowerShell(node _scrollshot.mjs http://localhost:3000 header-scrolled 700)",
+      "PowerShell(Get-Content \"C:\\\\Users\\\\NONEOF~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-none-of-ur-business-Desktop-Project-Locksmith\\\\9e078cd2-50c6-4db5-90bc-2feb1e8ecdbe\\\\tasks\\\\ba9cbmtac.output\" -ErrorAction SilentlyContinue; \"---\"; try { $r = Invoke-WebRequest -Uri \"https://busy-donkeys-cover.loca.lt\" -UseBasicParsing -TimeoutSec 20 -Headers @{\"bypass-tunnel-reminder\"=\"true\"}; \"Tunnel OK: HTTP $\\($r.StatusCode\\)\" } catch { \"Retry failed: $\\($_.Exception.Message\\)\" })"
+    ]
+  }
+}
