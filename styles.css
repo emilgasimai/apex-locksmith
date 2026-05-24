@@ -200,15 +200,20 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
 /* lock fades out mid-fall — gone before it lands; fades back in on close */
 .menu-lock-btn.lock-open .menu-lock-ico{ opacity:0;transition:opacity .22s ease .3s; }
 
-/* Mobile menu — absolute overlay so opening does NOT push page content down */
+/* Mobile menu — fixed overlay (sibling of #header, NOT a child) so its
+   backdrop-filter is not nullified by the header's own backdrop-filter
+   creating a compositing isolation when scrolled. */
 .mobile-menu{
-  position:absolute;top:100%;left:0;right:0;
-  z-index:5;
+  position:fixed;top:64px;left:0;right:0;
+  z-index:999;
   max-height:0;overflow:hidden;
-  transition:max-height .45s cubic-bezier(.2,.8,.2,1), opacity .3s ease;
+  transition:max-height .45s cubic-bezier(.2,.8,.2,1), opacity .3s ease, top .35s cubic-bezier(.2,.7,.3,1);
   opacity:0;
+  pointer-events:none;
 }
-.mobile-menu.open{max-height:520px;opacity:1;}
+.mobile-menu.open{max-height:520px;opacity:1;pointer-events:auto;}
+/* When the header shrinks on scroll, follow it down. */
+#header.scrolled ~ #mobileMenu{ top:56px; }
 
 /* Hide scrollbars on horizontal scroll */
 .no-scrollbar::-webkit-scrollbar{display:none}
