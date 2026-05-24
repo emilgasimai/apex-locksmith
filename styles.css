@@ -84,7 +84,9 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
   display:flex;gap:16px;overflow-x:auto;overscroll-behavior-x:contain;scroll-behavior:smooth;
   cursor:grab;
   user-select:none;-webkit-user-select:none;-ms-user-select:none;
-  touch-action:pan-x;
+  /* pan-x for horizontal carousel scroll, pan-y so a mostly-vertical
+     finger drag scrolls the page instead of getting trapped on a card. */
+  touch-action:pan-x pan-y;
 }
 .svc-track.dragging{scroll-behavior:auto;cursor:grabbing;}
 /* Make the cards feel like part of the draggable surface — grab on hover,
