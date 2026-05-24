@@ -1,0 +1,713 @@
+// ── Lock icon dropdown ──
+const lockBtn = document.getElementById('lockBtn');
+const lockSvg = document.getElementById('lockSvg');
+const mobileMenu = document.getElementById('mobileMenu');
+let isOpen = false;
+
+function toggleLock(forceState) {
+  isOpen = typeof forceState === 'boolean' ? forceState : !isOpen;
+  lockBtn.classList.toggle('lock-open', isOpen);
+  lockSvg.classList.toggle('lock-open', isOpen);
+  mobileMenu.classList.toggle('open', isOpen);
+  lockBtn.setAttribute('aria-expanded', String(isOpen));
+}
+lockBtn.addEventListener('click', () => {
+  // retrigger the one-shot bloom on every tap, then let it fade out
+  lockBtn.classList.remove('lk-bloom');
+  void lockBtn.offsetWidth;            // force reflow so the animation restarts
+  lockBtn.classList.add('lk-bloom');
+  toggleLock();
+});
+document.querySelectorAll('.mobile-link').forEach(a => a.addEventListener('click', () => toggleLock(false)));
+
+// ── ETA drift ──
+const etaEl = document.getElementById('eta');
+const techsEl = document.getElementById('techs');
+const fillEl = document.getElementById('etaFill');
+let eta = 14, techs = 4;
+function tick() {
+  eta = Math.max(11, Math.min(24, eta + (Math.random() < .5 ? -1 : 1)));
+  techs = Math.max(2, Math.min(7, techs + (Math.random() < .5 ? -1 : 1)));
+  etaEl.textContent = eta;
+  techsEl.textContent = techs;
+  fillEl.style.width = (((24 - eta) / (24 - 11)) * 100) + '%';
+}
+setInterval(tick, 5800);
+tick();
+
+// ── Service finder ──
+const PLANS = {
+  home:   { label:'House / Apt lockout',  eta:'15 min',  steps:['Stay near the door — tech will text on arrival','Have ID matching the address ready','Door opens in 5–10 minutes, no drilling on standard locks'] },
+  car:    { label:'Car / Truck lockout',  eta:'18 min',  steps:['Confirm vehicle make, model, year','Tech brings programmer for transponder keys','If keys are inside, we\'ll wait for you to verify ownership'] },
+  office: { label:'Office lockout',       eta:'22 min',  steps:['Bring proof of business affiliation','After-hours rate applies before 7am / after 7pm','Master keys can be cut on-site'] },
+  safe:   { label:'Safe lockout',         eta:'By appt', steps:['Photo of make/model speeds the quote','Most electronic safes open without drilling','Most mechanical safes do too — we manipulate, not destroy'] },
+};
+const planLabel = document.getElementById('planLabel');
+const planEta = document.getElementById('planEta');
+const planList = document.getElementById('planList');
+function renderPlan(key) {
+  const p = PLANS[key];
+  planLabel.textContent = p.label;
+  planEta.textContent = p.eta;
+  planList.innerHTML = p.steps.map((s, i) => `
+    <li class="flex gap-3 items-baseline font-body" style="font-size:14px;line-height:1.5;">
+      <span class="font-mono" style="background:#EDEDED;color:#1A1A1A;padding:2px 6px;font-size:10px;font-weight:700;letter-spacing:.1em;">${i+1}</span>
+      <span>${s}</span>
+    </li>`).join('');
+}
+document.querySelectorAll('[data-finder]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-finder]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderPlan(btn.dataset.finder);
+  });
+});
+renderPlan('home');
+
+// ── Postal-code formatter (Canadian A0A 0A0) ──
+// Position pattern: [Letter][Digit][Letter] [Digit][Letter][Digit]
+function formatPostal(raw) {
+  const cleaned = (raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+  let out = '';
+  for (let i = 0; i < cleaned.length; i++) {
+    const c = cleaned[i];
+    const expectLetter = (i === 0 || i === 2 || i === 4);
+    if (expectLetter && !/[A-Z]/.test(c)) break;
+    if (!expectLetter && !/[0-9]/.test(c)) break;
+    if (i === 3) out += ' ';
+    out += c;
+  }
+  return out;
+}
+const POSTAL_RX = /^[A-Z]\d[A-Z]\s\d[A-Z]\d$/;
+const isValidPostal = (v) => POSTAL_RX.test(v);
+
+// ── Phone formatter (NANP (xxx) xxx-xxxx) ──
+function formatPhone(raw) {
+  const d = (raw || '').replace(/\D/g, '').slice(0, 10);
+  if (d.length === 0) return '';
+  if (d.length <= 3) return '(' + d;
+  if (d.length <= 6) return '(' + d.slice(0, 3) + ') ' + d.slice(3);
+  return '(' + d.slice(0, 3) + ') ' + d.slice(3, 6) + '-' + d.slice(6);
+}
+const PHONE_RX = /^\(\d{3}\) \d{3}-\d{4}$/;
+const isValidPhone = (v) => PHONE_RX.test(v);
+
+function clearError(input) {
+  input.classList.remove('invalid');
+  const errEl = document.getElementById(input.id + '-error');
+  if (errEl) errEl.classList.remove('show');
+}
+function showError(input) {
+  input.classList.add('invalid');
+  const errEl = document.getElementById(input.id + '-error');
+  if (errEl) errEl.classList.add('show');
+}
+
+// Bind formatters to all marked inputs (live format + on-blur validation)
+document.querySelectorAll('input[data-format="postal"]').forEach(input => {
+  input.addEventListener('input', (e) => {
+    e.target.value = formatPostal(e.target.value);
+    clearError(e.target);
+  });
+  input.addEventListener('blur', (e) => {
+    if (e.target.value && !isValidPostal(e.target.value)) showError(e.target);
+  });
+});
+document.querySelectorAll('input[data-format="phone"]').forEach(input => {
+  input.addEventListener('input', (e) => {
+    e.target.value = formatPhone(e.target.value);
+    clearError(e.target);
+  });
+  input.addEventListener('blur', (e) => {
+    if (e.target.value && !isValidPhone(e.target.value)) showError(e.target);
+  });
+});
+
+// ── ZIP / Postal coverage checker ──
+const zipForm = document.getElementById('zipForm');
+const zipInput = document.getElementById('zipInput');
+const zipResult = document.getElementById('zipResult');
+// Every Toronto FSA starts with "M" (covers Toronto, North York, Scarborough,
+// Etobicoke, East York, York) — all covered. Plus the 905-belt GTA cities below.
+const GTA_905 = [
+  // Mississauga
+  'L4T','L4V','L4W','L4X','L4Y','L4Z','L5A','L5B','L5C','L5E','L5G','L5H','L5J','L5K','L5L','L5M','L5N','L5P','L5R','L5S','L5T','L5V','L5W',
+  // Brampton
+  'L6P','L6R','L6S','L6T','L6V','L6W','L6X','L6Y','L6Z','L7A',
+  // Vaughan / Woodbridge / Maple / Concord / Thornhill
+  'L4H','L4J','L4K','L4L','L6A',
+  // Markham / Unionville
+  'L3P','L3R','L3S','L3T','L6B','L6C','L6E','L6G',
+  // Richmond Hill
+  'L4B','L4C','L4E','L4S',
+  // Aurora / Newmarket / Stouffville / King City
+  'L4G','L3X','L3Y','L4A','L7B',
+  // Pickering / Ajax / Whitby / Oshawa (Durham)
+  'L1V','L1W','L1X','L1Y','L1S','L1T','L1Z','L1M','L1N','L1P','L1R','L1G','L1H','L1J','L1K','L1L',
+  // Oakville / Burlington / Milton (Halton)
+  'L6H','L6J','L6K','L6L','L6M','L7L','L7M','L7N','L7P','L7R','L7S','L7T','L9E','L9T',
+  // Caledon / Halton Hills / Bolton / Bradford
+  'L7C','L7E','L7K','L7G','L7J','L3Z',
+];
+const isCoveredFSA = (fsa) => fsa[0] === 'M' || GTA_905.includes(fsa);
+
+function renderZipPanel({ tone, title, body }) {
+  const colors = {
+    bad:   { border:'#ff5d3b', tint:'rgba(255,93,59,.10)', iconStroke:'#ff5d3b' },
+    good:  { border:'#5cd97a', tint:'rgba(92,217,122,.12)', iconStroke:'#5cd97a' },
+    warn:  { border:'#f4c20a', tint:'rgba(244,194,10,.08)', iconStroke:'#f4c20a' },
+    out:   { border:'#3a3a3e', tint:'transparent',           iconStroke:'#EDEDED' },
+  }[tone];
+  const icon = {
+    bad:  '<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v.5"/>',
+    good: '<path d="M4 12l5 5 11-12"/>',
+    warn: '<path d="M12 21s7-6 7-12a7 7 0 10-14 0c0 6 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/>',
+    out:  '<path d="M5 5l14 14M19 5L5 19"/>',
+  }[tone];
+  return `<div style="margin-top:12px;padding:14px 16px;border:2px solid ${colors.border};background:${colors.tint};">
+    <div class="flex items-center gap-2.5">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${colors.iconStroke}" stroke-width="2.4">${icon}</svg>
+      <div class="font-display uppercase" style="font-size:15px;letter-spacing:.02em;">${title}</div>
+    </div>
+    <div class="font-body" style="font-size:13px;color:#9a9a9a;margin-top:6px;line-height:1.45;">${body}</div>
+  </div>`;
+}
+
+zipForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const v = zipInput.value.toUpperCase().trim();
+  if (!isValidPostal(v)) {
+    zipInput.classList.add('invalid');
+    zipResult.innerHTML = renderZipPanel({
+      tone: 'bad',
+      title: 'INVALID FORMAT',
+      body: 'Canadian postal code only — format <strong>A0A 0A0</strong> (e.g. M5V 1A1).'
+    });
+    return;
+  }
+  zipInput.classList.remove('invalid');
+  const fsa = v.slice(0, 3);
+  if (isCoveredFSA(fsa)) {
+    zipResult.innerHTML = renderZipPanel({ tone:'good', title:`${v} · COVERED`, body:'In our service area — Toronto & the GTA. Call dispatch and we\'ll roll a tech your way.' });
+  } else {
+    zipResult.innerHTML = renderZipPanel({ tone:'out', title:`${v} · OUTSIDE GTA`, body:'That code is outside our Toronto & GTA service zone right now.' });
+  }
+});
+
+// ── Zone Check — "Use my location" + inline map ──
+// Uses Leaflet (loaded via CDN in index.html) for the map and Nominatim
+// (free, no API key) for reverse-geocoding. Theme: dark tiles + cyan accents.
+(function () {
+  const useLocBtn   = document.getElementById('useMyLocBtn');
+  const mapWrap     = document.getElementById('zoneMapWrap');
+  const mapEl       = document.getElementById('zoneMap');
+  const districtEl  = document.getElementById('zoneDistrict');
+  const statusEl    = document.getElementById('zoneGeoStatus');
+  if (!useLocBtn || !mapWrap || !mapEl) return;
+
+  const defaultLabel = useLocBtn.querySelector('.zone-loc-label').textContent;
+  let map = null, marker = null;
+
+  function setStatus(msg) {
+    statusEl.textContent = msg || '';
+    statusEl.classList.toggle('show', !!msg);
+  }
+  function setLoading(on) {
+    useLocBtn.disabled = !!on;
+    useLocBtn.classList.toggle('loading', !!on);
+    useLocBtn.querySelector('.zone-loc-label').textContent = on ? 'LOCATING…' : defaultLabel;
+  }
+  function renderDistrict(name) {
+    if (!name) { districtEl.style.display = 'none'; return; }
+    districtEl.style.display = 'flex';
+    districtEl.innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#27E0F5" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0;">
+        <path d="M12 21s7-7 7-12a7 7 0 10-14 0c0 5 7 12 7 12z"/><circle cx="12" cy="9" r="2.6"/>
+      </svg>
+      <div class="flex flex-col gap-0.5">
+        <span class="zone-district-tag">DETECTED DISTRICT</span>
+        <span class="zone-district-name">${name}</span>
+      </div>`;
+  }
+
+  function ensureMap(lat, lon) {
+    if (typeof L === 'undefined') return false;
+    if (!map) {
+      map = L.map(mapEl, {
+        zoomControl: false,
+        attributionControl: true,
+        scrollWheelZoom: false,
+        dragging: true,
+        doubleClickZoom: false,
+        keyboard: false,
+      }).setView([lat, lon], 14);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 19,
+        attribution: '© OSM · CARTO',
+      }).addTo(map);
+    } else {
+      map.setView([lat, lon], 14);
+    }
+    const icon = L.divIcon({
+      className: 'zone-pin-wrap',
+      html: '<div class="zone-map-pin"></div>',
+      iconSize: [18, 18],
+      iconAnchor: [9, 9],
+    });
+    if (marker) marker.remove();
+    marker = L.marker([lat, lon], { icon }).addTo(map);
+    return true;
+  }
+
+  async function reverseGeocode(lat, lon) {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`;
+    const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+    if (!res.ok) throw new Error('reverse geocode failed');
+    return res.json();
+  }
+
+  useLocBtn.addEventListener('click', () => {
+    if (!('geolocation' in navigator)) {
+      setStatus('Location not available in this browser — please enter your postal code manually.');
+      return;
+    }
+    if (typeof L === 'undefined') {
+      setStatus('Map library still loading — try again in a moment.');
+      return;
+    }
+    setStatus('');
+    setLoading(true);
+
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        const { latitude: lat, longitude: lon } = coords;
+        mapWrap.classList.add('open');
+        mapWrap.setAttribute('aria-hidden', 'false');
+        ensureMap(lat, lon);
+        // Wait for the expand transition to settle, then tell Leaflet to recalc.
+        setTimeout(() => { if (map) map.invalidateSize(); }, 560);
+
+        try {
+          const data = await reverseGeocode(lat, lon);
+          const addr = data.address || {};
+          const postal = (addr.postcode || '').toUpperCase().replace(/\s+/g, '');
+          if (postal) {
+            zipInput.value = formatPostal(postal);
+            clearError(zipInput);
+          }
+          const district =
+            addr.suburb || addr.quarter || addr.city_district ||
+            addr.neighbourhood || addr.town || addr.city || addr.county || '';
+          renderDistrict(district || 'Greater Toronto Area');
+        } catch (_err) {
+          setStatus('Could not look up postal code — please enter it manually above.');
+        } finally {
+          setLoading(false);
+        }
+      },
+      (err) => {
+        setLoading(false);
+        if (err.code === err.PERMISSION_DENIED) {
+          setStatus('Location access denied — please enter your postal code manually.');
+        } else if (err.code === err.POSITION_UNAVAILABLE) {
+          setStatus('Position unavailable — please enter your postal code manually.');
+        } else if (err.code === err.TIMEOUT) {
+          setStatus('Location timed out — please enter your postal code manually.');
+        } else {
+          setStatus('Could not get your location — please enter your postal code manually.');
+        }
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 }
+    );
+  });
+})();
+
+// ── Contact form (inline validation + inline success) ──
+document.getElementById('contactForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const form = e.target;
+  let valid = true;
+  const name = document.getElementById('contactName');
+  const phone = document.getElementById('contactPhone');
+  const postal = document.getElementById('contactPostal');
+
+  if (!name.value.trim()) { showError(name); valid = false; } else { clearError(name); }
+  if (!isValidPhone(phone.value)) { showError(phone); valid = false; } else { clearError(phone); }
+  if (!isValidPostal(postal.value)) { showError(postal); valid = false; } else { clearError(postal); }
+
+  if (!valid) return;
+
+  const success = document.getElementById('contactSuccess');
+  success.classList.add('show');
+  form.reset();
+  setTimeout(() => success.classList.remove('show'), 6000);
+});
+
+// ── Send a Note — char-limit (250, spaces excluded) + live counter + toast ──
+(function () {
+  const noteEl     = document.getElementById('contactNote');
+  const counterEl  = document.getElementById('noteCounter');
+  const counterNum = document.getElementById('noteCounterNum');
+  const toastEl    = document.getElementById('noteToast');
+  if (!noteEl || !counterEl || !counterNum) return;
+
+  const LIMIT = 250;
+  const WARN_AT = 180;   // 180–229 → yellow
+  const DANGER_AT = 230; // 230–250 → red
+  let toastTimer = null;
+
+  const countNonSpace = (s) => s.replace(/\s+/g, '').length;
+
+  // Walk through `s` char-by-char, keep spaces freely, stop accepting
+  // non-space chars once we hit `limit`. Returns the truncated value
+  // and a flag indicating whether truncation happened.
+  function truncateToLimit(s, limit) {
+    let count = 0, out = '';
+    let truncated = false;
+    for (const ch of s) {
+      if (/\s/.test(ch)) {
+        out += ch;
+      } else if (count < limit) {
+        out += ch;
+        count++;
+      } else {
+        truncated = true;
+      }
+    }
+    return { out, truncated };
+  }
+
+  function updateCounterUI() {
+    const n = countNonSpace(noteEl.value);
+    counterNum.textContent = n;
+    counterEl.classList.remove('warn', 'danger');
+    if (n >= DANGER_AT) counterEl.classList.add('danger');
+    else if (n >= WARN_AT) counterEl.classList.add('warn');
+  }
+
+  function showToast(msg) {
+    if (!toastEl) return;
+    if (msg) toastEl.querySelector('#noteToastMsg').textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2500);
+  }
+
+  noteEl.addEventListener('input', () => {
+    const before = noteEl.value;
+    const { out, truncated } = truncateToLimit(before, LIMIT);
+    if (truncated) {
+      // Preserve caret at end of accepted text
+      noteEl.value = out;
+      try { noteEl.setSelectionRange(out.length, out.length); } catch (_) {}
+      // Brief shake + red flash on the input itself for tactile feedback
+      noteEl.classList.remove('note-shake');
+      void noteEl.offsetWidth; // force reflow to retrigger animation
+      noteEl.classList.add('note-shake');
+      setTimeout(() => noteEl.classList.remove('note-shake'), 320);
+      showToast('You have reached the maximum character limit (250)');
+    }
+    updateCounterUI();
+  });
+
+  // Initialize counter (zero state)
+  updateCounterUI();
+})();
+
+// ── Year ──
+const yearEl = document.getElementById('year');
+if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+// ── Header scroll-shrink ──
+const headerEl = document.getElementById('header');
+const onHeaderScroll = () => {
+  headerEl.classList.toggle('scrolled', window.scrollY > 8);
+};
+window.addEventListener('scroll', onHeaderScroll, { passive: true });
+onHeaderScroll();
+
+// ── Counter animation ──
+const observerOpts = { threshold: .5 };
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting && !entry.target.classList.contains('counted')) {
+      const target = parseFloat(entry.target.dataset.target);
+      const isDecimal = target !== Math.floor(target);
+      const duration = 2500;
+      const start = Date.now();
+      entry.target.classList.add('counted');
+      const tickFn = () => {
+        const now = Date.now();
+        const progress = Math.min((now - start) / duration, 1);
+        const val = target * progress;
+        entry.target.textContent = isDecimal ? val.toFixed(1) : Math.floor(val);
+        if (progress < 1) requestAnimationFrame(tickFn);
+        else entry.target.textContent = target;
+      };
+      tickFn();
+    }
+  });
+}, observerOpts);
+document.querySelectorAll('.counter').forEach(el => observer.observe(el));
+
+// ── Scroll to top button ──
+const scrollBtn = document.getElementById('scrollTop');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 400) {
+    scrollBtn.style.opacity = '1';
+    scrollBtn.style.pointerEvents = 'auto';
+  } else {
+    scrollBtn.style.opacity = '0';
+    scrollBtn.style.pointerEvents = 'none';
+  }
+});
+scrollBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+// ── Hero animated particle background ──
+// Loads locksmith-themed SVGs from bg_icons/, drops ~28 cyan particles into
+// the hero, drifts + rotates each one, and gives a random 30% a soft glow.
+// Uses requestAnimationFrame, pauses on hidden tabs, opts out under
+// prefers-reduced-motion (handled in CSS).
+(function () {
+  const container = document.getElementById('heroParticles');
+  if (!container) return;
+  if (typeof _ === 'undefined') { console.warn('[hero-particles] lodash missing'); return; }
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const ICON_FILES = [
+    'fluent--door-16-filled.svg',
+    'fluent--door-16-regular.svg',
+    'game-icons--car-key.svg',
+    'hugeicons--drill.svg',
+    'icon-park-solid--door-handle.svg',
+    'jam--hammer-f.svg',
+    'key-7-svgrepo-com.svg',
+    'key-symbol-in-horizontal-position-svgrepo-com.svg',
+    'material-symbols--lock.svg',
+    'mdi--car-door.svg',
+    'mingcute--hammer-fill.svg',
+    'solar--key-linear.svg',
+    'streamline--wrench.svg',
+    'tabler--key.svg',
+    'uim--lock.svg',
+    'zondicons--key.svg',
+  ];
+
+  const COUNT       = 95;
+  const SIZE_MIN    = 20, SIZE_MAX = 60;
+  const OPACITY_MIN = 0.10, OPACITY_MAX = 0.18;
+  const DRIFT_MIN   = 6, DRIFT_MAX = 22;        // px/sec
+  const ROT_GROUPS  = {                         // ms for one full revolution
+    fast:   [8000,  10000],
+    medium: [15000, 20000],
+    slow:   [25000, 35000],
+  };
+  const PULSE_FRACTION = 0.30;
+  const WRAP_PAD       = 80;                    // off-screen buffer before wrapping
+
+  // Strip hardcoded black colours so the SVG inherits the cyan currentColor
+  // set on the container. Leaves explicit non-black colours alone.
+  function normalizeSvg(text) {
+    return text
+      .replace(/fill="#?000(?:000)?"/gi,   'fill="currentColor"')
+      .replace(/stroke="#?000(?:000)?"/gi, 'stroke="currentColor"')
+      .replace(/fill="black"/gi,           'fill="currentColor"')
+      .replace(/stroke="black"/gi,         'stroke="currentColor"')
+      .replace(/fill\s*:\s*(?:#000(?:000)?|black|rgb\(\s*0\s*,\s*0\s*,\s*0\s*\))/gi, 'fill: currentColor')
+      .replace(/stroke\s*:\s*(?:#000(?:000)?|black|rgb\(\s*0\s*,\s*0\s*,\s*0\s*\))/gi, 'stroke: currentColor');
+  }
+
+  Promise.all(ICON_FILES.map(name =>
+    fetch('bg_icons/' + name)
+      .then(r => (r.ok ? r.text() : ''))
+      .then(t => (t ? normalizeSvg(t) : ''))
+      .catch(() => '')
+  )).then(svgs => {
+    svgs = svgs.filter(Boolean);
+    if (!svgs.length) { console.warn('[hero-particles] no SVGs loaded'); return; }
+    init(svgs);
+  });
+
+  function makeParticle(svgs, W, H) {
+    const el   = document.createElement('div');
+    const spin = document.createElement('div');
+    el.className   = 'hero-particle';
+    spin.className = 'hero-particle-spin';
+    spin.innerHTML = _.sample(svgs);
+
+    const size = _.random(SIZE_MIN, SIZE_MAX);
+    el.style.width   = size + 'px';
+    el.style.height  = size + 'px';
+    el.style.opacity = _.random(OPACITY_MIN, OPACITY_MAX, true).toFixed(3);
+
+    // 30% pulse — apply to outer wrapper so drop-shadow cascades to the SVG
+    if (Math.random() < PULSE_FRACTION) {
+      el.classList.add('pulse');
+      el.style.animationDelay = '-' + _.random(0, 2400) + 'ms';
+    }
+
+    // Rotation: random speed group, random direction (reverse half the time)
+    const group   = _.sample(['fast', 'medium', 'slow']);
+    const [pMin, pMax] = ROT_GROUPS[group];
+    spin.style.animationDuration  = _.random(pMin, pMax) + 'ms';
+    spin.style.animationDirection = Math.random() < 0.5 ? 'normal' : 'reverse';
+
+    // Drift: random angle, random speed within the band
+    const speed = _.random(DRIFT_MIN, DRIFT_MAX, true);
+    const angle = Math.random() * Math.PI * 2;
+    const vx    = Math.cos(angle) * speed;
+    const vy    = Math.sin(angle) * speed;
+
+    const x = _.random(0, W);
+    const y = _.random(0, H);
+    el.style.transform = 'translate3d(' + x + 'px,' + y + 'px,0)';
+    el.appendChild(spin);
+
+    return { el, x, y, vx, vy };
+  }
+
+  function init(svgs) {
+    let W = container.clientWidth;
+    let H = container.clientHeight;
+    if (!W || !H) return;
+
+    const particles = _.times(COUNT, () => makeParticle(svgs, W, H));
+    const frag = document.createDocumentFragment();
+    particles.forEach(p => frag.appendChild(p.el));
+    container.appendChild(frag);
+
+    // Track size changes (window resize, hero re-flow, mobile rotate)
+    const ro = new ResizeObserver(() => {
+      W = container.clientWidth;
+      H = container.clientHeight;
+    });
+    ro.observe(container);
+
+    let last    = performance.now();
+    let running = true;
+    let rafId   = 0;
+
+    function frame(now) {
+      // Cap dt so a long pause doesn't fling everything off-screen at once
+      const dt = Math.min(60, now - last);
+      last = now;
+      const dts = dt / 1000;
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        p.x += p.vx * dts;
+        p.y += p.vy * dts;
+        if (p.x < -WRAP_PAD)     p.x = W + WRAP_PAD;
+        else if (p.x > W + WRAP_PAD) p.x = -WRAP_PAD;
+        if (p.y < -WRAP_PAD)     p.y = H + WRAP_PAD;
+        else if (p.y > H + WRAP_PAD) p.y = -WRAP_PAD;
+        p.el.style.transform = 'translate3d(' + p.x.toFixed(2) + 'px,' + p.y.toFixed(2) + 'px,0)';
+      }
+      if (running) rafId = requestAnimationFrame(frame);
+    }
+    rafId = requestAnimationFrame(frame);
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        running = false;
+        cancelAnimationFrame(rafId);
+      } else if (!running) {
+        running = true;
+        last = performance.now();
+        rafId = requestAnimationFrame(frame);
+      }
+    });
+  }
+})();
+
+// ── Message FAB (WhatsApp + SMS) toggle ──
+(function () {
+  const fab = document.getElementById('msgFab');
+  if (!fab) return;
+  const btn = document.getElementById('msgFabToggle');
+  if (!btn) return;
+  function close() {
+    fab.classList.remove('open');
+    btn.setAttribute('aria-expanded', 'false');
+  }
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const willOpen = !fab.classList.contains('open');
+    fab.classList.toggle('open', willOpen);
+    btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+  });
+  document.addEventListener('click', (e) => {
+    if (fab.classList.contains('open') && !fab.contains(e.target)) close();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && fab.classList.contains('open')) close();
+  });
+  // Close after picking an option (so the menu doesn't linger on return)
+  fab.querySelectorAll('.msg-fab-opt').forEach(opt => {
+    opt.addEventListener('click', () => close());
+  });
+})();
+
+// ── Services carousel ──
+(function () {
+  const track = document.getElementById('svcTrack');
+  if (!track) return;
+  const slides = Array.from(track.children);
+  const dotsWrap = document.getElementById('svcDots');
+  const prevBtn = document.querySelector('.svc-arrow[data-svc-dir="prev"]');
+  const nextBtn = document.querySelector('.svc-arrow[data-svc-dir="next"]');
+
+  const step = () => slides.length > 1
+    ? slides[1].offsetLeft - slides[0].offsetLeft
+    : slides[0].offsetWidth;
+
+  slides.forEach((_, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'svc-dot';
+    b.setAttribute('aria-label', 'Go to service ' + (i + 1));
+    b.addEventListener('click', () => track.scrollTo({ left: i * step(), behavior: 'smooth' }));
+    dotsWrap.appendChild(b);
+  });
+  const dots = Array.from(dotsWrap.children);
+
+  function update() {
+    const atEnd = track.scrollLeft >= track.scrollWidth - track.clientWidth - 4;
+    let idx = atEnd ? slides.length - 1 : Math.round(track.scrollLeft / step());
+    idx = Math.max(0, Math.min(slides.length - 1, idx));
+    dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+    if (prevBtn) prevBtn.disabled = track.scrollLeft <= 4;
+    if (nextBtn) nextBtn.disabled = atEnd;
+  }
+  if (prevBtn) prevBtn.addEventListener('click', () => track.scrollBy({ left: -step(), behavior: 'smooth' }));
+  if (nextBtn) nextBtn.addEventListener('click', () => track.scrollBy({ left: step(), behavior: 'smooth' }));
+  track.addEventListener('scroll', () => requestAnimationFrame(update), { passive: true });
+  window.addEventListener('resize', update);
+  update();
+
+  // mouse drag-to-scroll (touch uses native scrolling)
+  let down = false, startX = 0, startScroll = 0, moved = false;
+  track.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'mouse' || e.button !== 0) return;
+    down = true; moved = false; startX = e.clientX; startScroll = track.scrollLeft;
+    track.setPointerCapture(e.pointerId);
+    track.classList.add('dragging');
+  });
+  track.addEventListener('pointermove', (e) => {
+    if (!down) return;
+    const dx = e.clientX - startX;
+    if (Math.abs(dx) > 5) moved = true;
+    track.scrollLeft = startScroll - dx;
+  });
+  const endDrag = () => {
+    if (!down) return;
+    down = false;
+    track.classList.remove('dragging');
+    update();
+  };
+  track.addEventListener('pointerup', endDrag);
+  track.addEventListener('pointercancel', endDrag);
+  track.addEventListener('click', (e) => {
+    if (moved) { e.preventDefault(); e.stopPropagation(); }
+  }, true);
+})();

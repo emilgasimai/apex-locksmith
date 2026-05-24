@@ -6,8 +6,11 @@
 <title>Apex Locksmith — Open. Fast. 24/7. Toronto | GTA</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Chakra+Petch:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.10/lodash.min.js"></script>
 <script>
   tailwind.config = {
     theme: {
@@ -33,246 +36,18 @@
     },
   };
 </script>
-<style>
-  *{box-sizing:border-box}
-  html,body{margin:0;padding:0;background:#1A1A1A;color:#EDEDED;font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:clip}
-  /* Fluid type scale */
-  .t-h1{font-size:clamp(36px,7vw,120px);line-height:.85;letter-spacing:-.025em}
-  .t-h2{font-size:clamp(28px,4.5vw,52px);line-height:.95;letter-spacing:-.005em}
-  .t-h3{font-size:clamp(18px,2.2vw,28px);line-height:1;letter-spacing:.01em}
-  .t-phone-xl{font-size:clamp(28px,4.6vw,52px);line-height:1;letter-spacing:-.02em;white-space:nowrap}
-  .t-phone-md{font-size:clamp(20px,3.2vw,30px);line-height:1;letter-spacing:.02em;white-space:nowrap}
-  .t-num-xl{font-size:clamp(40px,6vw,90px);line-height:.9;letter-spacing:-.02em}
-  .t-num-lg{font-size:clamp(32px,5vw,68px);line-height:.9;letter-spacing:-.02em}
-  .t-num-md{font-size:clamp(28px,4vw,52px);line-height:1;letter-spacing:-.02em}
-  .t-body-lg{font-size:clamp(14px,1.5vw,18px);line-height:1.5}
-  .t-body{font-size:clamp(13px,1.3vw,15px);line-height:1.55}
-  .t-cap{font-size:11px;letter-spacing:.22em;text-transform:uppercase}
-  .t-cap-sm{font-size:10px;letter-spacing:.22em;text-transform:uppercase}
-
-  /* Caution stripe pattern — HIDDEN */
-  .caution-stripe{
-    display:none !important;
-  }
-  .hivis-stripe{
-    background-image:repeating-linear-gradient(135deg,#27E0F5 0 10px,#1cb8c9 10px 20px);
-  }
-
-  /* Hazard tag */
-  .hazard{
-    display:inline-block;padding:4px 10px;border:2px solid currentColor;
-    font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;
-    letter-spacing:.22em;text-transform:uppercase;line-height:1;
-  }
-
-  /* Interactive states */
-  a, button { transition: transform .15s cubic-bezier(.2,.7,.3,1.4), background-color .15s ease, color .15s ease, border-color .15s ease, opacity .15s ease; }
-  a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offset:2px; }
-  .btn-hivis:hover { background:#1cb8c9; }
-  .btn-hivis:active { transform:translateY(1px); }
-  .nav-link:hover { color:#27E0F5; }
-  .svc-card:hover { background:#2f2f33; }
-
-  /* Pulse */
-  @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.35} }
-  .pulse-dot { animation:pulse-dot 1.6s ease-in-out infinite; }
-
-  /* ── MENU lock-toggle button (mobile) ── */
-  .menu-lock-btn{
-    position:relative;z-index:5;
-    display:inline-flex;align-items:center;gap:7px;
-    padding:7px 17px 7px 9px;
-    background:#2c2c34;            /* dark by default */
-    color:#27E0F5;                 /* cyan lock + text by default */
-    border:none;cursor:pointer;
-    border-radius:999px !important;
-    font-family:'Archivo Black',sans-serif;font-size:14px;letter-spacing:.06em;
-    box-shadow:0 4px 11px -6px rgba(0,0,0,.6);
-    overflow:visible;
-    transition:transform .15s cubic-bezier(.2,.7,.3,1.4),
-               box-shadow .25s ease, background-color .24s ease, color .2s ease;
-  }
-  .menu-lock-btn.lock-open{ background:#27E0F5;color:#1A1A1A; }   /* active → cyan button, dark content */
-  .menu-lock-btn:active{ transform:translateY(1px); }
-  .menu-lock-btn:focus-visible{ outline:2px solid #27E0F5;outline-offset:3px; }
-  /* hover — cyan-filled highlight + glow */
-  .menu-lock-btn:hover{
-    background:#27E0F5;color:#1A1A1A;
-    box-shadow:0 0 22px rgba(39,224,245,.62), 0 0 9px rgba(39,224,245,.55),
-               0 4px 11px -6px rgba(0,0,0,.6);
-  }
-  /* click bloom — fires once per tap, then fades away (never persistent) */
-  .menu-lock-btn::after{
-    content:"";position:absolute;inset:-45%;
-    border-radius:999px;pointer-events:none;z-index:-1;opacity:0;
-    background:radial-gradient(closest-side, rgba(39,224,245,.72), rgba(39,224,245,0) 78%);
-  }
-  @keyframes bloomPulse{
-    0%  { opacity:0;   transform:scale(.55); }
-    28% { opacity:.95; transform:scale(.95); }
-    100%{ opacity:0;   transform:scale(1.5); }
-  }
-  .menu-lock-btn.lk-bloom::after{ animation:bloomPulse .62s ease-out; }
-  .menu-lock-ico{ width:24px;height:31px;flex-shrink:0;transition:opacity .22s ease; }
-  .menu-lock-ico svg{ width:100%;height:100%;display:block;overflow:visible; }
-  .menu-lock-txt{ line-height:1;padding-top:2px; }
-
-  /* padlock — shackle unlocks (left leg hinged to body), lock falls & vanishes mid-air; swings on hover */
-  .lk-swing{ transform-box:view-box;transform-origin:17px 13px; }
-  .lk-shackle{ transform-box:view-box;transform-origin:11px 20px; }
-  @keyframes lkSwing{
-    0%,100%{ transform:rotate(0deg); }
-    25%{ transform:rotate(7deg); }
-    75%{ transform:rotate(-7deg); }
-  }
-  @keyframes lkUnlock{
-    0%   { transform:rotate(0deg); }
-    100% { transform:rotate(-44deg); }
-  }
-  @keyframes lkFall{
-    0%   { transform:translateY(0); }
-    100% { transform:translateY(32px); }
-  }
-  .menu-lock-btn:hover:not(.lock-open) .lk-swing{ animation:lkSwing 1.4s ease-in-out infinite; }
-  .lock-open .lk-shackle{ animation:lkUnlock .28s cubic-bezier(.34,1.3,.6,1) forwards; }
-  .lock-open .lk-drop{ animation:lkFall .52s cubic-bezier(.55,0,.85,.55) .16s forwards; }
-  /* lock fades out mid-fall — gone before it lands; fades back in on close */
-  .menu-lock-btn.lock-open .menu-lock-ico{ opacity:0;transition:opacity .22s ease .3s; }
-
-  /* Mobile menu animation */
-  .mobile-menu{max-height:0;overflow:hidden;transition:max-height .45s cubic-bezier(.2,.8,.2,1), opacity .3s ease;opacity:0;}
-  .mobile-menu.open{max-height:520px;opacity:1;}
-
-  /* Hide scrollbars on horizontal scroll */
-  .no-scrollbar::-webkit-scrollbar{display:none}
-  .no-scrollbar{scrollbar-width:none}
-
-  /* Logo container */
-  .logo-img{height:48px;width:auto;display:block}
-  @media (max-width: 640px){ .logo-img{height:38px} }
-
-  /* Header — 21st.dev floating-pill style (Apex palette + fonts) */
-  #header{
-    position:sticky;top:0;z-index:1000;width:100%;
-    border-bottom:1px solid transparent;
-    transition:background-color .3s ease, border-color .3s ease;
-  }
-  #headerContent{height:64px;transition:height .35s cubic-bezier(.2,.7,.3,1);}
-  #header .logo-img{height:40px;transition:height .35s cubic-bezier(.2,.7,.3,1);}
-  #header .nav-link{border-radius:9px !important;}
-  #header nav .nav-link:hover{background:#2f2f33;}
-  #header .btn-hivis{border-radius:9px !important;}
-  #mobileMenu{background:#1A1A1A;}
-
-  /* scrolled — glassy */
-  #header.scrolled{
-    background:rgba(26,26,26,.85);
-    -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
-    border-bottom-color:#3a3a3e;
-  }
-  #header.scrolled #headerContent{height:56px;}
-  #header.scrolled .logo-img{height:32px;}
-
-  /* desktop — floating, contained, rounded pill */
-  @media (min-width:768px){
-    #header{
-      max-width:1180px;margin-left:auto;margin-right:auto;
-      border:1px solid transparent;border-radius:12px !important;
-      transition:max-width .4s cubic-bezier(.2,.7,.3,1),
-                 top .4s cubic-bezier(.2,.7,.3,1),
-                 background-color .3s ease, border-color .3s ease,
-                 box-shadow .3s ease;
-    }
-    #header.scrolled{
-      top:16px;max-width:1048px;
-      background:rgba(26,26,26,.62);
-      border-color:#3a3a3e;
-      box-shadow:0 16px 40px -12px rgba(0,0,0,.62), 0 4px 14px -4px rgba(0,0,0,.5);
-    }
-  }
-
-  /* Service finder tile */
-  .finder-tile{cursor:pointer;border:2px solid #3a3a3e;background:#1A1A1A;color:#EDEDED;
-    transition:transform .15s cubic-bezier(.2,.7,.3,1.4),border-color .15s ease,background-color .15s ease,box-shadow .2s ease;}
-  .finder-tile:hover:not(.active){border-color:#27E0F5;background:#202023;transform:translateY(-3px);
-    box-shadow:0 8px 20px -10px rgba(39,224,245,.65);}
-  .finder-tile:hover:not(.active) svg{color:#27E0F5;}
-  .finder-tile:active{transform:translateY(0);}
-  .finder-tile.active{background:#27E0F5;color:#1A1A1A;border-color:#27E0F5;}
-
-  /* Dispatch plan — fixed footprint so it never jumps between services */
-  .dispatch-plan{display:flex;flex-direction:column;min-height:440px;}
-  .dispatch-plan #planList{flex:1 1 auto;}
-  @media(min-width:640px){ .dispatch-plan{min-height:280px;} }
-  @media(min-width:1024px){ .dispatch-plan{min-height:320px;} }
-
-  /* Floating call button — pulsing beacon */
-  @keyframes callRing{
-    0%  {transform:scale(1);opacity:.5;}
-    70% {opacity:0;}
-    100%{transform:scale(2);opacity:0;}
-  }
-  #callFab{
-    position:fixed;right:24px;bottom:84px;z-index:999;
-    width:48px;height:48px;
-    display:flex;align-items:center;justify-content:center;
-    background:#27E0F5;color:#1A1A1A;
-    border-radius:999px !important;
-    box-shadow:0 8px 22px -6px rgba(39,224,245,.7), 0 3px 10px -3px rgba(0,0,0,.6);
-    transition:transform .15s cubic-bezier(.2,.7,.3,1.4), background-color .15s ease;
-  }
-  #callFab::before{
-    content:"";position:absolute;inset:0;z-index:-1;
-    border-radius:999px !important;background:#27E0F5;
-    animation:callRing 1.9s ease-out infinite;
-  }
-  #callFab:hover{background:#1cb8c9;transform:scale(1.07);}
-  #callFab:active{transform:scale(.96);}
-  #callFab:focus-visible{outline:2px solid #27E0F5;outline-offset:3px;}
-
-  /* No-rounded — brutalist */
-  *{border-radius:0 !important}
-
-  /* Section divider */
-  .section-divider{border-top:3px solid #EDEDED;}
-
-  /* Form inputs */
-  input,textarea,select{
-    background:#1A1A1A;color:#EDEDED;border:2px solid #3a3a3e;
-    padding:14px 18px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;width:100%;
-    transition:border-color .15s ease, background-color .15s ease;
-  }
-  input::placeholder,textarea::placeholder{color:#6a6a6e;}
-  input:hover,textarea:hover,select:hover{border-color:#55555a;}
-  input:focus,textarea:focus,select:focus{border-color:#27E0F5;background:#202023;}
-  input.invalid,textarea.invalid{border-color:#ff5d3b;background:rgba(255,93,59,.06);}
-  .form-error{display:none;margin-top:7px;font-family:'Space Grotesk',sans-serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#ff5d3b;font-weight:700;line-height:1.2;}
-  .form-error.show{display:flex;align-items:center;gap:6px;}
-  .form-error::before{content:"";display:inline-block;width:6px;height:6px;background:#ff5d3b;flex-shrink:0;}
-  .form-success{display:none;margin-top:14px;padding:14px 18px;border:2px solid #5cd97a;background:rgba(92,217,122,.10);align-items:center;gap:12px;}
-  .form-success.show{display:flex;}
-
-  /* Progress bar */
-  .eta-bar{height:14px;background:#1A1A1A;position:relative;border:1px solid #3a3a3e;}
-  .eta-fill{position:absolute;inset:0;background-image:repeating-linear-gradient(135deg,#27E0F5 0 10px,#1cb8c9 10px 20px);}
-
-  /* Photo placeholder */
-  .photo-slot{
-    position:relative;width:100%;
-    background-image:repeating-linear-gradient(45deg,#2a2a28 0 7px,#1f1f1d 7px 14px);
-    border:1px dashed rgba(154,154,154,.4);
-  }
-  .photo-slot .label{
-    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;
-    font-family:'Space Grotesk',sans-serif;font-size:11px;letter-spacing:.12em;color:#9a9a9a;text-align:center;
-    text-transform:uppercase;font-weight:600;
-  }
-
-  /* Smooth section scroll */
-  html{scroll-behavior:smooth;}
-</style>
+<link rel="stylesheet" href="styles.css"/>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
 </head>
 <body class="bg-bg text-ink">
+
+<!-- ───── LOADING OVERLAY (Lottie) ───── -->
+<div id="loadingOverlay" role="status" aria-live="polite" aria-label="Loading">
+  <div id="loadingAnim"></div>
+</div>
+
+<!-- TODO: remove test button before production -->
+<button id="testLoadingBtn" type="button" aria-label="Test loading animation">Test Loading</button>
 
 <!-- ───── TOP STRIPE + DISPATCH BAR ───── -->
 <div class="bg-ink text-bg" style="background:#0f0f10;color:#EDEDED;border-top:3px solid #27E0F5;">
@@ -283,7 +58,7 @@
         <span class="hidden xs:inline">ON-DUTY · 24/7</span>
         <span class="xs:hidden">24/7</span>
       </span>
-      <span class="opacity-60 hidden sm:inline">LIC #LSM-7791</span>
+      <span class="opacity-60 hidden sm:inline">LIC # — PENDING</span>
     </div>
     <a href="tel:+14165550000" class="text-hivis font-display flex items-center gap-2 hover:underline" style="font-size:14px;letter-spacing:.06em;">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 3h4l2 5-2 2a12 12 0 005 5l2-2 5 2v4a2 2 0 01-2 2A18 18 0 013 5a2 2 0 012-2z"/></svg>
@@ -301,12 +76,12 @@
 
     <!-- Desktop nav -->
     <nav class="hidden lg:flex items-center gap-1">
-      <a href="#home" class="nav-link" data-nav style="padding:9px 14px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:14px;letter-spacing:.01em;text-decoration:none;color:#EDEDED;">Home</a>
-      <a href="#services" class="nav-link" data-nav style="padding:9px 14px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:14px;letter-spacing:.01em;text-decoration:none;color:#EDEDED;">Services</a>
-      <a href="#about" class="nav-link" data-nav style="padding:9px 14px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:14px;letter-spacing:.01em;text-decoration:none;color:#EDEDED;">About</a>
-      <a href="#reviews" class="nav-link" data-nav style="padding:9px 14px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:14px;letter-spacing:.01em;text-decoration:none;color:#EDEDED;">Reviews</a>
-      <a href="#contact" class="nav-link" data-nav style="padding:9px 14px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:14px;letter-spacing:.01em;text-decoration:none;color:#EDEDED;">Contact</a>
-      <a href="tel:+14165550000" class="btn-hivis ml-2 inline-flex items-center gap-2" style="padding:10px 18px;background:#27E0F5;color:#1A1A1A;text-decoration:none;font-family:'Archivo Black',sans-serif;font-size:13px;letter-spacing:.04em;">
+      <a href="#home" class="nav-link" data-nav style="padding:9px 14px;font-weight:500;font-size:14px;letter-spacing:.01em;text-decoration:none;">Home</a>
+      <a href="#services" class="nav-link" data-nav style="padding:9px 14px;font-weight:500;font-size:14px;letter-spacing:.01em;text-decoration:none;">Services</a>
+      <a href="#about" class="nav-link" data-nav style="padding:9px 14px;font-weight:500;font-size:14px;letter-spacing:.01em;text-decoration:none;">About</a>
+      <a href="#reviews" class="nav-link" data-nav style="padding:9px 14px;font-weight:500;font-size:14px;letter-spacing:.01em;text-decoration:none;">Reviews</a>
+      <a href="#contact" class="nav-link" data-nav style="padding:9px 14px;font-weight:500;font-size:14px;letter-spacing:.01em;text-decoration:none;">Contact</a>
+      <a href="tel:+14165550000" class="btn-hivis call-pulse ml-2 inline-flex items-center gap-2" style="padding:10px 18px;background:#27E0F5;color:#1A1A1A;text-decoration:none;font-family:'Archivo Black',sans-serif;font-size:13px;letter-spacing:.04em;">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 3h4l2 5-2 2a12 12 0 005 5l2-2 5 2v4a2 2 0 01-2 2A18 18 0 013 5a2 2 0 012-2z"/></svg>
         CALL NOW
       </a>
@@ -336,14 +111,14 @@
   </div>
 
   <!-- Mobile menu -->
-  <div id="mobileMenu" class="mobile-menu lg:hidden" style="border-top:1px solid #3a3a3e;">
+  <div id="mobileMenu" class="mobile-menu lg:hidden">
     <nav class="flex flex-col px-4 sm:px-6 py-3 gap-1">
-      <a href="#home" class="mobile-link nav-link" style="padding:12px 12px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:15px;letter-spacing:.01em;text-decoration:none;color:#EDEDED;">Home</a>
-      <a href="#services" class="mobile-link nav-link" style="padding:12px 12px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:15px;letter-spacing:.01em;text-decoration:none;color:#EDEDED;">Services</a>
-      <a href="#about" class="mobile-link nav-link" style="padding:12px 12px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:15px;letter-spacing:.01em;text-decoration:none;color:#EDEDED;">About</a>
-      <a href="#reviews" class="mobile-link nav-link" style="padding:12px 12px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:15px;letter-spacing:.01em;text-decoration:none;color:#EDEDED;">Reviews</a>
-      <a href="#contact" class="mobile-link nav-link" style="padding:12px 12px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:15px;letter-spacing:.01em;text-decoration:none;color:#EDEDED;">Contact</a>
-      <a href="tel:+14165550000" class="btn-hivis mt-2 inline-flex items-center justify-center gap-2" style="padding:14px 18px;background:#27E0F5;color:#1A1A1A;text-decoration:none;font-family:'Archivo Black',sans-serif;font-size:14px;letter-spacing:.04em;">
+      <a href="#home" class="mobile-link nav-link" style="padding:12px 12px;font-weight:500;font-size:15px;letter-spacing:.01em;text-decoration:none;">Home</a>
+      <a href="#services" class="mobile-link nav-link" style="padding:12px 12px;font-weight:500;font-size:15px;letter-spacing:.01em;text-decoration:none;">Services</a>
+      <a href="#about" class="mobile-link nav-link" style="padding:12px 12px;font-weight:500;font-size:15px;letter-spacing:.01em;text-decoration:none;">About</a>
+      <a href="#reviews" class="mobile-link nav-link" style="padding:12px 12px;font-weight:500;font-size:15px;letter-spacing:.01em;text-decoration:none;">Reviews</a>
+      <a href="#contact" class="mobile-link nav-link" style="padding:12px 12px;font-weight:500;font-size:15px;letter-spacing:.01em;text-decoration:none;">Contact</a>
+      <a href="tel:+14165550000" class="btn-hivis call-pulse mt-2 inline-flex items-center justify-center gap-2" style="padding:14px 18px;background:#27E0F5;color:#1A1A1A;text-decoration:none;font-family:'Archivo Black',sans-serif;font-size:14px;letter-spacing:.04em;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 3h4l2 5-2 2a12 12 0 005 5l2-2 5 2v4a2 2 0 01-2 2A18 18 0 013 5a2 2 0 012-2z"/></svg>
         CALL NOW · (416) 555-0000
       </a>
@@ -353,7 +128,9 @@
 
 <!-- ───── HERO ───── -->
 <section id="home" class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14 lg:py-16">
-  <div class="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-8 lg:gap-10">
+  <!-- Animated particle background (locksmith icons) — pure decoration -->
+  <div id="heroParticles" class="hero-particles" aria-hidden="true"></div>
+  <div class="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-8 lg:gap-10 hero-grid">
     <div>
       <div class="flex flex-wrap gap-2 mb-4">
         <span class="hazard" style="color:#1A1A1A;background:#f4c20a;border-color:#1A1A1A;">EMERGENCY · 24/7</span>
@@ -367,15 +144,11 @@
       <p class="font-body t-body-lg" style="color:#9a9a9a;max-width:540px;margin-top:18px;">
         Doors. Cars. Safes. Offices. Front gates of warehouses at three in the morning. Apex Locksmith has answered the phone across Toronto & the GTA since 2008.
       </p>
-      <div class="grid grid-cols-1 sm:grid-cols-2 mt-6 lg:mt-8" style="border:3px solid #EDEDED;">
-        <a href="tel:+14165550000" class="btn-hivis flex flex-col gap-1 sm:border-r-[3px] border-b-[3px] sm:border-b-0 items-center justify-center" style="padding:18px 14px;background:#27E0F5;color:#1A1A1A;text-decoration:none;border-color:#EDEDED;min-height:100px;">
+      <div class="mt-6 lg:mt-8">
+        <a id="heroCallBtn" href="tel:+14165550000" class="btn-hivis call-pulse flex flex-col gap-1 items-center justify-center" style="padding:22px 14px;background:#27E0F5;color:#1A1A1A;text-decoration:none;min-height:100px;">
           <span class="font-mono t-cap" style="opacity:.85;font-size:11px;">TAP TO CALL</span>
           <span class="font-display t-phone-md">(416) 555-0000</span>
         </a>
-        <button class="flex flex-col justify-center gap-1 text-left" style="padding:20px 22px;background:#1A1A1A;color:#EDEDED;border:none;cursor:pointer;">
-          <span class="font-mono t-cap" style="opacity:.6;">OR</span>
-          <span class="font-display uppercase" style="font-size:16px;letter-spacing:.06em;">Get a quote ↗</span>
-        </button>
       </div>
       <!-- Trust row -->
       <div class="mt-7 flex flex-wrap gap-5 items-center">
@@ -401,26 +174,26 @@
     </div>
 
     <!-- Right column: ETA + zone check -->
-    <div class="flex flex-col gap-4">
-      <!-- ETA widget -->
-      <div style="position:relative;background:#242427;border:2px solid #27E0F5;padding:22px 22px;">
+    <div class="hero-side flex flex-col gap-4">
+      <!-- ETA widget (compact) -->
+      <div style="position:relative;background:#242427;border:2px solid #27E0F5;padding:14px 18px;">
         <div class="caution-stripe" style="position:absolute;top:-6px;left:0;right:0;height:6px;"></div>
-        <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center justify-between mb-1.5">
           <div class="flex items-center gap-2">
-            <span class="pulse-dot" style="width:10px;height:10px;background:#5cd97a;box-shadow:0 0 0 3px rgba(92,217,122,.25);"></span>
-            <span class="font-mono t-cap" style="font-weight:700;">LIVE · DISPATCH OPEN</span>
+            <span class="pulse-dot" style="width:9px;height:9px;background:#5cd97a;box-shadow:0 0 0 3px rgba(92,217,122,.25);"></span>
+            <span class="font-mono t-cap-sm" style="font-weight:700;">LIVE · DISPATCH OPEN</span>
           </div>
-          <span class="font-mono t-cap-sm" style="color:#9a9a9a;"><span id="techs">4</span> ON ROAD</span>
+          <span class="font-mono t-cap-sm" style="color:#9a9a9a;font-size:9px;"><span id="techs">4</span> ON ROAD</span>
         </div>
-        <div class="flex items-baseline gap-2 mt-1.5">
-          <div class="font-display" style="font-size:clamp(64px,11vw,104px);line-height:.85;color:#27E0F5;letter-spacing:-.04em;" id="eta">14</div>
-          <div class="font-display uppercase" style="font-size:clamp(20px,3vw,32px);line-height:1;letter-spacing:.02em;">MIN</div>
-          <div class="font-body hidden sm:block" style="font-size:13px;color:#9a9a9a;flex:1;padding-left:14px;padding-bottom:6px;letter-spacing:.05em;">to your door, anywhere in Toronto & GTA</div>
+        <div class="flex items-baseline gap-2 mt-0.5">
+          <div class="font-display" style="font-size:clamp(48px,8.4vw,78px);line-height:.85;color:#27E0F5;letter-spacing:-.04em;" id="eta">14</div>
+          <div class="font-display uppercase" style="font-size:clamp(16px,2.4vw,24px);line-height:1;letter-spacing:.02em;">MIN</div>
+          <div class="font-body hidden sm:block" style="font-size:11.5px;color:#9a9a9a;flex:1;padding-left:12px;padding-bottom:4px;letter-spacing:.04em;line-height:1.35;">to your door, anywhere in Toronto & GTA</div>
         </div>
-        <div class="eta-bar mt-3">
+        <div class="eta-bar mt-2" style="height:10px;">
           <div class="eta-fill" id="etaFill" style="width:70%;"></div>
         </div>
-        <div class="flex justify-between mt-1.5 font-mono" style="font-size:10px;color:#9a9a9a;letter-spacing:.18em;">
+        <div class="flex justify-between mt-1 font-mono" style="font-size:9px;color:#9a9a9a;letter-spacing:.16em;">
           <span>FASTEST · 11 MIN</span>
           <span>NIGHT MAX · 24 MIN</span>
         </div>
@@ -428,7 +201,7 @@
 
       <!-- Zone check (moved here, under the ETA indicator) -->
       <form id="zipForm" style="background:#242427;border:2px solid #EDEDED;">
-        <div class="flex justify-between items-center px-4 sm:px-5 py-3" style="background:#EDEDED;color:#1A1A1A;">
+        <div class="flex justify-between items-center px-4 sm:px-5 py-3" style="background:#27E0F5;color:#1A1A1A;">
           <div class="font-display uppercase" style="font-size:16px;letter-spacing:.04em;">ZONE CHECK</div>
           <div class="font-mono t-cap-sm" style="opacity:.7;">BY POSTAL</div>
         </div>
@@ -440,6 +213,22 @@
           </div>
           <div id="zipResult"></div>
           <div class="font-mono t-cap-sm mt-2.5" style="color:#9a9a9a;opacity:.7;">Format: A0A 0A0 · Try M5V 1A1 · L4W 0E1</div>
+
+          <!-- Use-my-location action -->
+          <button id="useMyLocBtn" type="button" class="zone-loc-btn mt-3.5">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+            <span class="zone-loc-label">USE MY LOCATION</span>
+          </button>
+          <div id="zoneGeoStatus" class="zone-geo-status" role="status" aria-live="polite"></div>
+
+          <!-- Inline expanding map -->
+          <div id="zoneMapWrap" class="zone-map-wrap" aria-hidden="true">
+            <div class="zone-map-frame">
+              <div id="zoneMap" class="zone-map"></div>
+              <div class="zone-map-scanline" aria-hidden="true"></div>
+              <div id="zoneDistrict" class="zone-district" style="display:none;"></div>
+            </div>
+          </div>
         </div>
       </form>
     </div>
@@ -496,25 +285,25 @@
         <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5">
           <button class="finder-tile active" data-finder="home">
             <div class="px-3 py-3.5 flex flex-col gap-2.5 items-start">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7v9h-6v-6h-6v6H3z"/></svg>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 9.77806V16.2C19 17.8801 19 18.7202 18.673 19.3619C18.3854 19.9264 17.9265 20.3854 17.362 20.673C16.7202 21 15.8802 21 14.2 21H9.8C8.11984 21 7.27976 21 6.63803 20.673C6.07354 20.3854 5.6146 19.9264 5.32698 19.3619C5 18.7202 5 17.8801 5 16.2V9.7774M21 12L15.5668 5.96393C14.3311 4.59116 13.7133 3.90478 12.9856 3.65138C12.3466 3.42882 11.651 3.42887 11.0119 3.65153C10.2843 3.90503 9.66661 4.59151 8.43114 5.96446L3 12M14 12C14 13.1045 13.1046 14 12 14C10.8954 14 10 13.1045 10 12C10 10.8954 10.8954 9.99996 12 9.99996C13.1046 9.99996 14 10.8954 14 12Z"/></svg>
               <div class="font-display uppercase" style="font-size:13px;letter-spacing:.04em;">House / Apt</div>
             </div>
           </button>
           <button class="finder-tile" data-finder="car">
             <div class="px-3 py-3.5 flex flex-col gap-2.5 items-start">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 14l2-6h14l2 6v5h-3v-2H6v2H3z"/><circle cx="7" cy="17" r="1.5"/><circle cx="17" cy="17" r="1.5"/></svg>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.51 2.83H8.49C6 2.83 5.45 4.07 5.13 5.59L4 11h16L18.87 5.59C18.55 4.07 18 2.83 15.51 2.83Z"/><path d="M21.99 19.82C22.1 20.99 21.16 22 19.96 22h-1.88c-1.08 0-1.23-.46-1.42-1.03l-.2-.6c-.28-.82-.46-1.37-1.9-1.37H9.44c-1.44 0-1.65.62-1.9 1.37l-.2.6C7.15 21.54 7 22 5.92 22H4.04c-1.2 0-2.14-1.01-2.03-2.18l.56-6.09c.14-1.5.43-2.73 3.05-2.73h12.76c2.62 0 2.91 1.23 3.05 2.73l.56 6.09Z"/><path d="M4 8H3"/><path d="M21 8h-1"/><path d="M12 3v2"/><path d="M10.5 5h3"/><path d="M6 15h3"/><path d="M15 15h3"/></svg>
               <div class="font-display uppercase" style="font-size:13px;letter-spacing:.04em;">Car / Truck</div>
             </div>
           </button>
           <button class="finder-tile" data-finder="office">
             <div class="px-3 py-3.5 flex flex-col gap-2.5 items-start">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18"/><path d="M8 7h2M14 7h2M8 11h2M14 11h2M8 15h2M14 15h2"/></svg>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M5 4C4.44772 4 4 4.44772 4 5V19C4 19.5523 4.44772 20 5 20H12H13C13.5523 20 14 19.5523 14 19V5C14 4.44772 13.5523 4 13 4H5ZM5 22H12H13H19C20.6569 22 22 20.6569 22 19V9C22 7.34315 20.6569 6 19 6H16V5C16 3.34315 14.6569 2 13 2H5C3.34315 2 2 3.34315 2 5V19C2 20.6569 3.34315 22 5 22ZM19 20H15.8293C15.9398 19.6872 16 19.3506 16 19V8H19C19.5523 8 20 8.44772 20 9V19C20 19.5523 19.5523 20 19 20ZM7 14H5V16H7V14ZM8 14H10V16H8V14ZM13 14H11V16H13V14ZM17 14H19V16H17V14ZM19 10H17V12H19V10ZM5 10H7V12H5V10ZM10 10H8V12H10V10ZM11 10H13V12H11V10ZM7 6H5V8H7V6ZM8 6H10V8H8V6ZM13 6H11V8H13V6Z"/></svg>
               <div class="font-display uppercase" style="font-size:13px;letter-spacing:.04em;">Office</div>
             </div>
           </button>
           <button class="finder-tile" data-finder="safe">
             <div class="px-3 py-3.5 flex flex-col gap-2.5 items-start">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16"/><circle cx="14" cy="12" r="3.5"/></svg>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M11.9426 1.25H12.0574C14.3658 1.24999 16.1748 1.24998 17.5863 1.43975C19.031 1.63399 20.1711 2.03933 21.0659 2.93414C21.9607 3.82895 22.366 4.96897 22.5603 6.41371C22.75 7.82519 22.75 9.63423 22.75 11.9426V12.0574C22.75 14.3658 22.75 16.1748 22.5603 17.5863C22.366 19.031 21.9607 20.1711 21.0659 21.0659C20.1711 21.9607 19.031 22.366 17.5863 22.5603C16.1748 22.75 14.3658 22.75 12.0574 22.75H11.9426C9.63423 22.75 7.82519 22.75 6.41371 22.5603C4.96897 22.366 3.82895 21.9607 2.93414 21.0659C2.03933 20.1711 1.63399 19.031 1.43975 17.5863C1.24998 16.1748 1.24999 14.3658 1.25 12.0574V11.9426C1.24999 9.63423 1.24998 7.82519 1.43975 6.41371C1.63399 4.96897 2.03933 3.82895 2.93414 2.93414C3.82895 2.03933 4.96897 1.63399 6.41371 1.43975C7.82519 1.24998 9.63423 1.24999 11.9426 1.25ZM6.61358 2.92637C5.33517 3.09825 4.56445 3.42514 3.9948 3.9948C3.42514 4.56445 3.09825 5.33517 2.92637 6.61358C2.75159 7.91356 2.75 9.62178 2.75 12C2.75 14.3782 2.75159 16.0864 2.92637 17.3864C3.09825 18.6648 3.42514 19.4355 3.9948 20.0052C4.56445 20.5749 5.33517 20.9018 6.61358 21.0736C7.91356 21.2484 9.62178 21.25 12 21.25C14.3782 21.25 16.0864 21.2484 17.3864 21.0736C18.6648 20.9018 19.4355 20.5749 20.0052 20.0052C20.5749 19.4355 20.9018 18.6648 21.0736 17.3864C21.2484 16.0864 21.25 14.3782 21.25 12C21.25 9.62178 21.2484 7.91356 21.0736 6.61358C20.9018 5.33517 20.5749 4.56445 20.0052 3.9948C19.4355 3.42514 18.6648 3.09825 17.3864 2.92637C16.0864 2.75159 14.3782 2.75 12 2.75C9.62178 2.75 7.91356 2.75159 6.61358 2.92637ZM6 6.25C6.41421 6.25 6.75 6.58579 6.75 7L6.75 17C6.75 17.4142 6.41421 17.75 6 17.75C5.58579 17.75 5.25 17.4142 5.25 17L5.25 7C5.25 6.58579 5.58579 6.25 6 6.25ZM9.46967 7.46967C9.76256 7.17678 10.2374 7.17678 10.5303 7.46967L11.932 8.8713C12.5248 8.47866 13.2357 8.25 14 8.25C14.7643 8.25 15.4752 8.47866 16.068 8.8713L17.4697 7.46967C17.7626 7.17678 18.2374 7.17678 18.5303 7.46967C18.8232 7.76256 18.8232 8.23744 18.5303 8.53033L17.1287 9.93196C17.5213 10.5248 17.75 11.2357 17.75 12C17.75 12.7643 17.5213 13.4752 17.1287 14.068L18.5303 15.4697C18.8232 15.7626 18.8232 16.2374 18.5303 16.5303C18.2374 16.8232 17.7626 16.8232 17.4697 16.5303L16.068 15.1287C15.4752 15.5213 14.7643 15.75 14 15.75C13.2357 15.75 12.5248 15.5213 11.932 15.1287L10.5303 16.5303C10.2374 16.8232 9.76256 16.8232 9.46967 16.5303C9.17678 16.2374 9.17678 15.7626 9.46967 15.4697L10.8713 14.068C10.4787 13.4752 10.25 12.7643 10.25 12C10.25 11.2357 10.4787 10.5248 10.8713 9.93196L9.46967 8.53033C9.17678 8.23744 9.17678 7.76256 9.46967 7.46967ZM14 9.75C12.7574 9.75 11.75 10.7574 11.75 12C11.75 13.2426 12.7574 14.25 14 14.25C15.2426 14.25 16.25 13.2426 16.25 12C16.25 10.7574 15.2426 9.75 14 9.75Z"/></svg>
               <div class="font-display uppercase" style="font-size:13px;letter-spacing:.04em;">Safe</div>
             </div>
           </button>
@@ -527,22 +316,26 @@
               <div class="font-mono t-cap-sm" style="color:#27E0F5;">▸ DISPATCH PLAN</div>
               <div class="font-display uppercase mt-1" id="planLabel" style="font-size:clamp(20px,2.4vw,28px);letter-spacing:.02em;line-height:1;">House / Apt lockout</div>
             </div>
-            <div class="flex gap-4">
-              <div class="text-right">
-                <div class="font-mono t-cap-sm" style="color:#9a9a9a;">ETA</div>
-                <div class="font-display mt-1" id="planEta" style="font-size:22px;">15 min</div>
-              </div>
-              <div class="text-right">
-                <div class="font-mono t-cap-sm" style="color:#9a9a9a;">PRICE</div>
-                <div class="font-display mt-1" id="planPrice" style="font-size:22px;color:#27E0F5;">$65–$95</div>
-              </div>
+            <div class="text-right">
+              <div class="font-mono t-cap-sm" style="color:#9a9a9a;">ETA</div>
+              <div class="font-display mt-1" id="planEta" style="font-size:22px;color:#27E0F5;">15 min</div>
             </div>
           </div>
           <ul id="planList" class="list-none p-0 m-0 grid gap-2"></ul>
-          <a href="tel:+14165550000" class="btn-hivis flex items-center justify-center gap-2.5 mt-4" style="background:#EDEDED;color:#1A1A1A;padding:14px 20px;text-decoration:none;font-family:'Archivo Black',sans-serif;font-size:16px;letter-spacing:.06em;text-transform:uppercase;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 3h4l2 5-2 2a12 12 0 005 5l2-2 5 2v4a2 2 0 01-2 2A18 18 0 013 5a2 2 0 012-2z"/></svg>
-            Dispatch · (416) 555-0000
-          </a>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-5 pt-4" style="border-top:1px dashed #3a3a3e;">
+            <div>
+              <div class="font-mono t-cap-sm" style="color:#27E0F5;font-weight:700;">✓ LICENSED</div>
+              <div class="font-body mt-1" style="font-size:12px;color:#9a9a9a;line-height:1.45;">Real locksmith, never subcontracted.</div>
+            </div>
+            <div>
+              <div class="font-mono t-cap-sm" style="color:#27E0F5;font-weight:700;">✓ NO DRILLING</div>
+              <div class="font-body mt-1" style="font-size:12px;color:#9a9a9a;line-height:1.45;">Manipulation first — drilling is a last resort.</div>
+            </div>
+            <div>
+              <div class="font-mono t-cap-sm" style="color:#27E0F5;font-weight:700;">✓ ALL CARDS</div>
+              <div class="font-body mt-1" style="font-size:12px;color:#9a9a9a;line-height:1.45;">Cash, debit, Visa, Mastercard, Amex.</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -557,17 +350,23 @@
           <span class="hazard" style="color:#1A1A1A;background:#f4c20a;border-color:#1A1A1A;">UNIT 04</span>
         </div>
       </div>
-      <div style="background:#0f0f10;color:#EDEDED;padding:20px 22px;position:relative;">
+      <div class="price-card" style="background:#0f0f10;color:#EDEDED;padding:20px 22px;position:relative;">
         <div class="caution-stripe absolute top-0 left-0 right-0" style="height:4px;"></div>
-        <div class="font-mono t-cap mt-1.5" style="color:#27E0F5;">FAIR PRICE GUARANTEE</div>
-        <p class="font-body mt-2 m-0" style="font-size:14px;line-height:1.55;">The number you hear on the phone is the number on the receipt. No "discovery fee", no upsell at the door.</p>
+        <button type="button" class="price-info" aria-label="More pricing info">
+          <span aria-hidden="true" class="price-info-glyph">i</span>
+          <span class="price-info-tooltip" role="tooltip">Pricing varies by lock type and complexity. Call for an accurate quote.</span>
+        </button>
+        <div class="font-mono t-cap mt-1.5" style="color:#27E0F5;">TRANSPARENT PRICING</div>
+        <p class="font-body mt-2 m-0" style="font-size:14px;line-height:1.55;">Pricing varies by lock type and job. Best to speak with a technician for an accurate quote.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ───── SERVICES ───── -->
-<section id="services" class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-16 section-divider">
+<!-- ───── SERVICES (carousel) ───── -->
+<section id="services" class="section-divider">
+  <div class="svc-bg-overlay" aria-hidden="true"></div>
+  <div class="svc-content-wrap max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-16">
   <div class="flex items-end justify-between gap-4 pb-3 mb-7" style="border-bottom:3px solid #EDEDED;">
     <div class="flex gap-3 items-end">
       <span class="hazard" style="color:#EDEDED;">NO.03</span>
@@ -576,79 +375,120 @@
         <div class="font-display t-h2 uppercase mt-1">Five trades</div>
       </div>
     </div>
+    <div class="hidden md:flex gap-2 shrink-0 pb-1">
+      <button type="button" class="svc-arrow" data-svc-dir="prev" aria-label="Previous services">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+      <button type="button" class="svc-arrow" data-svc-dir="next" aria-label="Next services">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
   </div>
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style="gap:10px;">
-    <!-- 5 services + 1 CTA -->
-    <article class="svc-card relative flex flex-col justify-between p-6" style="background:#242427;min-height:240px;border:2px solid #EDEDED;">
-      <div class="absolute top-0 left-0 px-2.5 py-1 font-mono t-cap-sm" style="background:#EDEDED;color:#1A1A1A;">01</div>
-      <div class="mt-6">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#27E0F5" stroke-width="2.2"><path d="M5 3h4l2 5-2 2a12 12 0 005 5l2-2 5 2v4a2 2 0 01-2 2A18 18 0 013 5a2 2 0 012-2z"/></svg>
-        <h3 class="font-display t-h3 uppercase mt-3.5 mb-2.5" style="text-wrap:balance;">24/7 Emergency Lockouts</h3>
-        <p class="font-body t-body m-0" style="color:#9a9a9a;">Home, office, car. 15-minute average response across Toronto & GTA.</p>
+
+  <div class="svc-carousel">
+    <div class="svc-track no-scrollbar" id="svcTrack">
+
+      <div class="svc-slide">
+        <a class="svc-card has-photo" href="#contact">
+          <div class="svc-photo" style="background-image:url('upscaledimages/24emergency.png');"></div>
+          <div class="svc-overlay"></div>
+          <div class="svc-num">01</div>
+          <div class="svc-tag">~15 MIN</div>
+          <div class="svc-body">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#27E0F5" stroke-width="2.2"><path d="M5 3h4l2 5-2 2a12 12 0 005 5l2-2 5 2v4a2 2 0 01-2 2A18 18 0 013 5a2 2 0 012-2z"/></svg>
+            <h3 class="font-display uppercase" style="font-size:22px;line-height:1.05;letter-spacing:.01em;margin:14px 0 8px;text-wrap:balance;">24/7 Emergency Lockouts</h3>
+            <p class="font-body svc-desc">Home, office, car. 15-minute average response across Toronto &amp; GTA.</p>
+            <div class="svc-foot">
+              <span class="svc-cta-link">Book it <span class="svc-arrow-ico">&rarr;</span></span>
+            </div>
+          </div>
+        </a>
       </div>
-      <div class="flex justify-between items-end mt-4 pt-3" style="border-top:1px solid #3a3a3e;">
-        <div class="font-display" style="font-size:22px;color:#27E0F5;letter-spacing:.02em;">FROM $65</div>
-        <div class="font-mono t-cap-sm" style="color:#9a9a9a;">~15 min</div>
+
+      <div class="svc-slide">
+        <a class="svc-card has-photo" href="#contact">
+          <div class="svc-photo" style="background-image:url('upscaledimages/residental.png');"></div>
+          <div class="svc-overlay"></div>
+          <div class="svc-num">02</div>
+          <div class="svc-tag">SAME DAY</div>
+          <div class="svc-body">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#27E0F5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 9.77806V16.2C19 17.8801 19 18.7202 18.673 19.3619C18.3854 19.9264 17.9265 20.3854 17.362 20.673C16.7202 21 15.8802 21 14.2 21H9.8C8.11984 21 7.27976 21 6.63803 20.673C6.07354 20.3854 5.6146 19.9264 5.32698 19.3619C5 18.7202 5 17.8801 5 16.2V9.7774M21 12L15.5668 5.96393C14.3311 4.59116 13.7133 3.90478 12.9856 3.65138C12.3466 3.42882 11.651 3.42887 11.0119 3.65153C10.2843 3.90503 9.66661 4.59151 8.43114 5.96446L3 12M14 12C14 13.1045 13.1046 14 12 14C10.8954 14 10 13.1045 10 12C10 10.8954 10.8954 9.99996 12 9.99996C13.1046 9.99996 14 10.8954 14 12Z"/></svg>
+            <h3 class="font-display uppercase" style="font-size:22px;line-height:1.05;letter-spacing:.01em;margin:14px 0 8px;text-wrap:balance;">Residential Rekey &amp; Install</h3>
+            <p class="font-body svc-desc">Rekey existing locks, install deadbolts, smart locks, mortise sets.</p>
+            <div class="svc-foot">
+              <span class="svc-cta-link">Book it <span class="svc-arrow-ico">&rarr;</span></span>
+            </div>
+          </div>
+        </a>
       </div>
-    </article>
-    <article class="svc-card relative flex flex-col justify-between p-6" style="background:#242427;min-height:240px;border:2px solid #EDEDED;">
-      <div class="absolute top-0 left-0 px-2.5 py-1 font-mono t-cap-sm" style="background:#EDEDED;color:#1A1A1A;">02</div>
-      <div class="mt-6">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#27E0F5" stroke-width="2.2"><path d="M3 11l9-7 9 7v9h-6v-6h-6v6H3z"/></svg>
-        <h3 class="font-display t-h3 uppercase mt-3.5 mb-2.5">Residential Rekey & Install</h3>
-        <p class="font-body t-body m-0" style="color:#9a9a9a;">Rekey existing locks, install deadbolts, smart locks, mortise sets.</p>
+
+      <div class="svc-slide">
+        <a class="svc-card has-photo" href="#contact">
+          <div class="svc-photo" style="background-image:url('upscaledimages/commercial.png');"></div>
+          <div class="svc-overlay"></div>
+          <div class="svc-num">03</div>
+          <div class="svc-tag">SAME DAY</div>
+          <div class="svc-body">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="#27E0F5" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M5 4C4.44772 4 4 4.44772 4 5V19C4 19.5523 4.44772 20 5 20H12H13C13.5523 20 14 19.5523 14 19V5C14 4.44772 13.5523 4 13 4H5ZM5 22H12H13H19C20.6569 22 22 20.6569 22 19V9C22 7.34315 20.6569 6 19 6H16V5C16 3.34315 14.6569 2 13 2H5C3.34315 2 2 3.34315 2 5V19C2 20.6569 3.34315 22 5 22ZM19 20H15.8293C15.9398 19.6872 16 19.3506 16 19V8H19C19.5523 8 20 8.44772 20 9V19C20 19.5523 19.5523 20 19 20ZM7 14H5V16H7V14ZM8 14H10V16H8V14ZM13 14H11V16H13V14ZM17 14H19V16H17V14ZM19 10H17V12H19V10ZM5 10H7V12H5V10ZM10 10H8V12H10V10ZM11 10H13V12H11V10ZM7 6H5V8H7V6ZM8 6H10V8H8V6ZM13 6H11V8H13V6Z"/></svg>
+            <h3 class="font-display uppercase" style="font-size:22px;line-height:1.05;letter-spacing:.01em;margin:14px 0 8px;text-wrap:balance;">Commercial &amp; Business</h3>
+            <p class="font-body svc-desc">Master key systems, panic bars, high-security restricted keyways.</p>
+            <div class="svc-foot">
+              <span class="svc-cta-link">Book it <span class="svc-arrow-ico">&rarr;</span></span>
+            </div>
+          </div>
+        </a>
       </div>
-      <div class="flex justify-between items-end mt-4 pt-3" style="border-top:1px solid #3a3a3e;">
-        <div class="font-display" style="font-size:22px;color:#27E0F5;letter-spacing:.02em;">FROM $89</div>
-        <div class="font-mono t-cap-sm" style="color:#9a9a9a;">Same day</div>
+
+      <div class="svc-slide">
+        <a class="svc-card has-photo" href="#contact">
+          <div class="svc-photo" style="background-image:url('upscaledimages/padlock.png');"></div>
+          <div class="svc-overlay"></div>
+          <div class="svc-num">04</div>
+          <div class="svc-tag">BY APPT</div>
+          <div class="svc-body">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#27E0F5" stroke-width="2.2"><rect x="5" y="11" width="14" height="10"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
+            <h3 class="font-display uppercase" style="font-size:22px;line-height:1.05;letter-spacing:.01em;margin:14px 0 8px;text-wrap:balance;">Smart Locks &amp; Access</h3>
+            <p class="font-body svc-desc">Z-Wave, keypad, biometric. Integration with existing security.</p>
+            <div class="svc-foot">
+              <span class="svc-cta-link">Book it <span class="svc-arrow-ico">&rarr;</span></span>
+            </div>
+          </div>
+        </a>
       </div>
-    </article>
-    <article class="svc-card relative flex flex-col justify-between p-6" style="background:#242427;min-height:240px;border:2px solid #EDEDED;">
-      <div class="absolute top-0 left-0 px-2.5 py-1 font-mono t-cap-sm" style="background:#EDEDED;color:#1A1A1A;">03</div>
-      <div class="mt-6">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#27E0F5" stroke-width="2.2"><rect x="4" y="3" width="16" height="18"/><path d="M8 7h2M14 7h2M8 11h2M14 11h2"/></svg>
-        <h3 class="font-display t-h3 uppercase mt-3.5 mb-2.5">Commercial & Business</h3>
-        <p class="font-body t-body m-0" style="color:#9a9a9a;">Master key systems, panic bars, high-security restricted keyways.</p>
+
+      <div class="svc-slide">
+        <a class="svc-card has-photo" href="#contact">
+          <div class="svc-photo" style="background-image:url('upscaledimages/safe.png');"></div>
+          <div class="svc-overlay"></div>
+          <div class="svc-num">05</div>
+          <div class="svc-tag">SAME DAY</div>
+          <div class="svc-body">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="#27E0F5" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M11.9426 1.25H12.0574C14.3658 1.24999 16.1748 1.24998 17.5863 1.43975C19.031 1.63399 20.1711 2.03933 21.0659 2.93414C21.9607 3.82895 22.366 4.96897 22.5603 6.41371C22.75 7.82519 22.75 9.63423 22.75 11.9426V12.0574C22.75 14.3658 22.75 16.1748 22.5603 17.5863C22.366 19.031 21.9607 20.1711 21.0659 21.0659C20.1711 21.9607 19.031 22.366 17.5863 22.5603C16.1748 22.75 14.3658 22.75 12.0574 22.75H11.9426C9.63423 22.75 7.82519 22.75 6.41371 22.5603C4.96897 22.366 3.82895 21.9607 2.93414 21.0659C2.03933 20.1711 1.63399 19.031 1.43975 17.5863C1.24998 16.1748 1.24999 14.3658 1.25 12.0574V11.9426C1.24999 9.63423 1.24998 7.82519 1.43975 6.41371C1.63399 4.96897 2.03933 3.82895 2.93414 2.93414C3.82895 2.03933 4.96897 1.63399 6.41371 1.43975C7.82519 1.24998 9.63423 1.24999 11.9426 1.25ZM6.61358 2.92637C5.33517 3.09825 4.56445 3.42514 3.9948 3.9948C3.42514 4.56445 3.09825 5.33517 2.92637 6.61358C2.75159 7.91356 2.75 9.62178 2.75 12C2.75 14.3782 2.75159 16.0864 2.92637 17.3864C3.09825 18.6648 3.42514 19.4355 3.9948 20.0052C4.56445 20.5749 5.33517 20.9018 6.61358 21.0736C7.91356 21.2484 9.62178 21.25 12 21.25C14.3782 21.25 16.0864 21.2484 17.3864 21.0736C18.6648 20.9018 19.4355 20.5749 20.0052 20.0052C20.5749 19.4355 20.9018 18.6648 21.0736 17.3864C21.2484 16.0864 21.25 14.3782 21.25 12C21.25 9.62178 21.2484 7.91356 21.0736 6.61358C20.9018 5.33517 20.5749 4.56445 20.0052 3.9948C19.4355 3.42514 18.6648 3.09825 17.3864 2.92637C16.0864 2.75159 14.3782 2.75 12 2.75C9.62178 2.75 7.91356 2.75159 6.61358 2.92637ZM6 6.25C6.41421 6.25 6.75 6.58579 6.75 7L6.75 17C6.75 17.4142 6.41421 17.75 6 17.75C5.58579 17.75 5.25 17.4142 5.25 17L5.25 7C5.25 6.58579 5.58579 6.25 6 6.25ZM9.46967 7.46967C9.76256 7.17678 10.2374 7.17678 10.5303 7.46967L11.932 8.8713C12.5248 8.47866 13.2357 8.25 14 8.25C14.7643 8.25 15.4752 8.47866 16.068 8.8713L17.4697 7.46967C17.7626 7.17678 18.2374 7.17678 18.5303 7.46967C18.8232 7.76256 18.8232 8.23744 18.5303 8.53033L17.1287 9.93196C17.5213 10.5248 17.75 11.2357 17.75 12C17.75 12.7643 17.5213 13.4752 17.1287 14.068L18.5303 15.4697C18.8232 15.7626 18.8232 16.2374 18.5303 16.5303C18.2374 16.8232 17.7626 16.8232 17.4697 16.5303L16.068 15.1287C15.4752 15.5213 14.7643 15.75 14 15.75C13.2357 15.75 12.5248 15.5213 11.932 15.1287L10.5303 16.5303C10.2374 16.8232 9.76256 16.8232 9.46967 16.5303C9.17678 16.2374 9.17678 15.7626 9.46967 15.4697L10.8713 14.068C10.4787 13.4752 10.25 12.7643 10.25 12C10.25 11.2357 10.4787 10.5248 10.8713 9.93196L9.46967 8.53033C9.17678 8.23744 9.17678 7.76256 9.46967 7.46967ZM14 9.75C12.7574 9.75 11.75 10.7574 11.75 12C11.75 13.2426 12.7574 14.25 14 14.25C15.2426 14.25 16.25 13.2426 16.25 12C16.25 10.7574 15.2426 9.75 14 9.75Z"/></svg>
+            <h3 class="font-display uppercase" style="font-size:22px;line-height:1.05;letter-spacing:.01em;margin:14px 0 8px;text-wrap:balance;">Safes — Open, Move, Install</h3>
+            <p class="font-body svc-desc">Combination recovery, electronic safe opening, in-floor installs.</p>
+            <div class="svc-foot">
+              <span class="svc-cta-link">Book it <span class="svc-arrow-ico">&rarr;</span></span>
+            </div>
+          </div>
+        </a>
       </div>
-      <div class="flex justify-between items-end mt-4 pt-3" style="border-top:1px solid #3a3a3e;">
-        <div class="font-display" style="font-size:22px;color:#27E0F5;letter-spacing:.02em;">FROM $135</div>
-        <div class="font-mono t-cap-sm" style="color:#9a9a9a;">Same day</div>
+
+      <div class="svc-slide">
+        <a class="svc-card svc-cta" href="tel:+14165550000">
+          <div class="svc-num" style="background:#1A1A1A;color:#EDEDED;">HELP</div>
+          <div class="svc-body" style="top:0;display:flex;flex-direction:column;justify-content:center;">
+            <h3 class="font-display uppercase" style="font-size:clamp(24px,3.4vw,30px);line-height:.98;margin:0;">Not sure which? We'll figure it out.</h3>
+            <p class="font-body" style="font-size:14px;line-height:1.5;margin:12px 0 20px;">One phone call. Ninety seconds of triage — we'll tell you the fix and how long it'll take.</p>
+            <span class="font-display" style="font-size:24px;letter-spacing:.02em;">(416) 555-0000 <span class="svc-arrow-ico">&rarr;</span></span>
+          </div>
+        </a>
       </div>
-    </article>
-    <article class="svc-card relative flex flex-col justify-between p-6" style="background:#242427;min-height:240px;border:2px solid #EDEDED;">
-      <div class="absolute top-0 left-0 px-2.5 py-1 font-mono t-cap-sm" style="background:#EDEDED;color:#1A1A1A;">04</div>
-      <div class="mt-6">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#27E0F5" stroke-width="2.2"><rect x="5" y="11" width="14" height="10"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
-        <h3 class="font-display t-h3 uppercase mt-3.5 mb-2.5">Smart Locks & Access</h3>
-        <p class="font-body t-body m-0" style="color:#9a9a9a;">Z-Wave, keypad, biometric. Integration with existing security.</p>
-      </div>
-      <div class="flex justify-between items-end mt-4 pt-3" style="border-top:1px solid #3a3a3e;">
-        <div class="font-display" style="font-size:22px;color:#27E0F5;letter-spacing:.02em;">FROM $159</div>
-        <div class="font-mono t-cap-sm" style="color:#9a9a9a;">By appointment</div>
-      </div>
-    </article>
-    <article class="svc-card relative flex flex-col justify-between p-6" style="background:#242427;min-height:240px;border:2px solid #EDEDED;">
-      <div class="absolute top-0 left-0 px-2.5 py-1 font-mono t-cap-sm" style="background:#EDEDED;color:#1A1A1A;">05</div>
-      <div class="mt-6">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#27E0F5" stroke-width="2.2"><rect x="3" y="4" width="18" height="16"/><circle cx="14" cy="12" r="3.5"/></svg>
-        <h3 class="font-display t-h3 uppercase mt-3.5 mb-2.5">Safes — Open, Move, Install</h3>
-        <p class="font-body t-body m-0" style="color:#9a9a9a;">Combination recovery, electronic safe opening, in-floor installs.</p>
-      </div>
-      <div class="flex justify-between items-end mt-4 pt-3" style="border-top:1px solid #3a3a3e;">
-        <div class="font-display" style="font-size:22px;color:#27E0F5;letter-spacing:.02em;">FROM $115</div>
-        <div class="font-mono t-cap-sm" style="color:#9a9a9a;">Same day</div>
-      </div>
-    </article>
-    <!-- CTA tile -->
-    <article class="relative flex flex-col justify-between p-6" style="background:#27E0F5;color:#1A1A1A;min-height:240px;border:2px solid #EDEDED;">
-      <div class="absolute top-0 left-0 px-2.5 py-1 font-mono t-cap-sm" style="background:#1A1A1A;color:#EDEDED;">HELP</div>
-      <div class="mt-6">
-        <h3 class="font-display uppercase m-0" style="font-size:clamp(22px,2.6vw,30px);line-height:.95;">Not sure which? We'll figure it out.</h3>
-        <p class="font-body mt-2.5" style="font-size:14px;line-height:1.5;">One phone call. Ninety seconds of triage.</p>
-      </div>
-      <a href="tel:+14165550000" class="font-display mt-4" style="color:#1A1A1A;text-decoration:none;font-size:clamp(20px,2.6vw,28px);letter-spacing:.02em;">(416) 555-0000 →</a>
-    </article>
+
+    </div>
   </div>
+
+  <div class="svc-dots" id="svcDots"></div>
+  </div><!-- /svc-content-wrap -->
 </section>
 
 <!-- ───── PROCESS ───── -->
@@ -684,11 +524,39 @@
   </div>
 </section>
 
+<!-- ───── ABOUT ───── -->
+<section id="about" class="about-section section-divider">
+  <div class="about-overlay" aria-hidden="true"></div>
+  <div class="about-vignette" aria-hidden="true"></div>
+  <div class="about-inner max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10">
+    <div class="max-w-[760px]">
+      <div class="flex items-end justify-center gap-3 pb-3 mb-6" style="border-bottom:3px solid #EDEDED;">
+        <span class="hazard" style="color:#EDEDED;">NO.05</span>
+        <div>
+          <div class="font-mono t-cap" style="opacity:.6;">The shop</div>
+          <div class="font-display t-h2 uppercase mt-1">ON THE ROAD 24/7</div>
+        </div>
+      </div>
+      <p class="font-body" style="font-size:clamp(15px,1.7vw,17px);line-height:1.55;margin:0 0 14px;">
+        Five licensed technicians. One dedicated dispatcher. Every truck is ours, every tech is staff — no subcontractors, ever. The locksmith at your door has been background-checked, trained, and trusted by thousands of Toronto families.
+      </p>
+      <div class="flex gap-2 flex-wrap mt-4 justify-center">
+        <span class="hazard" style="color:#EDEDED;background:#242427;">LICENSED · LIC # PENDING</span>
+        <span class="hazard" style="color:#EDEDED;background:#242427;">BONDED</span>
+        <span class="hazard" style="color:#EDEDED;background:#242427;">INSURED</span>
+        <span class="hazard" style="color:#EDEDED;background:#242427;">ALOA MEMBER</span>
+        <span class="hazard" style="color:#EDEDED;background:#242427;">SERVING GTA</span>
+      </div>
+    </div>
+    <!-- TODO: add logo/brand asset here when ready -->
+  </div>
+</section>
+
 <!-- ───── REVIEWS ───── -->
 <section id="reviews" class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-16 section-divider">
   <div class="flex flex-wrap items-end justify-between gap-4 pb-3 mb-7" style="border-bottom:3px solid #EDEDED;">
     <div class="flex gap-3 items-end">
-      <span class="hazard" style="color:#EDEDED;">NO.05</span>
+      <span class="hazard" style="color:#EDEDED;">NO.06</span>
       <div>
         <div class="font-mono t-cap" style="opacity:.6;">847 Google reviews</div>
         <div class="font-display t-h2 uppercase mt-1">4.9★ on Google</div>
@@ -742,39 +610,6 @@
   </div>
 </section>
 
-<!-- ───── ABOUT ───── -->
-<section id="about" class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-16">
-  <div class="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-10 lg:gap-12 items-center">
-    <div>
-      <div class="flex items-end gap-3 pb-3 mb-6" style="border-bottom:3px solid #EDEDED;">
-        <span class="hazard" style="color:#EDEDED;">NO.06</span>
-        <div>
-          <div class="font-mono t-cap" style="opacity:.6;">The shop</div>
-          <div class="font-display t-h2 uppercase mt-1">Owner-operated</div>
-        </div>
-      </div>
-      <p class="font-body" style="font-size:clamp(15px,1.7vw,17px);line-height:1.55;margin:0 0 14px;">
-        Five techs. One dispatcher. Every truck owned by Apex, every tech on staff. The person at your door is the person we'd send to our mom's house at 2 AM.
-      </p>
-      <div class="flex gap-2 flex-wrap mt-4">
-        <span class="hazard" style="color:#EDEDED;background:#242427;">LICENSED #LSM-7791</span>
-        <span class="hazard" style="color:#EDEDED;background:#242427;">BONDED $1M</span>
-        <span class="hazard" style="color:#EDEDED;background:#242427;">INSURED</span>
-        <span class="hazard" style="color:#EDEDED;background:#242427;">ALOA MEMBER</span>
-        <span class="hazard" style="color:#EDEDED;background:#242427;">BBB A+ SINCE 2011</span>
-      </div>
-    </div>
-    <div class="relative">
-      <div class="photo-slot" style="aspect-ratio:520/620;">
-        <div class="label">OWNER · MARCUS, IN SHOP</div>
-      </div>
-      <div class="absolute top-3 left-3">
-        <span class="hazard" style="color:#1A1A1A;background:#27E0F5;border-color:#1A1A1A;">FOUNDER · HOLLOWAY</span>
-      </div>
-    </div>
-  </div>
-</section>
-
 <!-- ───── CONTACT ───── -->
 <section id="contact" class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-16 section-divider">
   <div class="flex items-end justify-between gap-4 pb-3 mb-7" style="border-bottom:3px solid #EDEDED;">
@@ -788,7 +623,7 @@
   </div>
   <div class="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6 lg:gap-8">
     <div>
-      <a href="tel:+14165550000" class="btn-hivis relative flex flex-col" style="padding:26px 28px;background:#27E0F5;color:#1A1A1A;text-decoration:none;border:3px solid #EDEDED;">
+      <a href="tel:+14165550000" class="btn-hivis call-pulse relative flex flex-col" style="padding:26px 28px;background:#27E0F5;color:#1A1A1A;text-decoration:none;border:3px solid #EDEDED;">
         <div class="caution-stripe absolute top-0 left-0 right-0" style="height:6px"></div>
         <span class="font-mono t-cap mt-2" style="font-weight:700;">DISPATCH · OPEN NOW</span>
         <span class="font-display t-phone-xl mt-2">(416) 555-0000</span>
@@ -809,8 +644,13 @@
         </div>
         <div class="p-4" style="background:#242427;border:2px solid #EDEDED;">
           <span class="hazard" style="color:#EDEDED;">CREDENTIALS</span>
-          <div class="font-body mt-2.5" style="font-size:13px;line-height:1.55;">LIC #LSM-7791<br/>Bonded $1M · Insured · ALOA</div>
+          <div class="font-body mt-2.5" style="font-size:13px;line-height:1.55;">LIC # — coming soon<br/>Bonded · Insured · ALOA</div>
         </div>
+      </div>
+      <!-- TODO: replace [PHONE_NUMBER] with real WhatsApp Business number when available -->
+      <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <a href="https://wa.me/[PHONE_NUMBER]" class="btn-msg-outline font-display uppercase inline-flex items-center justify-center">WHATSAPP →</a>
+        <a href="sms:[PHONE_NUMBER]" class="btn-msg-outline font-display uppercase inline-flex items-center justify-center">SMS →</a>
       </div>
     </div>
     <form id="contactForm" class="grid gap-3.5 p-6" style="background:#242427;border:3px solid #EDEDED;" novalidate>
@@ -833,7 +673,8 @@
       </label>
       <label class="grid gap-1.5">
         <span class="font-mono t-cap-sm" style="color:#9a9a9a;font-weight:700;">WHAT'S UP?</span>
-        <textarea rows="4" placeholder="Rekey after move-in, smart lock install, etc."></textarea>
+        <textarea id="contactNote" rows="4" placeholder="Rekey after move-in, smart lock install, etc."></textarea>
+        <div id="noteCounter" class="note-counter" aria-live="polite"><span id="noteCounterNum">0</span> / 250</div>
       </label>
       <button type="submit" class="btn-hivis font-display uppercase" style="padding:14px 22px;background:#27E0F5;color:#1A1A1A;border:2px solid #EDEDED;cursor:pointer;font-size:16px;letter-spacing:.06em;">Send →</button>
       <div id="contactSuccess" class="form-success">
@@ -851,13 +692,34 @@
   </svg>
 </a>
 
+<!-- ───── FLOATING MESSAGE BUTTON (WhatsApp + SMS) ───── -->
+<!-- TODO: replace [PHONE_NUMBER] with real WhatsApp Business number when available -->
+<div id="msgFab" class="msg-fab">
+  <button type="button" id="msgFabToggle" class="msg-fab-btn" aria-label="Message us" aria-expanded="false" aria-haspopup="menu">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+    </svg>
+  </button>
+  <div class="msg-fab-options" role="menu" aria-label="Message options">
+    <a href="https://wa.me/[PHONE_NUMBER]" class="msg-fab-opt msg-fab-wa" target="_blank" rel="noopener noreferrer" role="menuitem" aria-label="Message us on WhatsApp">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M.057 24l1.687-6.163a11.867 11.867 0 0 1-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 0 1 8.413 3.488 11.824 11.824 0 0 1 3.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 0 1-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+      </svg>
+      <span>WHATSAPP</span>
+    </a>
+    <a href="sms:+14165550000" class="msg-fab-opt msg-fab-sms" role="menuitem" aria-label="Send us an SMS">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      <span>SMS</span>
+    </a>
+  </div>
+</div>
+
 <!-- ───── SCROLL TO TOP ───── -->
-<button id="scrollTop" aria-label="Scroll to top" class="fixed bottom-6 right-6 w-12 h-12 bg-hivis text-bg flex items-center justify-center hover:bg-hivisDk transition-opacity duration-300 opacity-0 pointer-events-none" style="z-index:999;border:2px solid #27E0F5;">
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M12 3.2 16.2 7.4M12 3.2 7.8 7.4"/>
-    <path d="M12 3.2v13.2"/>
-    <path d="M12 11.4h4.2"/>
-    <path d="M12 15.2h3"/>
+<button id="scrollTop" aria-label="Scroll to top" class="fixed bottom-6 right-6 w-12 h-12 bg-bg text-hivis flex items-center justify-center hover:text-white transition-opacity duration-300 opacity-0 pointer-events-none" style="z-index:999;border:2px solid #27E0F5;">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M12 5V19M12 5L6 11M12 5L18 11"/>
   </svg>
 </button>
 
@@ -870,291 +732,142 @@
         Stop reading.<br/>Start dialing.
       </div>
     </div>
-    <a href="tel:+14165550000" class="btn-hivis inline-flex flex-col shrink-0" style="padding:18px 26px;background:#27E0F5;color:#1A1A1A;text-decoration:none;border:2px solid #f4c20a;">
+    <a href="tel:+14165550000" class="btn-hivis call-pulse inline-flex flex-col shrink-0" style="padding:18px 26px;background:#27E0F5;color:#1A1A1A;text-decoration:none;border:2px solid #f4c20a;">
       <span class="font-mono" style="font-size:10px;letter-spacing:.24em;font-weight:700;">CALL DISPATCH</span>
       <span class="font-display" style="font-size:clamp(26px,3.4vw,40px);line-height:1;letter-spacing:-.02em;white-space:nowrap;">(416) 555-0000</span>
     </a>
   </div>
 </section>
 
+<!-- ───── CREDENTIALS STRIP ───── -->
+<section aria-label="Licensing and credentials" style="background:#1A1A1A;border-top:1px solid #3a3a3e;">
+  <div class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-7">
+    <div class="cred-strip">
+      <!-- Licensed Locksmith badge -->
+      <div class="cred-badge">
+        <div class="cred-shield">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#27E0F5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z"/>
+            <path d="M9 12l2 2 4-4"/>
+          </svg>
+        </div>
+        <div>
+          <div class="font-display uppercase" style="font-size:14px;letter-spacing:.04em;line-height:1;">Licensed Locksmith</div>
+          <div class="font-mono t-cap-sm mt-1.5" style="color:#9a9a9a;">Serving GTA professionally</div>
+        </div>
+      </div>
+
+      <!-- Center: pillars -->
+      <div class="cred-pillars font-mono">
+        <span>LICENSED</span>
+        <span class="cred-dot" aria-hidden="true"></span>
+        <span>BONDED</span>
+        <span class="cred-dot" aria-hidden="true"></span>
+        <span>INSURED</span>
+      </div>
+
+      <!-- Right: license placeholder -->
+      <div class="cred-lic">
+        <span class="font-mono t-cap-sm" style="color:#9a9a9a;">License #</span>
+        <span class="font-display" style="font-size:15px;letter-spacing:.04em;color:#27E0F5;">COMING SOON</span>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ───── FOOTER ───── -->
 <footer style="background:#1A1A1A;border-top:3px solid #EDEDED;">
-  <div class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-wrap gap-3 justify-between items-center font-mono t-cap-sm" style="opacity:.7;font-weight:600;">
-    <span>© <span id="year"></span> APEX LOCKSMITH</span>
-    <span class="hidden sm:inline">LIC #LSM-7791</span>
-    <span>TORONTO · GTA</span>
-    <span>PRIVACY · TERMS · WARRANTY</span>
+  <div class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <!-- Service areas -->
+    <div class="font-mono footer-areas" style="font-size:11px;letter-spacing:.16em;font-weight:600;text-transform:uppercase;color:#cdcdcd;line-height:1.7;margin-bottom:14px;">
+      <span style="color:#27E0F5;font-weight:700;">SERVING:</span>
+      Downtown Toronto · North York · Scarborough · Etobicoke · Mississauga · Vaughan · Richmond Hill · Markham · Brampton · + All GTA Locations
+    </div>
+    <!-- Meta row -->
+    <div class="flex flex-wrap gap-3 justify-between items-center font-mono t-cap-sm pt-4" style="opacity:.7;font-weight:600;border-top:1px solid #3a3a3e;">
+      <span>© 2025 APEX LOCKSMITH. ALL RIGHTS RESERVED.</span>
+      <span class="hidden sm:inline">LIC # — PENDING</span>
+      <span>TORONTO · GTA</span>
+      <span>PRIVACY · TERMS · WARRANTY</span>
+    </div>
   </div>
 </footer>
 
+<!-- Toast / popup target (used by Send-a-Note char limit) -->
+<div id="noteToast" class="note-toast" role="alert" aria-live="assertive">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0;"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v.5"/></svg>
+  <span id="noteToastMsg">You have reached the maximum character limit (250)</span>
+</div>
+
+<script src="app.js"></script>
 <script>
-  // ── Lock icon dropdown ──
-  const lockBtn = document.getElementById('lockBtn');
-  const lockSvg = document.getElementById('lockSvg');
-  const mobileMenu = document.getElementById('mobileMenu');
-  let isOpen = false;
+  (function(){
+    var overlay = document.getElementById('loadingOverlay');
+    var container = document.getElementById('loadingAnim');
+    var testBtn = document.getElementById('testLoadingBtn');
+    if (!overlay || !container) return;
 
-  function toggleLock(forceState) {
-    isOpen = typeof forceState === 'boolean' ? forceState : !isOpen;
-    lockBtn.classList.toggle('lock-open', isOpen);
-    lockSvg.classList.toggle('lock-open', isOpen);
-    mobileMenu.classList.toggle('open', isOpen);
-    lockBtn.setAttribute('aria-expanded', String(isOpen));
-  }
-  lockBtn.addEventListener('click', () => {
-    // retrigger the one-shot bloom on every tap, then let it fade out
-    lockBtn.classList.remove('lk-bloom');
-    void lockBtn.offsetWidth;            // force reflow so the animation restarts
-    lockBtn.classList.add('lk-bloom');
-    toggleLock();
-  });
-  document.querySelectorAll('.mobile-link').forEach(a => a.addEventListener('click', () => toggleLock(false)));
-
-  // ── ETA drift ──
-  const etaEl = document.getElementById('eta');
-  const techsEl = document.getElementById('techs');
-  const fillEl = document.getElementById('etaFill');
-  let eta = 14, techs = 4;
-  function tick() {
-    eta = Math.max(11, Math.min(24, eta + (Math.random() < .5 ? -1 : 1)));
-    techs = Math.max(2, Math.min(7, techs + (Math.random() < .5 ? -1 : 1)));
-    etaEl.textContent = eta;
-    techsEl.textContent = techs;
-    fillEl.style.width = (((24 - eta) / (24 - 11)) * 100) + '%';
-  }
-  setInterval(tick, 5800);
-  tick();
-
-  // ── Service finder ──
-  const PLANS = {
-    home:   { label:'House / Apt lockout',  eta:'15 min', price:'$65–$95',  steps:['Stay near the door — tech will text on arrival','Have ID matching the address ready','Door opens in 5–10 minutes, no drilling on standard locks'] },
-    car:    { label:'Car / Truck lockout',  eta:'18 min', price:'$75–$135', steps:['Confirm vehicle make, model, year','Tech brings programmer for transponder keys','If keys are inside, we\'ll wait for you to verify ownership'] },
-    office: { label:'Office lockout',       eta:'22 min', price:'$135–$220',steps:['Bring proof of business affiliation','After-hours rate applies before 7am / after 7pm','Master keys can be cut on-site'] },
-    safe:   { label:'Safe lockout',         eta:'By appt',price:'$185+',    steps:['Photo of make/model speeds the quote','Most electronic safes open without drilling','Most mechanical safes do too — we manipulate, not destroy'] },
-  };
-  const planLabel = document.getElementById('planLabel');
-  const planEta = document.getElementById('planEta');
-  const planPrice = document.getElementById('planPrice');
-  const planList = document.getElementById('planList');
-  function renderPlan(key) {
-    const p = PLANS[key];
-    planLabel.textContent = p.label;
-    planEta.textContent = p.eta;
-    planPrice.textContent = p.price;
-    planList.innerHTML = p.steps.map((s, i) => `
-      <li class="flex gap-3 items-baseline font-body" style="font-size:14px;line-height:1.5;">
-        <span class="font-mono" style="background:#EDEDED;color:#1A1A1A;padding:2px 6px;font-size:10px;font-weight:700;letter-spacing:.1em;">${i+1}</span>
-        <span>${s}</span>
-      </li>`).join('');
-  }
-  document.querySelectorAll('[data-finder]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('[data-finder]').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      renderPlan(btn.dataset.finder);
-    });
-  });
-  renderPlan('home');
-
-  // ── Postal-code formatter (Canadian A0A 0A0) ──
-  // Position pattern: [Letter][Digit][Letter] [Digit][Letter][Digit]
-  function formatPostal(raw) {
-    const cleaned = (raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
-    let out = '';
-    for (let i = 0; i < cleaned.length; i++) {
-      const c = cleaned[i];
-      const expectLetter = (i === 0 || i === 2 || i === 4);
-      if (expectLetter && !/[A-Z]/.test(c)) break;
-      if (!expectLetter && !/[0-9]/.test(c)) break;
-      if (i === 3) out += ' ';
-      out += c;
-    }
-    return out;
-  }
-  const POSTAL_RX = /^[A-Z]\d[A-Z]\s\d[A-Z]\d$/;
-  const isValidPostal = (v) => POSTAL_RX.test(v);
-
-  // ── Phone formatter (NANP (xxx) xxx-xxxx) ──
-  function formatPhone(raw) {
-    const d = (raw || '').replace(/\D/g, '').slice(0, 10);
-    if (d.length === 0) return '';
-    if (d.length <= 3) return '(' + d;
-    if (d.length <= 6) return '(' + d.slice(0, 3) + ') ' + d.slice(3);
-    return '(' + d.slice(0, 3) + ') ' + d.slice(3, 6) + '-' + d.slice(6);
-  }
-  const PHONE_RX = /^\(\d{3}\) \d{3}-\d{4}$/;
-  const isValidPhone = (v) => PHONE_RX.test(v);
-
-  function clearError(input) {
-    input.classList.remove('invalid');
-    const errEl = document.getElementById(input.id + '-error');
-    if (errEl) errEl.classList.remove('show');
-  }
-  function showError(input) {
-    input.classList.add('invalid');
-    const errEl = document.getElementById(input.id + '-error');
-    if (errEl) errEl.classList.add('show');
-  }
-
-  // Bind formatters to all marked inputs (live format + on-blur validation)
-  document.querySelectorAll('input[data-format="postal"]').forEach(input => {
-    input.addEventListener('input', (e) => {
-      e.target.value = formatPostal(e.target.value);
-      clearError(e.target);
-    });
-    input.addEventListener('blur', (e) => {
-      if (e.target.value && !isValidPostal(e.target.value)) showError(e.target);
-    });
-  });
-  document.querySelectorAll('input[data-format="phone"]').forEach(input => {
-    input.addEventListener('input', (e) => {
-      e.target.value = formatPhone(e.target.value);
-      clearError(e.target);
-    });
-    input.addEventListener('blur', (e) => {
-      if (e.target.value && !isValidPhone(e.target.value)) showError(e.target);
-    });
-  });
-
-  // ── ZIP / Postal coverage checker ──
-  const zipForm = document.getElementById('zipForm');
-  const zipInput = document.getElementById('zipInput');
-  const zipResult = document.getElementById('zipResult');
-  // Every Toronto FSA starts with "M" (covers Toronto, North York, Scarborough,
-  // Etobicoke, East York, York) — all covered. Plus the 905-belt GTA cities below.
-  const GTA_905 = [
-    // Mississauga
-    'L4T','L4V','L4W','L4X','L4Y','L4Z','L5A','L5B','L5C','L5E','L5G','L5H','L5J','L5K','L5L','L5M','L5N','L5P','L5R','L5S','L5T','L5V','L5W',
-    // Brampton
-    'L6P','L6R','L6S','L6T','L6V','L6W','L6X','L6Y','L6Z','L7A',
-    // Vaughan / Woodbridge / Maple / Concord / Thornhill
-    'L4H','L4J','L4K','L4L','L6A',
-    // Markham / Unionville
-    'L3P','L3R','L3S','L3T','L6B','L6C','L6E','L6G',
-    // Richmond Hill
-    'L4B','L4C','L4E','L4S',
-    // Aurora / Newmarket / Stouffville / King City
-    'L4G','L3X','L3Y','L4A','L7B',
-    // Pickering / Ajax / Whitby / Oshawa (Durham)
-    'L1V','L1W','L1X','L1Y','L1S','L1T','L1Z','L1M','L1N','L1P','L1R','L1G','L1H','L1J','L1K','L1L',
-    // Oakville / Burlington / Milton (Halton)
-    'L6H','L6J','L6K','L6L','L6M','L7L','L7M','L7N','L7P','L7R','L7S','L7T','L9E','L9T',
-    // Caledon / Halton Hills / Bolton / Bradford
-    'L7C','L7E','L7K','L7G','L7J','L3Z',
-  ];
-  const isCoveredFSA = (fsa) => fsa[0] === 'M' || GTA_905.includes(fsa);
-
-  function renderZipPanel({ tone, title, body }) {
-    const colors = {
-      bad:   { border:'#ff5d3b', tint:'rgba(255,93,59,.10)', iconStroke:'#ff5d3b' },
-      good:  { border:'#5cd97a', tint:'rgba(92,217,122,.12)', iconStroke:'#5cd97a' },
-      warn:  { border:'#f4c20a', tint:'rgba(244,194,10,.08)', iconStroke:'#f4c20a' },
-      out:   { border:'#3a3a3e', tint:'transparent',           iconStroke:'#EDEDED' },
-    }[tone];
-    const icon = {
-      bad:  '<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v.5"/>',
-      good: '<path d="M4 12l5 5 11-12"/>',
-      warn: '<path d="M12 21s7-6 7-12a7 7 0 10-14 0c0 6 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/>',
-      out:  '<path d="M5 5l14 14M19 5L5 19"/>',
-    }[tone];
-    return `<div style="margin-top:12px;padding:14px 16px;border:2px solid ${colors.border};background:${colors.tint};">
-      <div class="flex items-center gap-2.5">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${colors.iconStroke}" stroke-width="2.4">${icon}</svg>
-        <div class="font-display uppercase" style="font-size:15px;letter-spacing:.02em;">${title}</div>
-      </div>
-      <div class="font-body" style="font-size:13px;color:#9a9a9a;margin-top:6px;line-height:1.45;">${body}</div>
-    </div>`;
-  }
-
-  zipForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const v = zipInput.value.toUpperCase().trim();
-    if (!isValidPostal(v)) {
-      zipInput.classList.add('invalid');
-      zipResult.innerHTML = renderZipPanel({
-        tone: 'bad',
-        title: 'INVALID FORMAT',
-        body: 'Canadian postal code only — format <strong>A0A 0A0</strong> (e.g. M5V 1A1).'
+    var anim = null;
+    var animDataPromise = fetch('new_icons/loading.json')
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        // The Lottie ships with a solid "BG" layer; hide it so the
+        // container reads as transparent against the overlay.
+        if (data && Array.isArray(data.layers)) {
+          data.layers.forEach(function(l){
+            if (l && (l.nm === 'BG' || l.ty === 1)) l.hd = true;
+          });
+        }
+        return data;
+      })
+      .catch(function(){ return null; });
+    function ensureAnim(){
+      if (anim || typeof lottie === 'undefined') return;
+      animDataPromise.then(function(data){
+        if (anim) return;
+        anim = lottie.loadAnimation({
+          container: container,
+          renderer: 'svg',
+          loop: true,
+          autoplay: true,
+          animationData: data || undefined,
+          path: data ? undefined : 'new_icons/loading.json'
+        });
       });
-      return;
     }
-    zipInput.classList.remove('invalid');
-    const fsa = v.slice(0, 3);
-    if (isCoveredFSA(fsa)) {
-      zipResult.innerHTML = renderZipPanel({ tone:'good', title:`${v} · COVERED`, body:'In our service area — Toronto & the GTA. Call dispatch and we\'ll roll a tech your way.' });
+    function showLoading(){
+      overlay.classList.remove('is-hidden');
+      // Force reflow so the opacity transition restarts cleanly
+      void overlay.offsetWidth;
+      overlay.classList.remove('is-hiding');
+      ensureAnim();
+    }
+    function hideLoading(){
+      overlay.classList.add('is-hiding');
+      setTimeout(function(){ overlay.classList.add('is-hidden'); }, 500);
+    }
+
+    // Initial load: animation is already visible via HTML; init Lottie when script is ready
+    if (typeof lottie !== 'undefined') {
+      ensureAnim();
     } else {
-      zipResult.innerHTML = renderZipPanel({ tone:'out', title:`${v} · OUTSIDE GTA`, body:'That code is outside our Toronto & GTA service zone right now.' });
+      document.addEventListener('DOMContentLoaded', ensureAnim);
     }
-  });
 
-  // ── Contact form (inline validation + inline success) ──
-  document.getElementById('contactForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const form = e.target;
-    let valid = true;
-    const name = document.getElementById('contactName');
-    const phone = document.getElementById('contactPhone');
-    const postal = document.getElementById('contactPostal');
-
-    if (!name.value.trim()) { showError(name); valid = false; } else { clearError(name); }
-    if (!isValidPhone(phone.value)) { showError(phone); valid = false; } else { clearError(phone); }
-    if (!isValidPostal(postal.value)) { showError(postal); valid = false; } else { clearError(postal); }
-
-    if (!valid) return;
-
-    const success = document.getElementById('contactSuccess');
-    success.classList.add('show');
-    form.reset();
-    setTimeout(() => success.classList.remove('show'), 6000);
-  });
-
-  // ── Year ──
-  document.getElementById('year').textContent = new Date().getFullYear();
-
-  // ── Header scroll-shrink ──
-  const headerEl = document.getElementById('header');
-  const onHeaderScroll = () => {
-    headerEl.classList.toggle('scrolled', window.scrollY > 8);
-  };
-  window.addEventListener('scroll', onHeaderScroll, { passive: true });
-  onHeaderScroll();
-
-  // ── Counter animation ──
-  const observerOpts = { threshold: .5 };
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting && !entry.target.classList.contains('counted')) {
-        const target = parseFloat(entry.target.dataset.target);
-        const isDecimal = target !== Math.floor(target);
-        const duration = 2500;
-        const start = Date.now();
-        entry.target.classList.add('counted');
-        const tick = () => {
-          const now = Date.now();
-          const progress = Math.min((now - start) / duration, 1);
-          const val = target * progress;
-          entry.target.textContent = isDecimal ? val.toFixed(1) : Math.floor(val);
-          if (progress < 1) requestAnimationFrame(tick);
-          else entry.target.textContent = target;
-        };
-        tick();
-      }
-    });
-  }, observerOpts);
-  document.querySelectorAll('.counter').forEach(el => observer.observe(el));
-
-  // ── Scroll to top button ──
-  const scrollBtn = document.getElementById('scrollTop');
-  window.addEventListener('scroll', () => {
-    if (window.scrollY > 400) {
-      scrollBtn.style.opacity = '1';
-      scrollBtn.style.pointerEvents = 'auto';
+    if (document.readyState === 'complete') {
+      hideLoading();
     } else {
-      scrollBtn.style.opacity = '0';
-      scrollBtn.style.pointerEvents = 'none';
+      window.addEventListener('load', hideLoading);
     }
-  });
-  scrollBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+    // TODO: remove test button before production
+    if (testBtn){
+      testBtn.addEventListener('click', function(){
+        showLoading();
+        setTimeout(hideLoading, 3000);
+      });
+    }
+  })();
 </script>
 </body>
 </html>

@@ -1,0 +1,23 @@
+import puppeteer from 'puppeteer';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const outDir = path.join(__dirname, 'temporary screenshots');
+const existing = fs.readdirSync(outDir).filter(f => f.startsWith('screenshot-'));
+const nums = existing.map(f => parseInt(f.match(/screenshot-(\d+)/)?.[1] || '0', 10));
+let next = (nums.length ? Math.max(...nums) : 0) + 1;
+const browser = await puppeteer.launch({ executablePath: process.env.PUPPETEER_EXECUTABLE_PATH, headless: 'new' });
+const page = await browser.newPage();
+await page.setViewport({ width: 390, height: 844, isMobile: true });
+await page.goto('http://localhost:3000', { waitUntil: 'networkidle0' });
+await page.waitForFunction(() => document.querySelectorAll('#heroParticles .hero-particle').length >= 20, {timeout:8000}).catch(()=>{});
+await new Promise(r => setTimeout(r, 1000));
+const file = path.join(outDir, `screenshot-${next++}-hero-particles-mobile-closeup.png`);
+const rect = await page.evaluate(() => {
+  const r = document.getElementById('home').getBoundingClientRect();
+  return { x: 0, y: 0, width: window.innerWidth, height: Math.min(900, r.bottom + 40) };
+});
+await page.screenshot({ path: file, clip: rect, captureBeyondViewport: true });
+console.log(`Saved: ${file}`);
+await browser.close();
