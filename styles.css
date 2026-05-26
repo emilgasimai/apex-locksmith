@@ -294,12 +294,21 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
 /* Why Apex section */
 .why-section{background:#1A1A1A;color:#EDEDED;}
 .why-pulse-line{position:relative;height:2px;background:#27E0F5;margin-bottom:36px;}
-.apex-pulse{position:relative;animation:apexPulse 2.4s ease-in-out infinite;}
-@keyframes apexPulse{
-  0%,100%{box-shadow:0 0 0 0 rgba(39,224,245,.7), 0 0 0 0 rgba(39,224,245,.4);}
-  50%{box-shadow:0 0 18px 4px rgba(39,224,245,.85), 0 0 40px 8px rgba(39,224,245,.35);}
+.apex-pulse{position:relative;animation:apexHeartbeat 2.2s cubic-bezier(.4,0,.2,1) infinite;transform-origin:center;}
+.apex-q{display:inline-block;margin-left:14px;transform:rotate(28deg) translateY(8px);transform-origin:bottom left;color:#EDEDED;text-shadow:2px 4px 0 rgba(39,224,245,.35), 4px 8px 14px rgba(0,0,0,.5);transition:transform .35s cubic-bezier(.2,.7,.3,1.4);}
+.apex-q:hover{transform:rotate(34deg) translateY(10px) scale(1.05);}
+@keyframes apexHeartbeat{
+  0%, 55%, 100% {transform:scale(1);    box-shadow:0 0 0 0 rgba(39,224,245,0);}
+  14% {transform:scale(1.025); box-shadow:0 0 10px 1px rgba(39,224,245,.45);}
+  22% {transform:scale(1);     box-shadow:0 0 4px 0 rgba(39,224,245,.15);}
+  34% {transform:scale(1.025); box-shadow:0 0 10px 1px rgba(39,224,245,.45);}
+  46% {transform:scale(1);     box-shadow:0 0 0 0 rgba(39,224,245,0);}
 }
 @media (prefers-reduced-motion: reduce){ .apex-pulse{animation:none;} }
+
+/* Pulsing green dot on the 24/7 pill — sits on top-right corner of cyan box */
+.onroad-247{position:relative;}
+.onroad-dot{position:absolute;top:-7px;right:-9px;width:10px;height:10px;background:#5cd97a;border-radius:50%;box-shadow:0 0 8px rgba(92,217,122,.85), 0 0 2px rgba(0,0,0,.4);z-index:2;}
 .why-card{padding:28px 20px 26px;background:#242427;border:2px solid #2a2a2e;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;transition:border-color .25s ease, transform .25s ease;}
 .why-card:hover{border-color:#27E0F5;transform:translateY(-2px);}
 .why-icon{color:#27E0F5;display:flex;align-items:center;justify-content:center;width:100%;}
