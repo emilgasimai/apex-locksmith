@@ -385,7 +385,7 @@ zipForm.addEventListener('submit', (e) => {
       var s = document.createElement('script');
       s.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
       s.crossOrigin = '';
-      s.onload = function(){ useLocBtn.click(); };
+      s.onload = function(){ useLocBtn.disabled = false; useLocBtn.click(); };
       s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
       document.head.appendChild(s);
       return;
@@ -592,8 +592,11 @@ scrollBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 's
 (function () {
   const container = document.getElementById('heroParticles');
   if (!container) return;
-  if (typeof _ === 'undefined') { console.warn('[hero-particles] lodash missing'); return; }
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const rndInt  = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+  const rndFlt  = (a, b) => Math.random() * (b - a) + a;
+  const rndFrom = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
   const ICON_FILES = [
     'fluent--door-16-filled.svg',
@@ -654,33 +657,33 @@ scrollBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 's
     const spin = document.createElement('div');
     el.className   = 'hero-particle';
     spin.className = 'hero-particle-spin';
-    spin.innerHTML = _.sample(svgs);
+    spin.innerHTML = rndFrom(svgs);
 
-    const size = _.random(SIZE_MIN, SIZE_MAX);
+    const size = rndInt(SIZE_MIN, SIZE_MAX);
     el.style.width   = size + 'px';
     el.style.height  = size + 'px';
-    el.style.opacity = _.random(OPACITY_MIN, OPACITY_MAX, true).toFixed(3);
+    el.style.opacity = rndFlt(OPACITY_MIN, OPACITY_MAX).toFixed(3);
 
     // 30% pulse — apply to outer wrapper so drop-shadow cascades to the SVG
     if (Math.random() < PULSE_FRACTION) {
       el.classList.add('pulse');
-      el.style.animationDelay = '-' + _.random(0, 2400) + 'ms';
+      el.style.animationDelay = '-' + rndInt(0, 2400) + 'ms';
     }
 
     // Rotation: random speed group, random direction (reverse half the time)
-    const group   = _.sample(['fast', 'medium', 'slow']);
+    const group   = rndFrom(['fast', 'medium', 'slow']);
     const [pMin, pMax] = ROT_GROUPS[group];
-    spin.style.animationDuration  = _.random(pMin, pMax) + 'ms';
+    spin.style.animationDuration  = rndInt(pMin, pMax) + 'ms';
     spin.style.animationDirection = Math.random() < 0.5 ? 'normal' : 'reverse';
 
     // Drift: random angle, random speed within the band
-    const speed = _.random(DRIFT_MIN, DRIFT_MAX, true);
+    const speed = rndFlt(DRIFT_MIN, DRIFT_MAX);
     const angle = Math.random() * Math.PI * 2;
     const vx    = Math.cos(angle) * speed;
     const vy    = Math.sin(angle) * speed;
 
-    const x = _.random(0, W);
-    const y = _.random(0, H);
+    const x = rndInt(0, W);
+    const y = rndInt(0, H);
     el.style.transform = 'translate3d(' + x + 'px,' + y + 'px,0)';
     el.appendChild(spin);
 
@@ -692,7 +695,7 @@ scrollBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 's
     let H = container.clientHeight;
     if (!W || !H) return;
 
-    const particles = _.times(COUNT, () => makeParticle(svgs, W, H));
+    const particles = Array.from({ length: COUNT }, () => makeParticle(svgs, W, H));
     const frag = document.createDocumentFragment();
     particles.forEach(p => frag.appendChild(p.el));
     container.appendChild(frag);
