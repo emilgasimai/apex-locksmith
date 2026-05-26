@@ -388,12 +388,14 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
   100%{transform:scale(2);opacity:0;}
 }
 @keyframes fabBounce{
-  0%  {transform:translateY(0);}
-  10% {transform:translateY(-10px);}
-  18% {transform:translateY(-4px);}
-  26% {transform:translateY(-8px);}
-  36% {transform:translateY(0);}
-  100%{transform:translateY(0);}
+  0%   {transform:translateY(0) scaleX(1) scaleY(1);         animation-timing-function:ease-in;}
+  22%  {transform:translateY(-22px) scaleX(.92) scaleY(1.1); animation-timing-function:ease-out;}
+  38%  {transform:translateY(0) scaleX(1.22) scaleY(.8);     animation-timing-function:ease-in;}
+  50%  {transform:translateY(-11px) scaleX(.95) scaleY(1.06);animation-timing-function:ease-out;}
+  62%  {transform:translateY(0) scaleX(1.1) scaleY(.9);      animation-timing-function:ease-in;}
+  70%  {transform:translateY(-5px);                          animation-timing-function:ease-out;}
+  78%  {transform:translateY(0) scaleX(1) scaleY(1);}
+  100% {transform:translateY(0) scaleX(1) scaleY(1);}
 }
 #callFab{
   position:fixed;right:24px;bottom:84px;z-index:999;
@@ -403,7 +405,7 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
   border-radius:999px !important;
   box-shadow:0 8px 22px -6px rgba(39,224,245,.7), 0 3px 10px -3px rgba(0,0,0,.6);
   transition:transform .15s cubic-bezier(.2,.7,.3,1.4), background-color .15s ease;
-  animation:fabBounce 3.4s ease-in-out infinite;
+  animation:fabBounce 3.8s linear infinite;
 }
 #callFab:hover{animation:none;}
 #callFab:active{animation:none;}
