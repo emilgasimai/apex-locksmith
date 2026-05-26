@@ -797,6 +797,7 @@ textarea#contactNote.note-shake{
   background:rgba(15,15,16,.42);
   backdrop-filter:blur(8px);
   -webkit-backdrop-filter:blur(8px);
+  clip-path:inset(0);
 }
 .trust-content{position:relative;z-index:2;}
 
