@@ -37,24 +37,132 @@ tick();
 
 // ── Service finder ──
 const PLANS = {
-  home:   { label:'House / Apt lockout',  eta:'15 min',  steps:['Stay near the door — tech will text on arrival','Have ID matching the address ready','Door opens in 5–10 minutes, no drilling on standard locks'] },
-  car:    { label:'Car / Truck lockout',  eta:'18 min',  steps:['Confirm vehicle make, model, year','Tech brings programmer for transponder keys','If keys are inside, we\'ll wait for you to verify ownership'] },
-  office: { label:'Office lockout',       eta:'22 min',  steps:['Bring proof of business affiliation','After-hours rate applies before 7am / after 7pm','Master keys can be cut on-site'] },
-  safe:   { label:'Safe lockout',         eta:'By appt', steps:['Photo of make/model speeds the quote','Most electronic safes open without drilling','Most mechanical safes do too — we manipulate, not destroy'] },
+  home: {
+    label: 'House / Apt',
+    services: [
+      'Break-in repair',
+      'Broken key extraction',
+      'Jammed lock',
+      'Lockouts',
+      'High security locks',
+      'Smart locks',
+      'Home, Apartment, Condo doors',
+      'Mailbox',
+      'Padlock',
+      'Rekey',
+      'Lock change',
+      'Installation',
+    ],
+  },
+  car: {
+    label: 'Car / Truck',
+    services: [
+      'Car/truck lockouts',
+      'Semi trailer',
+      'Bike locks',
+      'Key programming',
+      'Remote programming',
+    ],
+  },
+  office: {
+    label: 'Office / Commercial',
+    services: [
+      'Break-in repair',
+      'Store lockout',
+      'Office lockout',
+      'Access control',
+      'Pushbar',
+      'Rekey',
+      'Lock change',
+      'Installation',
+    ],
+  },
+  safe: {
+    label: 'Safes',
+    services: [
+      'Combination lock',
+      'Keypad lock',
+      'Key lock',
+    ],
+  },
+  security: {
+    label: 'Security',
+    services: [
+      'Security camera installation',
+      'Security system setup',
+      'Camera maintenance',
+      'Access control systems',
+    ],
+  },
 };
 const planLabel = document.getElementById('planLabel');
-const planEta = document.getElementById('planEta');
-const planList = document.getElementById('planList');
-function renderPlan(key) {
-  const p = PLANS[key];
-  planLabel.textContent = p.label;
-  planEta.textContent = p.eta;
-  planList.innerHTML = p.steps.map((s, i) => `
-    <li class="flex gap-3 items-baseline font-body" style="font-size:14px;line-height:1.5;">
-      <span class="font-mono" style="background:#EDEDED;color:#1A1A1A;padding:2px 6px;font-size:10px;font-weight:700;letter-spacing:.1em;">${i+1}</span>
+const serviceList = document.getElementById('serviceList');
+const serviceToggle = document.getElementById('serviceToggle');
+const VISIBLE_COUNT = 4;
+let plansExpanded = false;
+let currentKey = 'home';
+
+function measureCollapsedHeight() {
+  const items = serviceList.querySelectorAll('li');
+  if (!items.length) return 0;
+  const last = items[Math.min(VISIBLE_COUNT, items.length) - 1];
+  const top = serviceList.getBoundingClientRect().top;
+  const bottom = last.getBoundingClientRect().bottom;
+  return Math.ceil(bottom - top);
+}
+
+function applyHeights(animate) {
+  const p = PLANS[currentKey];
+  if (p.services.length <= VISIBLE_COUNT) {
+    serviceList.style.maxHeight = 'none';
+    return;
+  }
+  const target = plansExpanded ? serviceList.scrollHeight : measureCollapsedHeight();
+  if (!animate) {
+    serviceList.style.transition = 'none';
+    serviceList.style.maxHeight = target + 'px';
+    serviceList.offsetHeight;
+    serviceList.style.transition = '';
+  } else {
+    serviceList.style.maxHeight = target + 'px';
+  }
+}
+
+function renderServices(animate = true) {
+  const p = PLANS[currentKey];
+  serviceList.innerHTML = p.services.map((s, i) => `
+    <li class="flex gap-3 items-baseline font-body service-item${i >= VISIBLE_COUNT ? ' service-item--extra' : ''}" style="font-size:14px;line-height:1.5;">
+      <span class="font-mono" style="color:#27E0F5;font-size:14px;font-weight:700;line-height:1;">✓</span>
       <span>${s}</span>
     </li>`).join('');
+  serviceList.classList.toggle('expanded', plansExpanded);
+  if (p.services.length > VISIBLE_COUNT) {
+    serviceToggle.style.display = 'inline-block';
+    serviceToggle.textContent = plansExpanded ? '— Show Less' : `+ Show All Services (${p.services.length})`;
+  } else {
+    serviceToggle.style.display = 'none';
+  }
+  applyHeights(animate);
 }
+
+function renderPlan(key) {
+  currentKey = key;
+  plansExpanded = false;
+  planLabel.textContent = PLANS[key].label;
+  renderServices(false);
+}
+
+window.addEventListener('resize', () => applyHeights(false));
+
+serviceToggle.addEventListener('click', () => {
+  plansExpanded = !plansExpanded;
+  serviceList.classList.toggle('expanded', plansExpanded);
+  serviceToggle.textContent = plansExpanded
+    ? '— Show Less'
+    : `+ Show All Services (${PLANS[currentKey].services.length})`;
+  applyHeights(true);
+});
+
 document.querySelectorAll('[data-finder]').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('[data-finder]').forEach(b => b.classList.remove('active'));

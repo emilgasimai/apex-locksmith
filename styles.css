@@ -276,11 +276,39 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
 .finder-tile:active{transform:translateY(0);}
 .finder-tile.active{background:#27E0F5;color:#1A1A1A;border-color:#27E0F5;}
 
-/* Dispatch plan — fixed footprint so it never jumps between services */
-.dispatch-plan{display:flex;flex-direction:column;min-height:440px;}
-.dispatch-plan #planList{flex:1 1 auto;}
-@media(min-width:640px){ .dispatch-plan{min-height:280px;} }
-@media(min-width:1024px){ .dispatch-plan{min-height:320px;} }
+/* Service list box — fixed footprint so it never jumps between categories */
+.service-list-box{display:flex;flex-direction:column;min-height:460px;}
+.service-list-box #serviceList{overflow:hidden;transition:max-height .4s ease-in-out;}
+.service-list-box #serviceList li{transition:opacity .3s ease, transform .3s ease;}
+.service-list-box #serviceList li.service-item--extra{opacity:0;transform:translateY(-4px);transition:opacity .25s ease, transform .25s ease;}
+.service-list-box #serviceList.expanded li.service-item--extra{opacity:1;transform:translateY(0);transition:opacity .35s ease .1s, transform .35s ease .1s;}
+.service-list-box #serviceToggle:hover{color:#EDEDED;}
+.service-list-box #serviceToggle:focus-visible{outline:2px solid #27E0F5;outline-offset:3px;}
+@media(min-width:640px){ .service-list-box{min-height:340px;} }
+@media(min-width:1024px){ .service-list-box{min-height:380px;} }
+
+/* Credential tags hover lift */
+.cred-tag{transition:transform .2s ease, border-color .2s ease, box-shadow .2s ease;}
+.cred-tag:hover{transform:translateY(-4px);border-color:#27E0F5;box-shadow:0 12px 22px -10px rgba(39,224,245,.65);}
+
+/* Why Apex section */
+.why-section{background:#1A1A1A;color:#EDEDED;}
+.why-pulse-line{position:relative;height:2px;background:#27E0F5;margin-bottom:36px;}
+.why-pulse-beam{position:absolute;left:0;right:0;top:100%;height:90px;pointer-events:none;background:linear-gradient(to bottom, rgba(39,224,245,.65), rgba(39,224,245,0));transform-origin:top;transform:scaleY(0);opacity:0;animation:whyPulse 4s ease-in-out infinite;}
+@keyframes whyPulse{
+  0%{transform:scaleY(0);opacity:0;}
+  6%{opacity:.75;}
+  45%{transform:scaleY(1.2);opacity:0;}
+  46%,100%{transform:scaleY(0);opacity:0;}
+}
+.why-card{padding:28px 20px 26px;background:#242427;border:2px solid #2a2a2e;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;transition:border-color .25s ease, transform .25s ease;}
+.why-card:hover{border-color:#27E0F5;transform:translateY(-2px);}
+.why-icon{color:#27E0F5;display:flex;align-items:center;justify-content:center;width:100%;}
+.why-title{font-size:clamp(15px,1.6vw,17px);letter-spacing:.02em;line-height:1.15;color:#EDEDED;}
+.why-sub{font-size:13px;line-height:1.5;color:#EDEDED;opacity:.7;}
+@media (prefers-reduced-motion: reduce){
+  .why-pulse-beam{animation:none;display:none;}
+}
 
 /* Floating call button — pulsing beacon */
 @keyframes callRing{
@@ -679,16 +707,21 @@ textarea#contactNote.note-shake{
   position:relative;z-index:3;
   display:flex;
   flex-direction:column;
-  align-items:center;
+  align-items:flex-start;
   justify-content:center;
   min-height:500px;
-  text-align:center;
+  text-align:left;
 }
 @media (max-width:640px){
   #about.about-section{ min-height:400px; }
-  .about-inner{ min-height:400px; }
+  .about-inner{ min-height:400px; align-items:center; text-align:center; }
   .about-vignette{background:radial-gradient(ellipse at center, transparent 25%, rgba(0,0,0,0.92) 100%);}
   .about-overlay{background:rgba(0,0,0,0.68);}
+}
+/* background-attachment:fixed is broken/blurry on iOS Safari and Android
+   Chrome — disable it on any touch-primary (no-hover) device. */
+@media (hover:none) and (pointer:coarse){
+  #about.about-section::before{ background-attachment:scroll; }
 }
 
 /* ── Message-us floating button — left side of the screen ── */
