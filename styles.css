@@ -2,7 +2,7 @@
 html,body{margin:0;padding:0;background:#1A1A1A;color:#EDEDED;font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:clip}
 
 /* ── Navigation font (industrial control-panel feel) ── */
-.nav-link{font-family:'Chakra Petch','Space Grotesk',sans-serif;color:#EDEDED;}
+.nav-link{font-family:'Space Grotesk',sans-serif;color:#EDEDED;}
 
 /* Fluid type scale */
 .t-h1{font-size:clamp(36px,7vw,120px);line-height:.85;letter-spacing:-.025em}
@@ -315,7 +315,7 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
 
 /* Pulsing green dot on the 24/7 pill — sits on top-right corner of cyan box */
 .onroad-247{position:relative;}
-.onroad-dot{position:absolute;top:-13px;right:-15px;width:10px;height:10px;background:#5cd97a;border-radius:50%;box-shadow:0 0 8px rgba(92,217,122,.85), 0 0 2px rgba(0,0,0,.4);z-index:2;}
+.onroad-dot{position:absolute;top:-23px;right:-25px;width:10px;height:10px;background:#5cd97a;border-radius:50%;box-shadow:0 0 8px rgba(92,217,122,.85), 0 0 2px rgba(0,0,0,.4);z-index:2;}
 .why-card{padding:28px 20px 26px;background:#242427;border:2px solid #2a2a2e;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;transition:border-color .25s ease, transform .25s ease;}
 .why-card:hover{border-color:#27E0F5;transform:translateY(-2px);}
 .why-icon{color:#27E0F5;display:flex;align-items:center;justify-content:center;width:100%;}
@@ -704,7 +704,7 @@ textarea#contactNote.note-shake{
 }
 #about.about-section::before{
   content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
-  background-image:url('brand_assets/black-door-handle-blurred-keys-minimal-frame.jpg');
+  background-image:url('brand_assets/door-handle.webp');
   background-size:cover;
   background-position:center;
   background-repeat:no-repeat;

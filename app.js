@@ -381,7 +381,13 @@ zipForm.addEventListener('submit', (e) => {
       return;
     }
     if (typeof L === 'undefined') {
-      setStatus('Map library still loading — try again in a moment.');
+      setLoading(true);
+      var s = document.createElement('script');
+      s.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
+      s.crossOrigin = '';
+      s.onload = function(){ useLocBtn.click(); };
+      s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      document.head.appendChild(s);
       return;
     }
     setStatus('');

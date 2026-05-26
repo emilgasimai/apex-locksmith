@@ -6,38 +6,10 @@
 <title>Apex Locksmith — Open. Fast. 24/7. Toronto | GTA</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Chakra+Petch:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-<script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.10/lodash.min.js"></script>
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        colors: {
-          bg:      '#1A1A1A',
-          bg2:     '#242427',
-          bg3:     '#2f2f33',
-          ink:     '#EDEDED',
-          inkDim:  '#9a9a9a',
-          rule:    '#3a3a3e',
-          hivis:   '#27E0F5',
-          hivisDk: '#1cb8c9',
-          caution: '#f4c20a',
-          green:   '#5cd97a',
-        },
-        fontFamily: {
-          display: ['"Archivo Black"', 'sans-serif'],
-          body:    ['"DM Sans"', 'sans-serif'],
-          mono:    ['"Space Grotesk"', 'sans-serif'],
-        },
-      },
-    },
-  };
-</script>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="tailwind.css"/>
+<link rel="stylesheet" id="leafletCss" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" media="print" onload="this.media='all'" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 <link rel="stylesheet" href="styles.css"/>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
 </head>
 <body class="bg-bg text-ink">
 
@@ -71,7 +43,7 @@
 <header id="header">
   <div id="headerContent" class="px-5 sm:px-6 flex items-center justify-between">
     <a href="#home" class="flex items-center gap-3">
-      <img src="brand_assets/withoutbg.png" alt="Apex Locksmith" class="logo-img"/>
+      <picture><source srcset="brand_assets/logo.webp" type="image/webp"/><img src="brand_assets/withoutbg.png" alt="Apex Locksmith" class="logo-img"/></picture>
     </a>
 
     <!-- Desktop nav -->
@@ -927,12 +899,13 @@
       setTimeout(function(){ overlay.classList.add('is-hidden'); }, 500);
     }
 
-    // Initial load: animation is already visible via HTML; init Lottie when script is ready
-    if (typeof lottie !== 'undefined') {
-      ensureAnim();
-    } else {
-      document.addEventListener('DOMContentLoaded', ensureAnim);
-    }
+    // Load Lottie asynchronously — doesn't block render, calls ensureAnim when ready
+    (function(){
+      var s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js';
+      s.onload = ensureAnim;
+      document.head.appendChild(s);
+    })();
 
     if (document.readyState === 'complete') {
       hideLoading();
