@@ -650,8 +650,6 @@ scrollBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 's
     svgs = svgs.filter(Boolean);
     if (!svgs.length) { console.warn('[hero-particles] no SVGs loaded'); return; }
     init(svgs, container, COUNT);
-    const trustEl = document.getElementById('trustParticles');
-    if (trustEl) init(svgs, trustEl, 48);
   });
 
   function makeParticle(svgs, W, H) {

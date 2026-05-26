@@ -742,7 +742,7 @@ textarea#contactNote.note-shake{
 #home{position:relative;}
 #home > .hero-grid{position:relative;z-index:1;}
 .hero-particles{
-  position:absolute;top:0;left:50%;height:100%;width:100vw;
+  position:absolute;top:0;left:50%;height:calc(100% + 220px);width:100vw;
   transform:translateX(-50%);
   z-index:0;pointer-events:none;overflow:hidden;
   contain:strict;
