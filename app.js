@@ -649,7 +649,9 @@ scrollBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 's
   )).then(svgs => {
     svgs = svgs.filter(Boolean);
     if (!svgs.length) { console.warn('[hero-particles] no SVGs loaded'); return; }
-    init(svgs);
+    init(svgs, container, COUNT);
+    const trustEl = document.getElementById('trustParticles');
+    if (trustEl) init(svgs, trustEl, 48);
   });
 
   function makeParticle(svgs, W, H) {
@@ -690,22 +692,22 @@ scrollBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 's
     return { el, x, y, vx, vy };
   }
 
-  function init(svgs) {
-    let W = container.clientWidth;
-    let H = container.clientHeight;
+  function init(svgs, el, count) {
+    let W = el.clientWidth;
+    let H = el.clientHeight;
     if (!W || !H) return;
 
-    const particles = Array.from({ length: COUNT }, () => makeParticle(svgs, W, H));
+    const particles = Array.from({ length: count }, () => makeParticle(svgs, W, H));
     const frag = document.createDocumentFragment();
     particles.forEach(p => frag.appendChild(p.el));
-    container.appendChild(frag);
+    el.appendChild(frag);
 
     // Track size changes (window resize, hero re-flow, mobile rotate)
     const ro = new ResizeObserver(() => {
-      W = container.clientWidth;
-      H = container.clientHeight;
+      W = el.clientWidth;
+      H = el.clientHeight;
     });
-    ro.observe(container);
+    ro.observe(el);
 
     let last    = performance.now();
     let running = true;

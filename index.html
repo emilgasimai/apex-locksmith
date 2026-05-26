@@ -209,8 +209,10 @@
 </section>
 
 <!-- ───── TRUST STRIP ───── -->
-<section style="background:#0f0f10;position:relative;border-top:3px solid #27E0F5;">
-  <div class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-9 grid grid-cols-2 lg:grid-cols-4 gap-y-6 gap-x-0">
+<section id="trustStrip" style="background:#0f0f10;position:relative;overflow:hidden;border-top:3px solid #27E0F5;">
+  <div id="trustParticles" class="hero-particles" aria-hidden="true"></div>
+  <div class="trust-frost" aria-hidden="true"></div>
+  <div class="trust-content max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-9 grid grid-cols-2 lg:grid-cols-4 gap-y-6 gap-x-0">
     <div class="lg:border-r border-rule px-0 lg:pr-6 flex flex-col items-center lg:items-start">
       <div class="font-display t-num-lg counter" data-target="18" style="color:#27E0F5;">0</div>
       <div class="font-display mt-1.5" style="font-size:14px;letter-spacing:.06em;">YRS / TORONTO</div>
@@ -231,7 +233,7 @@
       <div class="font-display mt-1.5" style="font-size:14px;letter-spacing:.06em;">JOBS COMPLETED</div>
       <div class="font-mono t-cap-sm mt-1" style="color:#9a9a9a;">AND COUNTING</div>
     </div>
-  </div>
+  </div><!-- /trust-content -->
 </section>
 
 <!-- ───── SERVICE FINDER + ZIP ───── -->

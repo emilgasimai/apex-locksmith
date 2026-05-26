@@ -778,6 +778,16 @@ textarea#contactNote.note-shake{
   .hero-particles{display:none;}
 }
 
+/* ── Trust strip: animated particle bg with frosted-glass overlay ── */
+#trustParticles{z-index:0;}
+.trust-frost{
+  position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:rgba(15,15,16,.70);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+}
+.trust-content{position:relative;z-index:2;}
+
 /* ── Owner-operated section: full-viewport photo background ── */
 #about.about-section{
   position:relative;
