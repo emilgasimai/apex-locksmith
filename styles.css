@@ -739,7 +739,7 @@ textarea#contactNote.note-shake{
    particle layer is NOT clipped back to the section's 1180px max-width;
    body has overflow-x:clip so the spillover never causes horizontal scroll.
    The particle layer owns its own overflow:hidden for wrapping drift. */
-#home{position:relative;}
+#home{position:relative;clip-path:inset(0 -200px -168px -200px);}
 #home > .hero-grid{position:relative;z-index:1;}
 .hero-particles{
   position:absolute;top:0;left:50%;height:calc(100% + 220px);width:100vw;
