@@ -371,9 +371,9 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
   .onroad-dot{top:-9px;right:-18px;width:9px;height:9px;}
 }
 .why-card{padding:28px 20px 26px;background:#242427;border:2px solid #2a2a2e;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;
-  box-shadow:0 2px 4px rgba(0,0,0,.35),0 12px 28px -10px rgba(0,0,0,.55),0 28px 60px -22px rgba(39,224,245,.12);
+  box-shadow:0 2px 4px rgba(0,0,0,.4),0 12px 28px -8px rgba(0,0,0,.65),0 32px 56px -18px rgba(0,0,0,.5);
   transition:border-color .25s ease, transform .25s ease, box-shadow .25s ease;}
-.why-card:hover{border-color:#27E0F5;transform:translateY(-2px);box-shadow:0 3px 6px rgba(0,0,0,.4),0 18px 36px -10px rgba(0,0,0,.6),0 36px 72px -22px rgba(39,224,245,.2);}
+.why-card:hover{border-color:#27E0F5;transform:translateY(-2px);box-shadow:0 3px 6px rgba(0,0,0,.5),0 18px 38px -8px rgba(0,0,0,.75),0 40px 64px -18px rgba(0,0,0,.6);}
 .why-icon{color:#27E0F5;display:flex;align-items:center;justify-content:center;width:100%;}
 .why-title{font-size:clamp(15px,1.6vw,17px);letter-spacing:.02em;line-height:1.15;color:#EDEDED;}
 .why-sub{font-size:13px;line-height:1.5;color:#EDEDED;opacity:.7;}
@@ -411,24 +411,35 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
 /* Section divider */
 .section-divider{border-top:3px solid #EDEDED;}
 
-/* Reviews — soft layered shadow behind each card.
-   Layered drops + a subtle cyan-tinted bloom give depth without going showy. */
+/* Reviews / Why Apex / Three Steps — pure black layered shadow */
+.step-card{
+  box-shadow:
+    0 2px 4px rgba(0,0,0,.4),
+    0 12px 28px -8px rgba(0,0,0,.65),
+    0 32px 56px -18px rgba(0,0,0,.5);
+  transition:transform .25s cubic-bezier(.2,.7,.3,1.15), box-shadow .25s ease;
+}
+.step-card:hover{
+  transform:translateY(-2px);
+  box-shadow:
+    0 3px 6px rgba(0,0,0,.5),
+    0 18px 38px -8px rgba(0,0,0,.75),
+    0 40px 64px -18px rgba(0,0,0,.6);
+}
 .review-card{
   box-shadow:
-    0 1px 0 rgba(255,255,255,.025) inset,
-    0 2px 4px rgba(0,0,0,.35),
-    0 12px 28px -10px rgba(0,0,0,.55),
-    0 28px 60px -22px rgba(39,224,245,.14);
+    0 2px 4px rgba(0,0,0,.4),
+    0 12px 28px -8px rgba(0,0,0,.65),
+    0 32px 56px -18px rgba(0,0,0,.5);
   transition:transform .35s cubic-bezier(.2,.7,.3,1.15),
              box-shadow .35s ease;
 }
 .review-card:hover{
   transform:translateY(-3px);
   box-shadow:
-    0 1px 0 rgba(255,255,255,.04) inset,
-    0 3px 6px rgba(0,0,0,.4),
-    0 18px 38px -10px rgba(0,0,0,.65),
-    0 38px 72px -22px rgba(39,224,245,.22);
+    0 3px 6px rgba(0,0,0,.5),
+    0 18px 38px -8px rgba(0,0,0,.75),
+    0 40px 64px -18px rgba(0,0,0,.6);
 }
 
 /* Form inputs — !important needed to beat Tailwind CDN preflight (runtime-injected) */
