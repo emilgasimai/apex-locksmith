@@ -294,13 +294,12 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
 /* Why Apex section */
 .why-section{background:#1A1A1A;color:#EDEDED;}
 .why-pulse-line{position:relative;height:2px;background:#27E0F5;margin-bottom:36px;}
-.why-pulse-beam{position:absolute;left:0;right:0;top:100%;height:90px;pointer-events:none;background:linear-gradient(to bottom, rgba(39,224,245,.65), rgba(39,224,245,0));transform-origin:top;transform:scaleY(0);opacity:0;animation:whyPulse 4s ease-in-out infinite;}
-@keyframes whyPulse{
-  0%{transform:scaleY(0);opacity:0;}
-  6%{opacity:.75;}
-  45%{transform:scaleY(1.2);opacity:0;}
-  46%,100%{transform:scaleY(0);opacity:0;}
+.apex-pulse{position:relative;animation:apexPulse 2.4s ease-in-out infinite;}
+@keyframes apexPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(39,224,245,.7), 0 0 0 0 rgba(39,224,245,.4);}
+  50%{box-shadow:0 0 18px 4px rgba(39,224,245,.85), 0 0 40px 8px rgba(39,224,245,.35);}
 }
+@media (prefers-reduced-motion: reduce){ .apex-pulse{animation:none;} }
 .why-card{padding:28px 20px 26px;background:#242427;border:2px solid #2a2a2e;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;transition:border-color .25s ease, transform .25s ease;}
 .why-card:hover{border-color:#27E0F5;transform:translateY(-2px);}
 .why-icon{color:#27E0F5;display:flex;align-items:center;justify-content:center;width:100%;}

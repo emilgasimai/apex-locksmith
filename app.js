@@ -542,6 +542,12 @@ const observer = new IntersectionObserver((entries) => {
     if (entry.isIntersecting && !entry.target.classList.contains('counted')) {
       const target = parseFloat(entry.target.dataset.target);
       const isDecimal = target !== Math.floor(target);
+      const suffix = entry.target.dataset.suffix || '';
+      const useComma = entry.target.dataset.format === 'comma';
+      const fmt = (n) => {
+        const s = isDecimal ? n.toFixed(1) : String(Math.floor(n));
+        return useComma ? Number(s).toLocaleString('en-US') + (isDecimal ? '' : '') : s;
+      };
       const duration = 2500;
       const start = Date.now();
       entry.target.classList.add('counted');
@@ -549,9 +555,9 @@ const observer = new IntersectionObserver((entries) => {
         const now = Date.now();
         const progress = Math.min((now - start) / duration, 1);
         const val = target * progress;
-        entry.target.textContent = isDecimal ? val.toFixed(1) : Math.floor(val);
+        entry.target.textContent = fmt(val) + (progress < 1 ? '' : suffix);
         if (progress < 1) requestAnimationFrame(tickFn);
-        else entry.target.textContent = target;
+        else entry.target.textContent = (useComma ? Number(target).toLocaleString('en-US') : (isDecimal ? target.toFixed(1) : target)) + suffix;
       };
       tickFn();
     }
