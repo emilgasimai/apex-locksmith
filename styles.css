@@ -276,6 +276,54 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
 .finder-tile:active{transform:translateY(0);}
 .finder-tile.active{background:#27E0F5;color:#1A1A1A;border-color:#27E0F5;}
 
+/* "MORE" placeholder tile — pressed-in 3D look, slow breathing pulse.
+   Mobile-only (md:hidden in markup) so the desktop 5-col row stays clean. */
+.finder-tile--more{
+  cursor:default;background:#141416;border-color:#2a2a2e;color:#5a6770;
+  position:relative;overflow:hidden;
+  box-shadow:
+    inset 0 3px 8px rgba(0,0,0,.55),
+    inset 0 -1px 0 rgba(255,255,255,.03),
+    inset 0 0 0 1px rgba(255,255,255,.015);
+  animation:moreBreathe 7s cubic-bezier(.4,0,.4,1) infinite;
+}
+.finder-tile--more:hover,
+.finder-tile--more:active{
+  background:#141416;border-color:#2a2a2e;color:#5a6770;
+  transform:none;box-shadow:
+    inset 0 3px 8px rgba(0,0,0,.55),
+    inset 0 -1px 0 rgba(255,255,255,.03),
+    inset 0 0 0 1px rgba(255,255,255,.015);
+}
+.finder-tile--more svg{color:inherit;}
+.finder-tile--more .more-dots{display:flex;gap:5px;align-items:center;height:26px;}
+.finder-tile--more .more-dots span{
+  width:8px;height:8px;border-radius:50%;background:currentColor;
+  box-shadow:inset 0 1px 2px rgba(0,0,0,.5), 0 1px 0 rgba(255,255,255,.04);
+}
+.finder-tile--more .more-label{color:#5a6770;}
+@keyframes moreBreathe{
+  0%, 100%{
+    box-shadow:
+      inset 0 3px 8px rgba(0,0,0,.55),
+      inset 0 -1px 0 rgba(255,255,255,.03),
+      inset 0 0 0 1px rgba(255,255,255,.015),
+      inset 0 0 0 rgba(39,224,245,0);
+    color:#5a6770;
+  }
+  50%{
+    box-shadow:
+      inset 0 3px 10px rgba(0,0,0,.6),
+      inset 0 -1px 0 rgba(255,255,255,.03),
+      inset 0 0 0 1px rgba(255,255,255,.015),
+      inset 0 0 28px rgba(39,224,245,.18);
+    color:#8a9ba3;
+  }
+}
+@media (prefers-reduced-motion: reduce){
+  .finder-tile--more{animation:none;}
+}
+
 /* Service list box — fixed footprint so it never jumps between categories */
 .service-list-box{display:flex;flex-direction:column;min-height:460px;}
 .service-list-box #serviceList{overflow:hidden;transition:max-height .4s ease-in-out;}
@@ -316,8 +364,16 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
 /* Pulsing green dot on the 24/7 pill — sits on top-right corner of cyan box */
 .onroad-247{position:relative;}
 .onroad-dot{position:absolute;top:-23px;right:-25px;width:10px;height:10px;background:#5cd97a;border-radius:50%;box-shadow:0 0 8px rgba(92,217,122,.85), 0 0 2px rgba(0,0,0,.4);z-index:2;}
-.why-card{padding:28px 20px 26px;background:#242427;border:2px solid #2a2a2e;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;transition:border-color .25s ease, transform .25s ease;}
-.why-card:hover{border-color:#27E0F5;transform:translateY(-2px);}
+/* On phones the heading wraps so "ON THE ROAD" sits on the line above the pill;
+   pull the dot tight to the pill's top-right so it clears both the ROAD text
+   above and the cyan box itself. */
+@media (max-width: 640px){
+  .onroad-dot{top:-9px;right:-18px;width:9px;height:9px;}
+}
+.why-card{padding:28px 20px 26px;background:#242427;border:2px solid #2a2a2e;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;
+  box-shadow:0 2px 4px rgba(0,0,0,.35),0 12px 28px -10px rgba(0,0,0,.55),0 28px 60px -22px rgba(39,224,245,.12);
+  transition:border-color .25s ease, transform .25s ease, box-shadow .25s ease;}
+.why-card:hover{border-color:#27E0F5;transform:translateY(-2px);box-shadow:0 3px 6px rgba(0,0,0,.4),0 18px 36px -10px rgba(0,0,0,.6),0 36px 72px -22px rgba(39,224,245,.2);}
 .why-icon{color:#27E0F5;display:flex;align-items:center;justify-content:center;width:100%;}
 .why-title{font-size:clamp(15px,1.6vw,17px);letter-spacing:.02em;line-height:1.15;color:#EDEDED;}
 .why-sub{font-size:13px;line-height:1.5;color:#EDEDED;opacity:.7;}
@@ -354,6 +410,26 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
 
 /* Section divider */
 .section-divider{border-top:3px solid #EDEDED;}
+
+/* Reviews — soft layered shadow behind each card.
+   Layered drops + a subtle cyan-tinted bloom give depth without going showy. */
+.review-card{
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.025) inset,
+    0 2px 4px rgba(0,0,0,.35),
+    0 12px 28px -10px rgba(0,0,0,.55),
+    0 28px 60px -22px rgba(39,224,245,.14);
+  transition:transform .35s cubic-bezier(.2,.7,.3,1.15),
+             box-shadow .35s ease;
+}
+.review-card:hover{
+  transform:translateY(-3px);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.04) inset,
+    0 3px 6px rgba(0,0,0,.4),
+    0 18px 38px -10px rgba(0,0,0,.65),
+    0 38px 72px -22px rgba(39,224,245,.22);
+}
 
 /* Form inputs — !important needed to beat Tailwind CDN preflight (runtime-injected) */
 input,textarea,select{
@@ -512,14 +588,14 @@ html{scroll-behavior:smooth;}
 .zone-geo-status.show{display:block;}
 
 .zone-map-wrap{
-  display:grid;grid-template-rows:0fr;opacity:0;
-  transition:grid-template-rows .55s cubic-bezier(.2,.7,.3,1),
-             opacity .35s ease,
-             margin-top .35s ease;
-  margin-top:0;
+  max-height:0;opacity:0;margin-top:0;overflow:hidden;
+  transform:translateY(-8px) scaleY(.96);transform-origin:top center;
+  transition:max-height .6s cubic-bezier(.2,.7,.3,1),
+             transform .55s cubic-bezier(.2,.7,.3,1.15),
+             opacity .35s ease .05s,
+             margin-top .4s cubic-bezier(.2,.7,.3,1);
 }
-.zone-map-wrap > *{min-height:0;overflow:hidden;}
-.zone-map-wrap.open{grid-template-rows:1fr;opacity:1;margin-top:14px;}
+.zone-map-wrap.open{max-height:320px;opacity:1;margin-top:14px;transform:translateY(0) scaleY(1);}
 
 .zone-map-frame{
   position:relative;height:170px;border:2px solid #27E0F5;
