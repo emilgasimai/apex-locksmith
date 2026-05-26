@@ -149,36 +149,40 @@
     <!-- Right column: ETA + zone check -->
     <div class="hero-side flex flex-col gap-4">
       <!-- ETA widget (compact) -->
-      <div style="position:relative;background:rgba(36,36,39,.45);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:2px solid #27E0F5;padding:14px 18px;">
-        <div class="caution-stripe" style="position:absolute;top:-6px;left:0;right:0;height:6px;"></div>
-        <div class="flex items-center justify-between mb-1.5">
-          <div class="flex items-center gap-2">
-            <span class="pulse-dot" style="width:9px;height:9px;background:#5cd97a;box-shadow:0 0 0 3px rgba(92,217,122,.25);"></span>
-            <span class="font-mono t-cap-sm" style="font-weight:700;">LIVE · DISPATCH OPEN</span>
+      <div style="position:relative;border:2px solid #27E0F5;padding:14px 18px;">
+        <div aria-hidden="true" style="position:absolute;inset:0;z-index:0;pointer-events:none;background:rgba(36,36,39,.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);"></div>
+        <div class="caution-stripe" style="position:absolute;top:-6px;left:0;right:0;height:6px;z-index:1;"></div>
+        <div style="position:relative;z-index:1;">
+          <div class="flex items-center justify-between mb-1.5">
+            <div class="flex items-center gap-2">
+              <span class="pulse-dot" style="width:9px;height:9px;background:#5cd97a;box-shadow:0 0 0 3px rgba(92,217,122,.25);"></span>
+              <span class="font-mono t-cap-sm" style="font-weight:700;">LIVE · DISPATCH OPEN</span>
+            </div>
+            <span class="font-mono t-cap-sm" style="color:#9a9a9a;font-size:9px;"><span id="techs">4</span> ON ROAD</span>
           </div>
-          <span class="font-mono t-cap-sm" style="color:#9a9a9a;font-size:9px;"><span id="techs">4</span> ON ROAD</span>
-        </div>
-        <div class="flex items-baseline gap-2 mt-0.5">
-          <div class="font-display" style="font-size:clamp(48px,8.4vw,78px);line-height:.85;color:#27E0F5;letter-spacing:-.04em;" id="eta">14</div>
-          <div class="font-display uppercase" style="font-size:clamp(16px,2.4vw,24px);line-height:1;letter-spacing:.02em;">MIN</div>
-          <div class="font-body hidden sm:block" style="font-size:11.5px;color:#9a9a9a;flex:1;padding-left:12px;padding-bottom:4px;letter-spacing:.04em;line-height:1.35;">to your door, anywhere in Toronto & GTA</div>
-        </div>
-        <div class="eta-bar mt-2" style="height:10px;">
-          <div class="eta-fill" id="etaFill" style="width:70%;"></div>
-        </div>
-        <div class="flex justify-between mt-1 font-mono" style="font-size:9px;color:#9a9a9a;letter-spacing:.16em;">
-          <span>FASTEST · 11 MIN</span>
-          <span>NIGHT MAX · 24 MIN</span>
+          <div class="flex items-baseline gap-2 mt-0.5">
+            <div class="font-display" style="font-size:clamp(48px,8.4vw,78px);line-height:.85;color:#27E0F5;letter-spacing:-.04em;" id="eta">14</div>
+            <div class="font-display uppercase" style="font-size:clamp(16px,2.4vw,24px);line-height:1;letter-spacing:.02em;">MIN</div>
+            <div class="font-body hidden sm:block" style="font-size:11.5px;color:#9a9a9a;flex:1;padding-left:12px;padding-bottom:4px;letter-spacing:.04em;line-height:1.35;">to your door, anywhere in Toronto & GTA</div>
+          </div>
+          <div class="eta-bar mt-2" style="height:10px;">
+            <div class="eta-fill" id="etaFill" style="width:70%;"></div>
+          </div>
+          <div class="flex justify-between mt-1 font-mono" style="font-size:9px;color:#9a9a9a;letter-spacing:.16em;">
+            <span>FASTEST · 11 MIN</span>
+            <span>NIGHT MAX · 24 MIN</span>
+          </div>
         </div>
       </div>
 
       <!-- Zone check (moved here, under the ETA indicator) -->
-      <form id="zipForm" style="background:rgba(36,36,39,.45);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:2px solid #EDEDED;">
-        <div class="flex justify-between items-center px-4 sm:px-5 py-3" style="background:#27E0F5;color:#1A1A1A;">
+      <form id="zipForm" style="position:relative;border:2px solid #EDEDED;">
+        <div aria-hidden="true" style="position:absolute;inset:0;z-index:0;pointer-events:none;background:rgba(36,36,39,.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);"></div>
+        <div class="flex justify-between items-center px-4 sm:px-5 py-3" style="position:relative;z-index:1;background:#27E0F5;color:#1A1A1A;">
           <div class="font-display uppercase" style="font-size:16px;letter-spacing:.04em;">ZONE CHECK</div>
           <div class="font-mono t-cap-sm" style="opacity:.7;">BY POSTAL</div>
         </div>
-        <div class="p-5">
+        <div class="p-5" style="position:relative;z-index:1;">
           <div class="font-body t-body mb-3" style="color:#9a9a9a;">We dispatch across Toronto & GTA. Enter your postal code.</div>
           <div class="flex">
             <input id="zipInput" data-format="postal" placeholder="A0A 0A0" maxlength="7" autocomplete="postal-code" inputmode="text" autocapitalize="characters" spellcheck="false" style="flex:1;min-width:0;border-right:none;font-family:'Archivo Black',sans-serif;font-size:clamp(18px,2.4vw,24px);letter-spacing:.08em;padding:14px 18px;text-transform:uppercase;"/>
