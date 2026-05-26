@@ -368,7 +368,7 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
    pull the dot tight to the pill's top-right so it clears both the ROAD text
    above and the cyan box itself. */
 @media (max-width: 640px){
-  .onroad-dot{top:-3px;right:-18px;width:9px;height:9px;}
+  .onroad-dot{top:0px;right:-18px;width:9px;height:9px;}
 }
 .why-card{padding:28px 20px 26px;background:#242427;border:2px solid #2a2a2e;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;
   box-shadow:0 2px 4px rgba(0,0,0,.4),0 12px 28px -8px rgba(0,0,0,.65),0 32px 56px -18px rgba(0,0,0,.5);
