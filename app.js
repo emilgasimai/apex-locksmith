@@ -4,8 +4,15 @@ const lockSvg = document.getElementById('lockSvg');
 const mobileMenu = document.getElementById('mobileMenu');
 let isOpen = false;
 
+function positionMobileMenu() {
+  const hdr = document.getElementById('header');
+  if (!hdr) return;
+  mobileMenu.style.top = hdr.getBoundingClientRect().bottom + 'px';
+}
+
 function toggleLock(forceState) {
   isOpen = typeof forceState === 'boolean' ? forceState : !isOpen;
+  if (isOpen) positionMobileMenu();
   lockBtn.classList.toggle('lock-open', isOpen);
   lockSvg.classList.toggle('lock-open', isOpen);
   mobileMenu.classList.toggle('open', isOpen);
@@ -18,6 +25,7 @@ lockBtn.addEventListener('click', () => {
   lockBtn.classList.add('lk-bloom');
   toggleLock();
 });
+window.addEventListener('scroll', () => { if (isOpen) positionMobileMenu(); }, { passive: true });
 document.querySelectorAll('.mobile-link').forEach(a => a.addEventListener('click', () => toggleLock(false)));
 
 // ── ETA drift ──
@@ -40,58 +48,53 @@ const PLANS = {
   home: {
     label: 'House / Apt',
     services: [
-      'Break-in repair',
-      'Broken key extraction',
-      'Jammed lock',
-      'Lockouts',
-      'High security locks',
-      'Smart locks',
-      'Home, Apartment, Condo doors',
-      'Mailbox',
-      'Padlock',
+      'Break-in Repair',
+      'Broken Key/Lock',
+      'Smart Lock',
+      'Garage Door',
       'Rekey',
-      'Lock change',
-      'Installation',
+      {main: 'Lockouts', sub: 'House, Apartment, Condo, Cars, Safes, Padlock, Mailbox'},
+      {main: 'Installation', sub: 'High Security Locks, Smart Locks, Multipoint Locks, Deadbolts, Cylinders, Handles, Master Key'},
     ],
   },
   car: {
     label: 'Car / Truck',
     services: [
-      'Car/truck lockouts',
-      'Semi trailer',
-      'Bike locks',
-      'Key programming',
-      'Remote programming',
+      'Car/Truck Lockout',
+      'Protected Vehicle',
+      'Semi Trailer',
+      'Key Programming',
+      'Key Cuts',
+      'Ignition',
     ],
   },
   office: {
     label: 'Office / Commercial',
     services: [
-      'Break-in repair',
-      'Store lockout',
-      'Office lockout',
-      'Access control',
-      'Pushbar',
-      'Rekey',
-      'Lock change',
-      'Installation',
+      'Break-in Repair',
+      'Store Lockout',
+      'Office Lockout',
+      'Gates Lockout',
+      'Access Control',
+      {main: 'Installation', sub: 'High Security Locks, Smart Locks, Access Point, Mortise Locks, Push Bar, Cylinders, Handles, Door Opener, Master Key'},
     ],
   },
   safe: {
     label: 'Safes',
     services: [
-      'Combination lock',
-      'Keypad lock',
-      'Key lock',
+      'Combination Locks',
+      'Keypad Locks',
+      'Key Locks',
     ],
   },
   security: {
-    label: 'Security',
+    label: 'Security / Camera',
     services: [
-      'Security camera installation',
-      'Security system setup',
-      'Camera maintenance',
-      'Access control systems',
+      'Security Camera Installation',
+      'Security System Setup',
+      'Camera Maintenance',
+      'Access Control Systems',
+      'Smart Home System',
     ],
   },
 };
@@ -130,11 +133,14 @@ function applyHeights(animate) {
 
 function renderServices(animate = true) {
   const p = PLANS[currentKey];
-  serviceList.innerHTML = p.services.map((s, i) => `
-    <li class="flex gap-3 items-baseline font-body service-item${i >= VISIBLE_COUNT ? ' service-item--extra' : ''}" style="font-size:14px;line-height:1.5;">
-      <span class="font-mono" style="color:#27E0F5;font-size:14px;font-weight:700;line-height:1;">✓</span>
-      <span>${s}</span>
-    </li>`).join('');
+  serviceList.innerHTML = p.services.map((s, i) => {
+    const main = typeof s === 'object' ? s.main : s;
+    const sub  = typeof s === 'object' ? s.sub  : null;
+    return `<li class="flex gap-3 items-baseline font-body service-item${i >= VISIBLE_COUNT ? ' service-item--extra' : ''}" style="font-size:14px;line-height:1.5;">
+      <span class="font-mono" style="color:#27E0F5;font-size:14px;font-weight:700;line-height:1;flex-shrink:0;">✓</span>
+      <span>${main}${sub ? `<br><span style="font-size:11px;color:#6f6f74;line-height:1.4;display:block;">${sub}</span>` : ''}</span>
+    </li>`;
+  }).join('');
   serviceList.classList.toggle('expanded', plansExpanded);
   if (p.services.length > VISIBLE_COUNT) {
     serviceToggle.style.display = 'inline-block';
@@ -542,34 +548,50 @@ window.addEventListener('scroll', onHeaderScroll, { passive: true });
 onHeaderScroll();
 
 // ── Counter animation ──
-const observerOpts = { threshold: .5 };
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting && !entry.target.classList.contains('counted')) {
-      const target = parseFloat(entry.target.dataset.target);
-      const isDecimal = target !== Math.floor(target);
-      const suffix = entry.target.dataset.suffix || '';
-      const useComma = entry.target.dataset.format === 'comma';
-      const fmt = (n) => {
-        const s = isDecimal ? n.toFixed(1) : String(Math.floor(n));
-        return useComma ? Number(s).toLocaleString('en-US') + (isDecimal ? '' : '') : s;
-      };
-      const duration = 2500;
-      const start = Date.now();
-      entry.target.classList.add('counted');
-      const tickFn = () => {
-        const now = Date.now();
-        const progress = Math.min((now - start) / duration, 1);
-        const val = target * progress;
-        entry.target.textContent = fmt(val) + (progress < 1 ? '' : suffix);
-        if (progress < 1) requestAnimationFrame(tickFn);
-        else entry.target.textContent = (useComma ? Number(target).toLocaleString('en-US') : (isDecimal ? target.toFixed(1) : target)) + suffix;
-      };
-      tickFn();
+(function () {
+  const counters = document.querySelectorAll('.counter');
+  if (!counters.length) return;
+
+  function runCounter(el) {
+    if (el.classList.contains('counted')) return;
+    el.classList.add('counted');
+    const target   = parseFloat(el.dataset.target);
+    const isDecimal = target !== Math.floor(target);
+    const suffix   = el.dataset.suffix || '';
+    const useComma = el.dataset.format === 'comma';
+    const duration = 2000;
+    const start    = performance.now();
+
+    function fmt(n) {
+      if (isDecimal) return n.toFixed(1);
+      const floored = Math.floor(n);
+      return useComma ? floored.toLocaleString('en-US') : String(floored);
     }
-  });
-}, observerOpts);
-document.querySelectorAll('.counter').forEach(el => observer.observe(el));
+
+    function tick(now) {
+      const progress = Math.min((now - start) / duration, 1);
+      // ease-out cubic so it decelerates as it reaches the target
+      const ease = 1 - Math.pow(1 - progress, 3);
+      if (progress < 1) {
+        el.textContent = fmt(target * ease);
+        requestAnimationFrame(tick);
+      } else {
+        el.textContent = (isDecimal ? target.toFixed(1) : (useComma ? target.toLocaleString('en-US') : String(target))) + suffix;
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+
+  const counterObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      runCounter(entry.target);
+      counterObserver.unobserve(entry.target);
+    });
+  }, { threshold: 0.1 });
+
+  counters.forEach(el => counterObserver.observe(el));
+})();
 
 // ── Scroll to top button ──
 const scrollBtn = document.getElementById('scrollTop');
@@ -641,6 +663,9 @@ scrollBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 's
       .replace(/stroke\s*:\s*(?:#000(?:000)?|black|rgb\(\s*0\s*,\s*0\s*,\s*0\s*\))/gi, 'stroke: currentColor');
   }
 
+  const isMobile = window.innerWidth < 768;
+  const activeCount = isMobile ? Math.ceil(COUNT / 2) : COUNT;
+
   Promise.all(ICON_FILES.map(name =>
     fetch('bg_icons/' + name)
       .then(r => (r.ok ? r.text() : ''))
@@ -649,7 +674,7 @@ scrollBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 's
   )).then(svgs => {
     svgs = svgs.filter(Boolean);
     if (!svgs.length) { console.warn('[hero-particles] no SVGs loaded'); return; }
-    init(svgs, container, COUNT);
+    init(svgs, container, activeCount);
   });
 
   function makeParticle(svgs, W, H) {

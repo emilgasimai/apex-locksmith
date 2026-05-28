@@ -1,5 +1,28 @@
 {
   "dependencies": {
     "puppeteer": "^25.0.4"
-  }
+  },
+  "name": "project-locksmith",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "devDependencies": {
+    "sharp": "^0.34.5",
+    "tailwindcss": "^3.4.19"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emilgasimai/apex-locksmith.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/emilgasimai/apex-locksmith/issues"
+  },
+  "homepage": "https://github.com/emilgasimai/apex-locksmith#readme"
 }

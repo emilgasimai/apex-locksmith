@@ -207,13 +207,11 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
   position:fixed;top:64px;left:0;right:0;
   z-index:999;
   max-height:0;overflow:hidden;
-  transition:max-height .45s cubic-bezier(.2,.8,.2,1), opacity .3s ease, top .35s cubic-bezier(.2,.7,.3,1);
+  transition:max-height .45s cubic-bezier(.2,.8,.2,1), opacity .3s ease;
   opacity:0;
   pointer-events:none;
 }
 .mobile-menu.open{max-height:520px;opacity:1;pointer-events:auto;}
-/* When the header shrinks on scroll, follow it down. */
-#header.scrolled ~ #mobileMenu{ top:56px; }
 
 /* Hide scrollbars on horizontal scroll */
 .no-scrollbar::-webkit-scrollbar{display:none}
@@ -501,6 +499,7 @@ html{scroll-behavior:smooth;}
   100% {box-shadow: 0 0 0 0 rgba(39,224,245,0);}
 }
 .call-pulse:hover{animation:callBoxPulse 1.9s ease-out infinite;}
+.safe-pulse{position:relative;animation:apexHeartbeat 2.2s cubic-bezier(.4,0,.2,1) infinite;transform-origin:center;}
 /* Hero button — always-on pulse, slightly stronger so it reads on mobile */
 @keyframes heroCallPulse{
   0%   {box-shadow: 0 0 0 0 rgba(39,224,245,.7);}
