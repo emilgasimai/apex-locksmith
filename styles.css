@@ -67,7 +67,7 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
 }
 #services::before{
   content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
-  background-image:url('brand_assets/bg.jpg');
+  background-image:url('brand_assets/concrete.webp');
   background-size:cover;
   background-position:center;
   background-repeat:no-repeat;
@@ -212,6 +212,15 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
   pointer-events:none;
 }
 .mobile-menu.open{max-height:520px;opacity:1;pointer-events:auto;}
+
+/* The hamburger + drawer are mobile/tablet only; the inline nav takes over at
+   ≥1024px. Tailwind's lg:hidden loses the cascade tie because .menu-lock-btn
+   sets display:inline-flex and styles.css loads after tailwind.css — so enforce
+   the hidden state here (where source order wins). */
+@media (min-width:1024px){
+  .menu-lock-btn{ display:none !important; }
+  .mobile-menu{ display:none !important; }
+}
 
 /* Hide scrollbars on horizontal scroll */
 .no-scrollbar::-webkit-scrollbar{display:none}

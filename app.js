@@ -98,6 +98,18 @@ const PLANS = {
     ],
   },
 };
+
+// ── Apply admin Service-Finder override (set by content-patch.js before this
+//    script runs). Categories are fixed; only each category's services change. ──
+(function () {
+  const ov = window.__APEX_SERVICES_OVERRIDE__;
+  if (ov && typeof ov === 'object') {
+    Object.keys(ov).forEach((k) => {
+      if (PLANS[k] && Array.isArray(ov[k])) PLANS[k].services = ov[k];
+    });
+  }
+})();
+
 const planLabel = document.getElementById('planLabel');
 const serviceList = document.getElementById('serviceList');
 const serviceToggle = document.getElementById('serviceToggle');
@@ -177,6 +189,17 @@ document.querySelectorAll('[data-finder]').forEach(btn => {
   });
 });
 renderPlan('home');
+
+// ── Live-preview hook for the admin Service-Finder manager. The admin calls
+//    frame.contentWindow.__apexSetServices(pendingServices) to re-render the
+//    finder with unsaved changes (does not touch localStorage). ──
+window.__apexSetServices = function (ov) {
+  if (!ov || typeof ov !== 'object') return;
+  Object.keys(ov).forEach((k) => {
+    if (PLANS[k] && Array.isArray(ov[k])) PLANS[k].services = ov[k];
+  });
+  renderPlan(currentKey);
+};
 
 // ── Postal-code formatter (Canadian A0A 0A0) ──
 // Position pattern: [Letter][Digit][Letter] [Digit][Letter][Digit]

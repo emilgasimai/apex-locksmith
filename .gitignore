@@ -22,3 +22,13 @@ yarn-error.log*
 .env
 .env.local
 .env.*.local
+
+.vercel
+
+# Source image originals — only the optimized .webp/.jpg are deployed
+*_original.*
+
+# Local Puppeteer test harnesses + one-off tooling (not needed for deploy)
+shot-*.mjs
+diag-*.mjs
+convert-images.cjs

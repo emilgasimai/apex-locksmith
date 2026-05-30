@@ -26,7 +26,12 @@ const MIME = {
 const server = http.createServer((req, res) => {
   let urlPath = decodeURIComponent(req.url.split('?')[0]);
   if (urlPath === '/') urlPath = '/index.html';
-  const filePath = path.join(__dirname, urlPath);
+  let filePath = path.join(__dirname, urlPath);
+
+  // Clean-URL support (mirrors Vercel's cleanUrls): serve "/admin" from "admin.html"
+  if (!path.extname(filePath) && !fs.existsSync(filePath) && fs.existsSync(filePath + '.html')) {
+    filePath += '.html';
+  }
 
   try {
     const content = fs.readFileSync(filePath);
