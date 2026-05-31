@@ -247,11 +247,9 @@
     'address-line1': 'addressLine1', 'address-line2': 'addressLine2',
     'hours-dispatch': 'hoursDispatch', 'hours-shop': 'hoursShop'
   };
-  // Fix 1 — editable admin sidebar labels. defaultMenu captured once from the
-  // original DOM so renames never overwrite the built-in fallbacks.
+  // Menu Labels — editable public site nav link labels (Home, Services, About, Reviews, Contact).
   let savedMenu = {}, pendingMenu = {};
-  const defaultMenu = {};
-  navList.querySelectorAll('.nav-item').forEach(function (b) { defaultMenu[b.dataset.view] = b.textContent.trim(); });
+  const NAV_DEFAULTS = { home: 'Home', services: 'Services', about: 'About', reviews: 'Reviews', contact: 'Contact' };
   function readStoreSync(key, fb) { try { var r = localStorage.getItem(key); return r == null ? fb : JSON.parse(r); } catch (e) { return fb; } }
 
   function clone(o) { return JSON.parse(JSON.stringify(o)); }
@@ -267,9 +265,8 @@
     savedServices = readStoreSync('apex_admin_services_v1', null) || clone(DEFAULTS.services || {});
     pendingServices = clone(savedServices);
     pendingShared = {};
-    savedMenu = Object.assign({}, defaultMenu, readStoreSync('apex_admin_menu_v1', null) || {});
+    savedMenu = readStoreSync('apex_admin_menu_v1', null) || {};
     pendingMenu = clone(savedMenu);
-    applyMenuLabels(pendingMenu);
     frame.addEventListener('load', onFrameLoad);
     // If the frame already loaded before listener attached, run setup now.
     if (frame.contentDocument && frame.contentDocument.readyState === 'complete') {
@@ -294,6 +291,7 @@
     injectEditorStyles();
     wrapMixedText();
     applyAll(pending);          // reflect working state in preview
+    applyMenuLabels(pendingMenu); // reflect pending nav label edits
     attachFrameHandlers();
     refreshControls();
   }
@@ -823,25 +821,30 @@
     if (mode === 'menu') renderMenuManager();
   }
 
-  /* ── Fix 1: admin sidebar menu-label editor ── */
+  /* ── Menu Labels: public site nav link editor ── */
   function applyMenuLabels(map) {
-    navList.querySelectorAll('.nav-item').forEach(function (b) {
-      const v = b.dataset.view;
-      b.textContent = (map && map[v]) || defaultMenu[v] || b.textContent;
+    // Applies to the iframe — updates [data-nav-key] elements (desktop + mobile nav).
+    if (!doc) return;
+    Object.keys(NAV_DEFAULTS).forEach(function (key) {
+      const label = (map && map[key]) || NAV_DEFAULTS[key];
+      doc.querySelectorAll('[data-nav-key="' + key + '"]').forEach(function (el) {
+        el.textContent = label;
+      });
     });
   }
   function renderMenuManager() {
     menuList.innerHTML = '';
-    navList.querySelectorAll('.nav-item').forEach(function (b) {
-      const view = b.dataset.view;
+    Object.keys(NAV_DEFAULTS).forEach(function (key) {
       const row = document.createElement('div');
       row.className = 'menu-row';
-      row.innerHTML = '<label class="field"><span class="field-label">' + esc(defaultMenu[view]) +
-        ' <span class="menu-row-view">' + esc(view) + '</span></span>' +
-        '<input type="text" value="' + attr(pendingMenu[view] || '') + '"/></label>';
+      row.innerHTML =
+        '<label class="field">' +
+          '<span class="field-label">' + esc(NAV_DEFAULTS[key]) + '</span>' +
+          '<input type="text" placeholder="' + attr(NAV_DEFAULTS[key]) + '" value="' + attr(pendingMenu[key] || '') + '"/>' +
+        '</label>';
       const inp = row.querySelector('input');
       inp.addEventListener('input', function () {
-        pendingMenu[view] = inp.value;
+        pendingMenu[key] = inp.value;
         applyMenuLabels(pendingMenu);
         refreshControls();
       });

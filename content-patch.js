@@ -245,6 +245,21 @@
     paths.forEach(function (p) { applyOne(p, map[p]); });
   }
 
+  /* ========================================================================
+     NAV LABELS  (data-nav-key hooks — desktop + mobile nav links)
+     map: { home, services, about, reviews, contact } → custom text.
+     TODO: on backend, broadcast changes via websocket.
+     ===================================================================== */
+  function applyNavLabels(map) {
+    if (!map) return;
+    Object.keys(map).forEach(function (key) {
+      if (!map[key]) return;
+      document.querySelectorAll('[data-nav-key="' + key + '"]').forEach(function (el) {
+        el.textContent = map[key];
+      });
+    });
+  }
+
   /* ── Expose for admin live-preview ── */
   window.APEX_PATCH = {
     renderCard: renderCard,
@@ -254,7 +269,8 @@
     applyBusiness: applyBusiness,
     applyServices: applyServices,
     applyContent: applyContent,
-    syncContentKey: syncContentKey
+    syncContentKey: syncContentKey,
+    applyNavLabels: applyNavLabels
   };
 
   /* ========================================================================
@@ -276,4 +292,6 @@
   if (services) applyServices(services);
 
   applyContent(getStore('apex_admin_content_v1', null));
+
+  applyNavLabels(getStore('apex_admin_menu_v1', null));
 })();
