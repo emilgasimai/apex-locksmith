@@ -828,6 +828,27 @@
   document.querySelectorAll('.ed-mode').forEach(function (btn) {
     btn.addEventListener('click', function () { setEditorMode(btn.dataset.mode); });
   });
+
+  /* ── Collapsible mode switcher (mobile) ──
+     The 2×2 tool grid eats vertical space on phones, leaving little room to
+     edit in the preview. So on mobile it collapses behind a compact button
+     that shows the current tool; tapping reveals the grid, and choosing a tool
+     auto-collapses it. Desktop always shows the grid (the toggle is hidden). */
+  const editorToolbar = document.querySelector('.editor-toolbar');
+  const modeToggle    = document.getElementById('modeToggle');
+  const modeToggleLabel = document.getElementById('modeToggleLabel');
+
+  function setModesOpen(open) {
+    if (!editorToolbar) return;
+    editorToolbar.classList.toggle('modes-open', open);
+    if (modeToggle) modeToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+  if (modeToggle) {
+    modeToggle.addEventListener('click', function () {
+      setModesOpen(!editorToolbar.classList.contains('modes-open'));
+    });
+  }
+
   function setEditorMode(mode) {
     editorMode = mode;
     document.querySelectorAll('.ed-mode').forEach(function (b) {
@@ -839,6 +860,11 @@
     if (mode === 'carousel') renderCardList();
     if (mode === 'services') renderServiceManager();
     if (mode === 'menu') renderMenuManager();
+    // Reflect the chosen tool in the toggle, then collapse so the preview
+    // gets the full screen (mobile). No-op visually on desktop.
+    const activeBtn = document.querySelector('.ed-mode[data-mode="' + mode + '"]');
+    if (modeToggleLabel && activeBtn) modeToggleLabel.textContent = activeBtn.textContent.trim();
+    setModesOpen(false);
   }
 
   /* ── Menu Labels: public site nav link editor ── */

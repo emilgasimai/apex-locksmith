@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <meta name="robots" content="noindex,nofollow"/>
 <title>Apex Admin</title>
-<link rel="stylesheet" href="admin.css?v=9"/>
+<link rel="stylesheet" href="admin.css?v=10"/>
 </head>
 <body>
 
@@ -82,7 +82,13 @@
         <div class="editor-toolbar">
           <div class="editor-toolbar-left">
             <span class="editor-title">Content Editor</span>
-            <div class="editor-modes" role="tablist" aria-label="Editor mode">
+            <!-- Mobile-only: collapses the tool grid so the preview gets the room.
+                 Shows the current tool; tap to reveal the grid, pick a tool, it auto-hides. -->
+            <button type="button" id="modeToggle" class="ed-mode-toggle" aria-expanded="false" aria-controls="editorModes">
+              <span class="ed-mode-toggle-cur" id="modeToggleLabel">Inline edit</span>
+              <svg class="ed-mode-toggle-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="editor-modes" id="editorModes" role="tablist" aria-label="Editor mode">
               <button type="button" class="ed-mode is-active" data-mode="inline">Inline edit</button>
               <button type="button" class="ed-mode" data-mode="carousel">Carousel cards</button>
               <button type="button" class="ed-mode" data-mode="services">Service finder</button>
@@ -334,8 +340,8 @@
   </div>
 </div>
 
-<script src="apex-defaults.js?v=9"></script>
-<script src="admin-store.js?v=9"></script>
-<script src="admin.js?v=9"></script>
+<script src="apex-defaults.js?v=10"></script>
+<script src="admin-store.js?v=10"></script>
+<script src="admin.js?v=10"></script>
 </body>
 </html>
