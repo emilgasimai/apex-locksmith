@@ -111,24 +111,36 @@
     }
   }
 
+  // Re-check expiry whenever the tab regains focus/visibility. iOS Safari
+  // throttles or pauses setInterval in backgrounded tabs, so the 15s poll
+  // alone can miss the 30-minute timeout — this catches it on return.
+  function checkSessionExpiry() {
+    AdminStore.getSession().then(function (s) {
+      if (!s || isExpired(s)) {
+        if (sessionTimer) { clearInterval(sessionTimer); sessionTimer = null; }
+        doLogout('Session expired due to inactivity. Please sign in again.');
+      }
+    });
+  }
+  function onVisibility() { if (document.visibilityState === 'visible') checkSessionExpiry(); }
+
   function startSessionWatch() {
     document.addEventListener('click', registerActivity, true);
     document.addEventListener('keydown', registerActivity, true);
     document.addEventListener('mousemove', registerActivity, true);
+    document.addEventListener('touchstart', registerActivity, true);   // iOS taps
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('focus', checkSessionExpiry);
     // Poll for expiry independent of activity.
-    sessionTimer = setInterval(async function () {
-      const s = await AdminStore.getSession();
-      if (!s || isExpired(s)) {
-        clearInterval(sessionTimer);
-        sessionTimer = null;
-        doLogout('Session expired due to inactivity. Please sign in again.');
-      }
-    }, 15000);
+    sessionTimer = setInterval(checkSessionExpiry, 15000);
   }
   function stopSessionWatch() {
     document.removeEventListener('click', registerActivity, true);
     document.removeEventListener('keydown', registerActivity, true);
     document.removeEventListener('mousemove', registerActivity, true);
+    document.removeEventListener('touchstart', registerActivity, true);
+    document.removeEventListener('visibilitychange', onVisibility);
+    window.removeEventListener('focus', checkSessionExpiry);
     if (sessionTimer) { clearInterval(sessionTimer); sessionTimer = null; }
   }
 
@@ -167,6 +179,7 @@
   const editPanelTitle = document.getElementById('editPanelTitle');
   const editPanelPath  = document.getElementById('editPanelPath');
   const editPanelClose = document.getElementById('editPanelClose');
+  const editPanelGrip  = document.getElementById('editPanelGrip');
   const editTextBlock  = document.getElementById('editText');
   const editTextInput  = document.getElementById('editTextInput');
   const editImageBlock = document.getElementById('editImage');
@@ -525,6 +538,33 @@
   }
 
   editPanelClose.addEventListener('click', closePanel);
+
+  // Bottom-sheet (mobile): drag the grip down — or tap it — to dismiss.
+  if (editPanelGrip) {
+    let gDrag = false, gStartY = 0, gDy = 0, gMoved = 0;
+    const gEnd = function () {
+      if (!gDrag) return;
+      gDrag = false;
+      editPanel.style.transition = '';
+      editPanel.style.transform = '';
+      if (gDy > 80 || gMoved < 6) closePanel();   // dragged down far enough, or tapped
+    };
+    editPanelGrip.addEventListener('pointerdown', function (e) {
+      gDrag = true; gDy = 0; gMoved = 0; gStartY = e.clientY;
+      editPanel.style.transition = 'none';
+      try { editPanelGrip.setPointerCapture(e.pointerId); } catch (_) {}
+    });
+    editPanelGrip.addEventListener('pointermove', function (e) {
+      if (!gDrag) return;
+      gDy = e.clientY - gStartY; gMoved = Math.abs(gDy);
+      if (gDy > 0) editPanel.style.transform = 'translateY(' + gDy + 'px)';
+    });
+    editPanelGrip.addEventListener('pointerup', gEnd);
+    editPanelGrip.addEventListener('pointercancel', gEnd);
+    editPanelGrip.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); closePanel(); }
+    });
+  }
 
   // Text edits: live, coalesced into one undo step per element session.
   editTextInput.addEventListener('input', function () {

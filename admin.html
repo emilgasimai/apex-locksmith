@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <meta name="robots" content="noindex,nofollow"/>
 <title>Apex Admin</title>
-<link rel="stylesheet" href="admin.css?v=2"/>
+<link rel="stylesheet" href="admin.css?v=4"/>
 </head>
 <body>
 
@@ -140,8 +140,9 @@
           <div class="stage-frame-wrap">
           <iframe id="siteFrame" class="site-frame" src="/" title="Site preview"></iframe>
 
-          <!-- Slide-in edit panel -->
+          <!-- Slide-in edit panel (right-side on desktop, bottom sheet on mobile) -->
           <aside id="editPanel" class="edit-panel" aria-hidden="true">
+            <div class="edit-panel-grip" id="editPanelGrip" role="button" tabindex="0" aria-label="Drag down or tap to close"></div>
             <div class="edit-panel-head">
               <span id="editPanelTitle" class="edit-panel-title">Edit</span>
               <button id="editPanelClose" type="button" class="icon-btn" aria-label="Close panel">&times;</button>
@@ -292,8 +293,8 @@
 <!-- Toast -->
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="apex-defaults.js?v=2"></script>
-<script src="admin-store.js?v=2"></script>
-<script src="admin.js?v=2"></script>
+<script src="apex-defaults.js?v=4"></script>
+<script src="admin-store.js?v=4"></script>
+<script src="admin.js?v=4"></script>
 </body>
 </html>

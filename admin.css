@@ -26,6 +26,9 @@
 }
 
 * { box-sizing: border-box; }
+/* Remove the 300ms tap delay / double-tap zoom on controls (iOS Safari). */
+button, a, .nav-item, label { touch-action: manipulation; }
+button { -webkit-tap-highlight-color: rgba(39,224,245,.18); }
 /* Explicit display values below would otherwise beat the UA [hidden] rule. */
 [hidden] { display: none !important; }
 html, body { height: 100%; }
@@ -184,7 +187,9 @@ input:focus, textarea:focus {
 }
 
 /* ============================ DASHBOARD ============================ */
-.dash-view { height: 100%; display: flex; flex-direction: column; }
+/* 100dvh tracks the iOS dynamic viewport so the bottom bar isn't hidden
+   behind Safari's toolbar; falls back to 100% on older browsers. */
+.dash-view { height: 100%; height: 100dvh; display: flex; flex-direction: column; }
 
 .topbar {
   height: var(--topbar-h);
@@ -195,6 +200,8 @@ input:focus, textarea:focus {
   padding: 0 16px;
   background: var(--bg-2);
   border-bottom: 1px solid var(--line);
+  position: relative;   /* establish stacking so the burger sits above the drawer */
+  z-index: 70;
 }
 .topbar-brand { font-weight: 800; letter-spacing: .04em; display: inline-flex; align-items: center; gap: 9px; }
 .topbar-brand-icon { width: 18px; height: 18px; flex-shrink: 0; }
@@ -329,6 +336,23 @@ input:focus, textarea:focus {
   z-index: 5;
 }
 .edit-panel.is-open { transform: translateX(0); }
+/* Drag handle — only shown when the panel is a bottom sheet (mobile). */
+.edit-panel-grip {
+  display: none;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 0 6px;
+  cursor: grab;
+  touch-action: none;   /* let the pointer drag the sheet instead of scrolling */
+}
+.edit-panel-grip::before {
+  content: "";
+  width: 42px; height: 5px; border-radius: 3px;
+  background: var(--line-soft);
+}
+.edit-panel-grip:active { cursor: grabbing; }
+.edit-panel-grip:active::before { background: var(--line); }
 .edit-panel-head {
   flex: 0 0 auto;
   display: flex;
@@ -424,38 +448,90 @@ input:focus, textarea:focus {
 /* ── Mobile sidebar drawer trigger + backdrop (desktop default: hidden) ── */
 .topbar-burger {
   display: none; align-items: center; justify-content: center;
-  width: 36px; height: 36px; margin-right: 6px; padding: 0;
+  width: 44px; height: 44px; margin-right: 4px; padding: 0;
   background: var(--panel-2); border: 1px solid var(--line); border-radius: 4px;
   color: var(--accent); cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(39,224,245,.25);
 }
+.topbar-burger:active { background: #34343a; }
 .topbar-burger:hover { background: #34343a; }
 .topbar-burger:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .sidebar-backdrop { display: none; }
 
-/* ============================ RESPONSIVE ============================ */
+/* ============================ RESPONSIVE (phones/tablets) ============== */
 @media (max-width: 820px) {
+  /* Block any horizontal scroll from off-canvas / overlay panels */
+  .dash-view { overflow-x: hidden; }
+
+  .topbar { padding: 0 10px; }
   .topbar-burger { display: inline-flex; }
-  /* Sidebar becomes an off-canvas slide-in drawer overlay */
+  .topbar-status { display: none; }   /* free up width; not essential on phones */
+
+  /* Sidebar becomes an off-canvas slide-in drawer overlay.
+     Off-screen when closed (visibility:hidden) so nothing is tappable. */
   .sidebar {
     position: fixed; top: var(--topbar-h); left: 0; bottom: 0;
-    width: 250px; max-width: 82%;
+    width: 270px; max-width: 84%;
     transform: translateX(-100%);
-    transition: transform .24s cubic-bezier(.22,.61,.36,1);
+    visibility: hidden;
+    transition: transform .24s cubic-bezier(.22,.61,.36,1), visibility 0s linear .24s;
     z-index: 60;
     border-right: 1px solid var(--line);
     box-shadow: 14px 0 40px rgba(0,0,0,.5);
+    overflow-y: auto;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
   }
-  .sidebar.is-open { transform: translateX(0); }
+  .sidebar.is-open { transform: translateX(0); visibility: visible; transition: transform .24s cubic-bezier(.22,.61,.36,1); }
+  .nav-item { padding: 14px 18px; }   /* ≥44px tap target */
   .sidebar-backdrop {
     display: block; position: fixed; inset: var(--topbar-h) 0 0 0;
     background: rgba(0,0,0,.55);
     opacity: 0; pointer-events: none; transition: opacity .24s ease; z-index: 55;
   }
   .sidebar-backdrop.is-open { opacity: 1; pointer-events: auto; }
-  .editor-hint { display: none; }
-  .edit-panel { width: 100%; max-width: 100%; }
-  .manager-pane { flex-basis: 100%; }
-  .form-grid { grid-template-columns: 1fr; }
+
+  /* Editor toolbar wraps. (The mode-switcher grid, .ed-mode, .manager-pane and
+     form-view mobile styles live in the RESPONSIVE OVERRIDES block at the end of
+     the file, so they win over the PART 2 base styles.) */
+  .editor-toolbar { flex-wrap: wrap; gap: 8px; padding: 8px 12px; }
+  .editor-title, .editor-hint { display: none; }
+  .editor-toolbar-left { flex: 1 1 100%; min-width: 0; }
+  .editor-toolbar-right { flex: 1 1 100%; justify-content: flex-start; }
+
+  /* Bottom action bar clears the iPhone home indicator */
+  .editor-bottombar {
+    height: auto; min-height: var(--bottombar-h);
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+  }
+  .editor-bottombar .btn { padding: 11px 18px; }
+
+  /* Edit panel → bottom sheet: slides up, ≤60% tall, internal scroll,
+     drag handle, fixed (never pushes/shifts the page, no horizontal scroll). */
+  .edit-panel {
+    position: fixed; left: 0; right: 0; bottom: 0; top: auto;
+    width: 100%; max-width: 100%;
+    height: auto; max-height: 60vh; max-height: 60dvh;
+    border-left: 0; border-top: 1px solid var(--line);
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -16px 44px rgba(0,0,0,.55);
+    transform: translateY(100%);
+    transition: transform .26s cubic-bezier(.22,.61,.36,1);
+    z-index: 80;
+  }
+  .edit-panel.is-open { transform: translateY(0); }
+  .edit-panel-grip { display: flex; }
+  .edit-panel-body { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
+
+  /* Toast clears the home indicator */
+  .toast { bottom: calc(16px + env(safe-area-inset-bottom)); max-width: calc(100% - 32px); }
+}
+
+/* ── Very small phones (iPhone SE / mini ~375px) ── */
+@media (max-width: 400px) {
+  .topbar-right .btn { padding: 8px 11px; }
+  .ed-mode { font-size: 12px; }
+  .editor-bottombar .btn { padding: 10px 14px; }
 }
 
 /* ============================================================================
@@ -620,4 +696,35 @@ input:focus, textarea:focus {
 @media (max-width: 560px) {
   .version-row { flex-direction: column; align-items: stretch; }
   .version-actions { justify-content: flex-end; }
+}
+
+/* ============================================================================
+   RESPONSIVE OVERRIDES — declared LAST so they beat the PART 2 component
+   base styles above (which otherwise win the cascade by source order).
+   These are the mobile rules for components defined after the main @media block.
+   ============================================================================ */
+@media (max-width: 820px) {
+  /* Mode switcher → full-width 2×2 grid; every mode visible at once, no scroll. */
+  .editor-modes {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+    width: 100%; border: 0; border-radius: 0; overflow: visible;
+  }
+  .ed-mode {
+    border: 1px solid var(--line); border-radius: 6px;
+    padding: 12px 10px; min-height: 44px;
+    text-align: center; justify-content: center;
+    white-space: normal; line-height: 1.15; font-size: 12.5px;
+  }
+  .ed-mode:last-child { border-right: 1px solid var(--line); }
+  .ed-mode.is-active { border-color: var(--accent); }
+
+  /* Manager panes + form views fill the small screen. */
+  .manager-pane { flex-basis: 100%; flex-grow: 1; border-right: 0; }
+  .view-form { padding: 16px 14px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-actions { flex-wrap: wrap; }
+  .form-actions-btns { flex: 1 1 100%; justify-content: flex-end; }
+}
+@media (max-width: 400px) {
+  .ed-mode { font-size: 12px; padding: 11px 8px; }
 }
