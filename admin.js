@@ -1368,6 +1368,43 @@
   const defaultHistoryList   = document.getElementById('defaultHistoryList');
   const defaultCurrent       = document.getElementById('defaultCurrent');
 
+  /* ── Reusable confirm modal (styled warning dialog) ──
+     Returns a Promise<boolean>. Used instead of native confirm() so the
+     destructive Restore Default action gets a clear red/grey warning dialog. */
+  const confirmModalEl     = document.getElementById('confirmModal');
+  const confirmModalTitle  = document.getElementById('confirmModalTitle');
+  const confirmModalMsg    = document.getElementById('confirmModalMsg');
+  const confirmModalOk     = document.getElementById('confirmModalOk');
+  const confirmModalCancel = document.getElementById('confirmModalCancel');
+  let _confirmResolve = null;
+
+  function openConfirmModal(opts) {
+    return new Promise(function (resolve) {
+      _confirmResolve = resolve;
+      confirmModalTitle.textContent = opts.title || 'Are you sure?';
+      confirmModalMsg.textContent   = opts.message || '';
+      confirmModalOk.textContent    = opts.confirmLabel || 'Confirm';
+      confirmModalEl.hidden = false;
+      void confirmModalEl.offsetWidth;           // force reflow so the fade-in transitions
+      confirmModalEl.classList.add('is-open');
+      confirmModalCancel.focus();                // default focus on the safe (Cancel) button
+    });
+  }
+  function closeConfirmModal(result) {
+    confirmModalEl.classList.remove('is-open');
+    setTimeout(function () {
+      if (!confirmModalEl.classList.contains('is-open')) confirmModalEl.hidden = true;
+    }, 170);                                     // let the fade-out finish before display:none
+    const r = _confirmResolve; _confirmResolve = null;
+    if (r) r(result);
+  }
+  confirmModalOk.addEventListener('click', function () { closeConfirmModal(true); });
+  confirmModalCancel.addEventListener('click', function () { closeConfirmModal(false); });
+  confirmModalEl.addEventListener('click', function (e) { if (e.target === confirmModalEl) closeConfirmModal(false); });
+  document.addEventListener('keydown', function (e) {
+    if (!confirmModalEl.hidden && e.key === 'Escape') closeConfirmModal(false);
+  });
+
   async function renderDefaults() {
     const cp = await AdminStore.getDefaultCheckpoint();
     const hist = (await AdminStore.getDefaultHistory()) || [];
@@ -1395,16 +1432,17 @@
         '<span class="version-name">' + esc(d.name || formatTs(d.ts)) + '<span class="version-badge protected">Protected</span></span>' +
         '<span class="version-ts">' + esc(d.name ? formatTs(d.ts) : 'Default checkpoint') + '</span>' +
       '</div>' +
-      '<div class="version-actions"><button class="btn btn-ghost btn-sm" data-act="restore">Restore</button></div>';
+      '<div class="version-actions"><button class="btn btn-ghost btn-sm" data-act="restore">Restore this Default</button></div>';
     row.querySelector('[data-act="restore"]').addEventListener('click', function () { restoreDefault(d, false); });
+    // TODO: allow deletion of old default checkpoints from backend only
     return row;   // note: no delete button — Default checkpoints are protected
   }
 
   saveDefaultBtn.addEventListener('click', async function () {
-    if (!confirm('This will set the current site content as the new Default checkpoint. Continue?')) return;
+    if (!confirm('This will set the current site content as the new Default. The previous Default will be archived but not deleted. Continue?')) return;
     const name = prompt('Name this Default checkpoint (optional):', '');
     const cp = { id: 'd' + Date.now(), ts: Date.now(), name: (name && name.trim()) ? name.trim() : null, data: snapshotState() };
-    // TODO: move to secure backend
+    // TODO: store default checkpoints in secure backend, not localStorage
     await AdminStore.saveDefaultCheckpoint(cp);
     const hist = (await AdminStore.getDefaultHistory()) || [];
     hist.unshift(cp);                         // kept forever — never auto-deleted
@@ -1413,14 +1451,19 @@
     showToast('Default checkpoint saved');
   });
 
-  function restoreDefault(cp, isLast) {
+  async function restoreDefault(cp, isLast) {
     if (!cp) return;
-    const msg = isLast
-      ? 'This will revert ALL content to the last Default checkpoint. Are you sure?'
-      : 'This will revert ALL content to this Default checkpoint. Are you sure?';
-    if (!confirm(msg)) return;
+    const message = isLast
+      ? 'Restoring to Default will revert ALL site content to the last saved Default checkpoint. This cannot be undone unless you have a recent snapshot. Are you sure?'
+      : 'Restoring to this Default will revert ALL site content to this Default checkpoint. This cannot be undone unless you have a recent snapshot. Are you sure?';
+    const ok = await openConfirmModal({
+      title: 'Restore Default?',
+      message: message,
+      confirmLabel: 'Yes, Restore Default',
+    });
+    if (!ok) return;
     const d = cp.data || {};
-    // TODO: move to secure backend
+    // TODO: store default checkpoints in secure backend, not localStorage
     setOrRemove(CONTENT_KEYS.content, d.content);
     setOrRemove(CONTENT_KEYS.carousel, d.carousel);
     setOrRemove(CONTENT_KEYS.services, d.services);

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <meta name="robots" content="noindex,nofollow"/>
 <title>Apex Admin</title>
-<link rel="stylesheet" href="admin.css?v=5"/>
+<link rel="stylesheet" href="admin.css?v=6"/>
 </head>
 <body>
 
@@ -322,8 +322,20 @@
 <!-- Toast -->
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="apex-defaults.js?v=5"></script>
-<script src="admin-store.js?v=5"></script>
-<script src="admin.js?v=5"></script>
+<!-- Confirm modal — styled warning dialog (used by Restore Default) -->
+<div id="confirmModal" class="modal-overlay" hidden>
+  <div class="modal-box" role="alertdialog" aria-modal="true" aria-labelledby="confirmModalTitle" aria-describedby="confirmModalMsg">
+    <h3 id="confirmModalTitle" class="modal-title">Restore Default?</h3>
+    <p id="confirmModalMsg" class="modal-msg"></p>
+    <div class="modal-actions">
+      <button id="confirmModalCancel" type="button" class="btn btn-ghost">Cancel</button>
+      <button id="confirmModalOk" type="button" class="btn btn-danger">Yes, Restore Default</button>
+    </div>
+  </div>
+</div>
+
+<script src="apex-defaults.js?v=6"></script>
+<script src="admin-store.js?v=6"></script>
+<script src="admin.js?v=6"></script>
 </body>
 </html>

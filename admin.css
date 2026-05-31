@@ -773,3 +773,37 @@ input:focus, textarea:focus {
 @media (max-width: 400px) {
   .ed-mode { font-size: 12px; padding: 11px 8px; }
 }
+
+/* ============================================================================
+   Confirm modal — styled warning dialog (used by Restore Default)
+   ============================================================================ */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  background: rgba(8, 8, 9, .66);
+  -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
+  opacity: 0; transition: opacity .16s ease;
+}
+.modal-overlay.is-open { opacity: 1; }
+.modal-overlay[hidden] { display: none; }
+.modal-box {
+  width: 100%; max-width: 420px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--danger);
+  border-radius: 8px;
+  padding: 22px 22px 18px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .55);
+  transform: translateY(8px) scale(.98);
+  transition: transform .18s cubic-bezier(.2, .8, .2, 1);
+}
+.modal-overlay.is-open .modal-box { transform: translateY(0) scale(1); }
+.modal-title { margin: 0 0 9px; font-size: 16px; color: var(--ink); }
+.modal-msg { margin: 0 0 20px; font-size: 13.5px; line-height: 1.6; color: var(--muted); }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.modal-actions .btn { min-height: 40px; touch-action: manipulation; }
+@media (max-width: 480px) {
+  .modal-actions { flex-direction: column-reverse; }
+  .modal-actions .btn { width: 100%; justify-content: center; }
+}
