@@ -26,6 +26,8 @@ const AdminStore = (function () {
     reviews: 'apex_admin_reviews_v1',
     versions: 'apex_admin_versions_v1',
     menu: 'apex_admin_menu_v1',
+    defaultCheckpoint: 'apex_default_checkpoint',
+    defaultHistory: 'apex_default_history',
   };
 
   // Hardcoded credentials for now — see login().
@@ -176,6 +178,30 @@ const AdminStore = (function () {
     async saveVersions(list) {
       // TODO: move version history to backend database
       write(KEYS.versions, list);
+      return true;
+    },
+
+    /* ───────────── DEFAULT CHECKPOINT (protected) ───────────── */
+    // The "Default" is a protected baseline kept separately from the rolling
+    // 20-snapshot history. apex_default_checkpoint = the latest Default;
+    // apex_default_history = every Default ever saved (never auto-deleted).
+
+    async getDefaultCheckpoint() {
+      // TODO: move to secure backend
+      return read(KEYS.defaultCheckpoint, null);
+    },
+    async saveDefaultCheckpoint(cp) {
+      // TODO: move to secure backend
+      write(KEYS.defaultCheckpoint, cp);
+      return true;
+    },
+    async getDefaultHistory() {
+      // TODO: move to secure backend
+      return read(KEYS.defaultHistory, []);
+    },
+    async saveDefaultHistory(list) {
+      // TODO: move to secure backend
+      write(KEYS.defaultHistory, list);
       return true;
     },
   };

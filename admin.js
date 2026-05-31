@@ -180,6 +180,9 @@
   const editPanelPath  = document.getElementById('editPanelPath');
   const editPanelClose = document.getElementById('editPanelClose');
   const editPanelGrip  = document.getElementById('editPanelGrip');
+  const elAcceptBtn = document.getElementById('elAcceptBtn');
+  const elRevertBtn = document.getElementById('elRevertBtn');
+  const elUndoBtn   = document.getElementById('elUndoBtn');
   const editTextBlock  = document.getElementById('editText');
   const editTextInput  = document.getElementById('editTextInput');
   const editImageBlock = document.getElementById('editImage');
@@ -203,6 +206,7 @@
     '#zipResult', '#zoneGeoStatus', '#zoneDistrict', '#noteToast',
     '#loadingOverlay', '#loadingAnim', '#testLoadingBtn',
     '#callFab', '#msgFab', '#scrollTop',
+    '#lockBtn', '#mobileMenu', '.menu-lock-btn', '.mobile-menu',  /* site's own mobile menu — keep interactive, not editable */
     '.caution-stripe', '.trust-frost', '.svc-overlay', '.svc-bg-overlay',
     '.about-overlay', '.about-vignette', '.zone-map-scanline', '.apex-txt-skip'
   ].join(', ');
@@ -445,7 +449,13 @@
     doc.addEventListener('keydown', registerActivity, true);
   }
 
+  // Selectors whose clicks we must NOT hijack — the site's own mobile menu must
+  // keep working (toggle + nav) inside the preview instead of entering edit mode.
+  const PASSTHROUGH_SEL = '#lockBtn, #mobileMenu, .menu-lock-btn, .mobile-menu';
+
   function onFrameClick(e) {
+    // Fix 3: let the site's MENU button + dropdown handle their own clicks.
+    if (e.target.closest && e.target.closest(PASSTHROUGH_SEL)) return;
     e.preventDefault();
     e.stopPropagation();
     if (e.stopImmediatePropagation) e.stopImmediatePropagation();
@@ -565,6 +575,64 @@
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); closePanel(); }
     });
   }
+
+  /* ── Per-element action buttons (✓ accept / ✗ revert / ↶ undo) ──
+     These affect ONLY the currently selected element. The global Apply/Cancel
+     in the bottom bar still handle every pending change together. */
+  function sharedSavedValue(key) {
+    const biz = readStoreSync('apex_admin_business_v1', null) || clone(DEFAULTS.business || {});
+    const f = SHARED_FIELDS[key];
+    return f ? (biz[f] == null ? '' : biz[f]) : '';
+  }
+
+  // ✓ Accept — the edit is already in the pending state; confirm & close.
+  elAcceptBtn.addEventListener('click', function () { closePanel(); });
+
+  // ✗ Revert — discard ALL of this element's pending edits, back to its
+  //   previous (last-applied / source) value. Other pending changes untouched.
+  elRevertBtn.addEventListener('click', function () {
+    if (!active) return;
+    if (active.sharedKey) {
+      const key = active.sharedKey;
+      const v = sharedSavedValue(key);
+      delete pendingShared[key];
+      const w = frame.contentWindow;
+      if (w && w.APEX_PATCH && w.APEX_PATCH.syncContentKey) { try { w.APEX_PATCH.syncContentKey(key, v); } catch (e) {} }
+    } else {
+      const p = active.path;
+      history = history.filter(function (h) { return h.path !== p; });
+      if (saved[p]) { pending[p] = clone(saved[p]); applyOne(p, saved[p]); }
+      else { delete pending[p]; applyOriginal(p); }
+    }
+    sessionStarted = false;
+    closePanel();
+    refreshControls();
+  });
+
+  // ↶ Undo — step back the last change made to THIS element.
+  elUndoBtn.addEventListener('click', function () {
+    if (!active) return;
+    if (active.sharedKey) {
+      // Shared values aren't multi-step; step back to the saved value.
+      const key = active.sharedKey;
+      const v = sharedSavedValue(key);
+      delete pendingShared[key];
+      editTextInput.value = v;
+      const w = frame.contentWindow;
+      if (w && w.APEX_PATCH && w.APEX_PATCH.syncContentKey) { try { w.APEX_PATCH.syncContentKey(key, v); } catch (e) {} }
+    } else {
+      const p = active.path;
+      let idx = -1;
+      for (let i = history.length - 1; i >= 0; i--) { if (history[i].path === p) { idx = i; break; } }
+      if (idx === -1) { refreshControls(); return; }
+      const entry = history.splice(idx, 1)[0];
+      if (entry.prevEntry) { pending[p] = entry.prevEntry; applyOne(p, entry.prevEntry); }
+      else { delete pending[p]; applyOriginal(p); }
+      refreshPanelValue();
+    }
+    sessionStarted = false;
+    refreshControls();
+  });
 
   // Text edits: live, coalesced into one undo step per element session.
   editTextInput.addEventListener('input', function () {
@@ -1215,6 +1283,7 @@
 
   async function loadVersions() {
     renderVersionList((await AdminStore.getVersions()) || []);
+    renderDefaults();
   }
 
   function renderVersionList(list) {
@@ -1288,6 +1357,87 @@
     if (val == null) localStorage.removeItem(key);
     else localStorage.setItem(key, JSON.stringify(val));
   }
+
+  /* ========================================================================
+     9. DEFAULT CHECKPOINT (protected baseline + Default History)
+     Separate from the rolling 20-snapshot history; never auto-deleted.
+     ===================================================================== */
+  const saveDefaultBtn       = document.getElementById('saveDefaultBtn');
+  const restoreDefaultBtn    = document.getElementById('restoreDefaultBtn');
+  const defaultHistoryToggle = document.getElementById('defaultHistoryToggle');
+  const defaultHistoryList   = document.getElementById('defaultHistoryList');
+  const defaultCurrent       = document.getElementById('defaultCurrent');
+
+  async function renderDefaults() {
+    const cp = await AdminStore.getDefaultCheckpoint();
+    const hist = (await AdminStore.getDefaultHistory()) || [];
+    if (cp) {
+      defaultCurrent.innerHTML = 'Current Default: <strong>' + esc(cp.name || formatTs(cp.ts)) + '</strong>' + (cp.name ? ' · ' + esc(formatTs(cp.ts)) : '');
+    } else {
+      defaultCurrent.textContent = 'No Default checkpoint set yet — save one to create a protected baseline.';
+    }
+    restoreDefaultBtn.disabled = !cp;
+    const cnt = defaultHistoryToggle.querySelector('.default-count');
+    if (cnt) cnt.textContent = hist.length ? '(' + hist.length + ')' : '';
+    defaultHistoryList.innerHTML = '';
+    if (!hist.length) {
+      defaultHistoryList.innerHTML = '<div class="manager-empty">No Default checkpoints saved yet.</div>';
+    } else {
+      hist.forEach(function (d) { defaultHistoryList.appendChild(buildDefaultRow(d)); });
+    }
+  }
+
+  function buildDefaultRow(d) {
+    const row = document.createElement('div');
+    row.className = 'version-row';
+    row.innerHTML =
+      '<div class="version-info">' +
+        '<span class="version-name">' + esc(d.name || formatTs(d.ts)) + '<span class="version-badge protected">Protected</span></span>' +
+        '<span class="version-ts">' + esc(d.name ? formatTs(d.ts) : 'Default checkpoint') + '</span>' +
+      '</div>' +
+      '<div class="version-actions"><button class="btn btn-ghost btn-sm" data-act="restore">Restore</button></div>';
+    row.querySelector('[data-act="restore"]').addEventListener('click', function () { restoreDefault(d, false); });
+    return row;   // note: no delete button — Default checkpoints are protected
+  }
+
+  saveDefaultBtn.addEventListener('click', async function () {
+    if (!confirm('This will set the current site content as the new Default checkpoint. Continue?')) return;
+    const name = prompt('Name this Default checkpoint (optional):', '');
+    const cp = { id: 'd' + Date.now(), ts: Date.now(), name: (name && name.trim()) ? name.trim() : null, data: snapshotState() };
+    // TODO: move to secure backend
+    await AdminStore.saveDefaultCheckpoint(cp);
+    const hist = (await AdminStore.getDefaultHistory()) || [];
+    hist.unshift(cp);                         // kept forever — never auto-deleted
+    await AdminStore.saveDefaultHistory(hist);
+    renderDefaults();
+    showToast('Default checkpoint saved');
+  });
+
+  function restoreDefault(cp, isLast) {
+    if (!cp) return;
+    const msg = isLast
+      ? 'This will revert ALL content to the last Default checkpoint. Are you sure?'
+      : 'This will revert ALL content to this Default checkpoint. Are you sure?';
+    if (!confirm(msg)) return;
+    const d = cp.data || {};
+    // TODO: move to secure backend
+    setOrRemove(CONTENT_KEYS.content, d.content);
+    setOrRemove(CONTENT_KEYS.carousel, d.carousel);
+    setOrRemove(CONTENT_KEYS.services, d.services);
+    setOrRemove(CONTENT_KEYS.business, d.business);
+    setOrRemove(CONTENT_KEYS.reviews, d.reviews);
+    window.location.reload();
+  }
+
+  restoreDefaultBtn.addEventListener('click', async function () {
+    restoreDefault(await AdminStore.getDefaultCheckpoint(), true);
+  });
+
+  defaultHistoryToggle.addEventListener('click', function () {
+    const willOpen = defaultHistoryList.hidden;
+    defaultHistoryList.hidden = !willOpen;
+    defaultHistoryToggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+  });
 
   /* ── Go ── */
   boot();

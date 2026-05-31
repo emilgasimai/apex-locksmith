@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <meta name="robots" content="noindex,nofollow"/>
 <title>Apex Admin</title>
-<link rel="stylesheet" href="admin.css?v=4"/>
+<link rel="stylesheet" href="admin.css?v=5"/>
 </head>
 <body>
 
@@ -174,6 +174,18 @@
               </div>
             </div>
             <div class="edit-panel-foot">
+              <div class="edit-panel-actions">
+                <button id="elAcceptBtn" type="button" class="pel-btn pel-accept" title="Accept — keep this change (apply later)" aria-label="Accept this element's change">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12l5 5L20 7"/></svg>
+                  Accept
+                </button>
+                <button id="elRevertBtn" type="button" class="pel-btn pel-revert" title="Revert — undo all changes to this element" aria-label="Revert this element to its previous value">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                </button>
+                <button id="elUndoBtn" type="button" class="pel-btn pel-undo" title="Undo the last change to this element" aria-label="Undo last change to this element">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>
+                </button>
+              </div>
               <span class="edit-panel-path" id="editPanelPath"></span>
             </div>
           </aside>
@@ -265,8 +277,25 @@
               <h2>Saved Changes</h2>
               <p class="form-sub">A snapshot is captured automatically each time you Apply or Save. Restore any version to roll the whole site back. Keeps the 20 most recent.</p>
             </div>
+            <button id="saveDefaultBtn" type="button" class="btn btn-primary btn-sm" title="Set the current content as the protected Default checkpoint">★ Save as Default</button>
           </div>
+
+          <div id="defaultCurrent" class="default-current"></div>
+
           <div class="manager-list" id="versionList"></div>
+
+          <!-- Protected Default checkpoints -->
+          <div class="default-section">
+            <button id="defaultHistoryToggle" type="button" class="default-toggle" aria-expanded="false">
+              <span>Default History <span class="default-count"></span></span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div id="defaultHistoryList" class="manager-list" hidden></div>
+            <button id="restoreDefaultBtn" type="button" class="btn btn-danger btn-block" disabled>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-right:6px;"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+              Restore Default
+            </button>
+          </div>
         </div>
       </section>
 
@@ -293,8 +322,8 @@
 <!-- Toast -->
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="apex-defaults.js?v=4"></script>
-<script src="admin-store.js?v=4"></script>
-<script src="admin.js?v=4"></script>
+<script src="apex-defaults.js?v=5"></script>
+<script src="admin-store.js?v=5"></script>
+<script src="admin.js?v=5"></script>
 </body>
 </html>
