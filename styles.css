@@ -1,5 +1,5 @@
 *{box-sizing:border-box}
-html,body{margin:0;padding:0;background:#1A1A1A;color:#EDEDED;font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:clip}
+html,body{margin:0;padding:0;background:#1A1A1A;color:#EDEDED;font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:clip;overflow-wrap:break-word}
 
 /* ── Navigation font (industrial control-panel feel) ── */
 .nav-link{font-family:'Space Grotesk',sans-serif;color:#EDEDED;}
@@ -963,3 +963,63 @@ textarea#contactNote.note-shake{
 }
 #testLoadingBtn:hover,
 #testLoadingBtn:focus-visible{ background:#27E0F5; color:#1A1A1A; opacity:1; }
+
+/* ── EN / FR language toggle — sliding pill ── */
+.lang-toggle{
+  position:relative;
+  display:inline-grid;
+  grid-template-columns:1fr 1fr;     /* equal halves → slider always lands true */
+  align-items:stretch;
+  border:1px solid #27E0F5;
+  border-radius:999px;
+  background:rgba(39,224,245,.05);
+  overflow:hidden;
+  -webkit-tap-highlight-color:transparent;
+}
+/* the cyan indicator that slides between EN and FR */
+.lang-slider{
+  position:absolute;
+  top:2px; left:2px;
+  width:calc(50% - 2px);
+  height:calc(100% - 4px);
+  background:#27E0F5;
+  border-radius:999px;
+  transform:translateX(0);
+  transition:transform .24s cubic-bezier(.4,0,.2,1);  /* transform-only */
+  pointer-events:none;
+  z-index:0;
+}
+.lang-toggle[data-lang="fr"] .lang-slider{ transform:translateX(100%); }
+.lang-opt{
+  position:relative; z-index:1;
+  font-family:'Space Grotesk', sans-serif;
+  font-size:12px; font-weight:700; letter-spacing:.08em;
+  color:#27E0F5;
+  background:transparent; border:0;
+  padding:5px 13px; line-height:1;
+  cursor:pointer; border-radius:999px;
+  transition:color .2s ease, text-shadow .2s ease;
+}
+/* active option (the one the slider sits under) → dark text on cyan */
+.lang-toggle[data-lang="en"] .lang-opt[data-lang="en"],
+.lang-toggle[data-lang="fr"] .lang-opt[data-lang="fr"]{ color:#1A1A1A; }
+.lang-opt:focus-visible{ outline:2px solid #27E0F5; outline-offset:2px; }
+/* subtle glow on the INACTIVE option on hover */
+.lang-toggle[data-lang="en"] .lang-opt[data-lang="fr"]:hover,
+.lang-toggle[data-lang="fr"] .lang-opt[data-lang="en"]:hover{
+  text-shadow:0 0 9px rgba(39,224,245,.9);
+}
+/* Mobile menu variant — centered, slightly larger tap targets */
+.lang-toggle--mobile{ align-self:center; margin:2px 0 10px; }
+.lang-toggle--mobile .lang-opt{
+  font-size:13px; padding:7px 18px; min-height:34px;
+  display:flex; align-items:center; justify-content:center;
+}
+
+/* ── Language-switch fade (Fix 4): fade out → swap text → fade in (~300ms) ── */
+body{ transition:opacity .15s ease; }
+body.lang-switching{ opacity:0; }
+@media (prefers-reduced-motion: reduce){
+  body{ transition:none; }
+  .lang-slider{ transition:none; }
+}

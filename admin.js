@@ -146,6 +146,26 @@
 
   logoutBtn.addEventListener('click', function () { doLogout(); });
 
+  /* ── Unsaved-changes guard ──
+     Nothing is ever persisted to localStorage except via an explicit
+     Apply/Save button (Content Editor APPLY, Business Info Save, Reviews
+     Apply, version/Default actions). So a page refresh / tab close / external
+     navigation simply drops all in-memory pending edits. Warn before that
+     happens — but ONLY when something is actually pending. */
+  function hasUnsavedChanges() {
+    try { if (typeof isDirty === 'function' && isDirty()) return true; } catch (e) {}
+    try { if (typeof bizDirty === 'function' && bizDirty()) return true; } catch (e) {}
+    try { if (typeof reviewDirty === 'function' && reviewDirty()) return true; } catch (e) {}
+    return false;
+  }
+  window.addEventListener('beforeunload', function (e) {
+    if (!hasUnsavedChanges()) return;                  // clean → no prompt
+    var msg = 'You have unsaved changes. If you leave, all changes will be lost.';
+    e.preventDefault();
+    e.returnValue = msg;   // modern browsers show their own generic text
+    return msg;
+  });
+
   /* ========================================================================
      4. SECTION ROUTING
      ===================================================================== */
@@ -1442,7 +1462,7 @@
   }
 
   saveDefaultBtn.addEventListener('click', async function () {
-    if (!confirm('This will set the current site content as the new Default. The previous Default will be archived but not deleted. Continue?')) return;
+    if (!confirm('This will set the current site content as the new Default checkpoint. Continue?')) return;
     const name = prompt('Name this Default checkpoint (optional):', '');
     const cp = { id: 'd' + Date.now(), ts: Date.now(), name: (name && name.trim()) ? name.trim() : null, data: snapshotState() };
     // TODO: store default checkpoints in secure backend, not localStorage

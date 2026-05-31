@@ -156,7 +156,10 @@ function renderServices(animate = true) {
   serviceList.classList.toggle('expanded', plansExpanded);
   if (p.services.length > VISIBLE_COUNT) {
     serviceToggle.style.display = 'inline-block';
-    serviceToggle.textContent = plansExpanded ? '— Show Less' : `+ Show All Services (${p.services.length})`;
+    // Label is wrapped so i18n can translate it independently of the count.
+    serviceToggle.innerHTML = plansExpanded
+      ? '<span class="svc-toggle-label">— Show Less</span>'
+      : '<span class="svc-toggle-label">+ Show All Services</span> (' + p.services.length + ')';
   } else {
     serviceToggle.style.display = 'none';
   }
@@ -175,9 +178,9 @@ window.addEventListener('resize', () => applyHeights(false));
 serviceToggle.addEventListener('click', () => {
   plansExpanded = !plansExpanded;
   serviceList.classList.toggle('expanded', plansExpanded);
-  serviceToggle.textContent = plansExpanded
-    ? '— Show Less'
-    : `+ Show All Services (${PLANS[currentKey].services.length})`;
+  serviceToggle.innerHTML = plansExpanded
+    ? '<span class="svc-toggle-label">— Show Less</span>'
+    : '<span class="svc-toggle-label">+ Show All Services</span> (' + PLANS[currentKey].services.length + ')';
   applyHeights(true);
 });
 
@@ -326,9 +329,9 @@ zipForm.addEventListener('submit', (e) => {
   zipInput.classList.remove('invalid');
   const fsa = v.slice(0, 3);
   if (isCoveredFSA(fsa)) {
-    zipResult.innerHTML = renderZipPanel({ tone:'good', title:`${v} · COVERED`, body:'In our service area — Toronto & the GTA. Call dispatch and we\'ll roll a tech your way.' });
+    zipResult.innerHTML = renderZipPanel({ tone:'good', title:`${v} · <span>COVERED</span>`, body:'In our service area — Toronto & the GTA. Call dispatch and we\'ll roll a tech your way.' });
   } else {
-    zipResult.innerHTML = renderZipPanel({ tone:'out', title:`${v} · OUTSIDE GTA`, body:'That code is outside our Toronto & GTA service zone right now.' });
+    zipResult.innerHTML = renderZipPanel({ tone:'out', title:`${v} · <span>OUTSIDE GTA</span>`, body:'That code is outside our Toronto & GTA service zone right now.' });
   }
 });
 
