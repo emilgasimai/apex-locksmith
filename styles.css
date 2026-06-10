@@ -5,7 +5,7 @@ html,body{margin:0;padding:0;background:#1A1A1A;color:#EDEDED;font-family:'DM Sa
 .nav-link{font-family:'Space Grotesk',sans-serif;color:#EDEDED;}
 
 /* Fluid type scale */
-.t-h1{font-size:clamp(36px,7vw,120px);line-height:.85;letter-spacing:-.025em}
+.t-h1{font-size:clamp(34px,5vw,74px);line-height:.86;letter-spacing:-.025em}
 .t-h2{font-size:clamp(28px,4.5vw,52px);line-height:.95;letter-spacing:-.005em}
 .t-h3{font-size:clamp(18px,2.2vw,28px);line-height:1;letter-spacing:.01em}
 .t-phone-xl{font-size:clamp(28px,4.6vw,52px);line-height:1;letter-spacing:-.02em;white-space:nowrap}
@@ -230,48 +230,82 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
 .logo-img{height:48px;width:auto;display:block}
 @media (max-width: 640px){ .logo-img{height:38px} }
 
-/* Header — 21st.dev floating-pill style (Aston palette + fonts) */
+/* Header — full-width, flush bar (NOT a floating pill). STATIC by design:
+   size, background colour and opacity are identical at every scroll position —
+   no shrink / transparency / float-on-scroll plugin. */
 #header{
   position:sticky;top:0;z-index:1000;width:100%;
-  border-bottom:1px solid transparent;
-  transition:background-color .3s ease, border-color .3s ease;
+  background:rgba(26,26,26,.85);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
 }
-#headerContent{height:64px;transition:height .35s cubic-bezier(.2,.7,.3,1);}
-#header .logo-img{height:40px;transition:height .35s cubic-bezier(.2,.7,.3,1);}
-#header .nav-link{border-radius:9px !important;}
+/* The bar background stays full-width; its content aligns with the rest of the
+   site (same 1180px container as the top bar / hero). Standard (compact) sizes
+   live here; desktop enlarges them at the top of the page (see below). */
+#headerContent{height:64px;max-width:1180px;margin-left:auto;margin-right:auto;
+  transition:height .3s cubic-bezier(.2,.7,.3,1);}
+#header .logo-img{height:40px;transition:height .3s cubic-bezier(.2,.7,.3,1);}
+#header .nav-link{border-radius:9px !important;transition:font-size .3s cubic-bezier(.2,.7,.3,1);}
 #header nav .nav-link:hover{background:#2f2f33;}
-#header .btn-hivis{border-radius:9px !important;}
+#header .btn-hivis{border-radius:9px !important;
+  transition:font-size .3s cubic-bezier(.2,.7,.3,1),padding .3s cubic-bezier(.2,.7,.3,1);}
+
+/* Desktop: header sits a bit LARGER at the very top of the page, then shrinks
+   back to the standard (compact) size once the user scrolls — .scrolled is
+   toggled by app.js at scrollY > 10. Mobile keeps the standard size always. */
+@media (min-width:768px){
+  #headerContent{height:84px;}
+  #header .logo-img{height:52px;}
+  #header .nav-link{font-size:15px !important;}
+  #header .btn-hivis{font-size:14px !important;padding:12px 22px !important;}
+  #header.scrolled #headerContent{height:64px;}
+  #header.scrolled .logo-img{height:40px;}
+  #header.scrolled .nav-link{font-size:14px !important;}
+  #header.scrolled .btn-hivis{font-size:13px !important;padding:10px 18px !important;}
+}
+
+/* Neon wordmark logo (replaces the header logo image): outlined cyan letters
+   with a glow, in the display font. Larger at the top, shrinks with .scrolled. */
+.neon-logo{
+  display:inline-flex;flex-direction:column;align-items:flex-start;
+  font-family:'Archivo Black',sans-serif;text-transform:uppercase;line-height:.92;
+  -webkit-user-select:none;user-select:none;
+}
+.neon-logo-main,.neon-logo-sub{
+  color:transparent;transition:font-size .3s cubic-bezier(.2,.7,.3,1);
+}
+.neon-logo-main{
+  font-size:24px;letter-spacing:.04em;
+  -webkit-text-stroke:1.4px #4fe9ff;
+  text-shadow:0 0 3px rgba(39,224,245,.95),0 0 9px rgba(39,224,245,.7),
+              0 0 18px rgba(39,224,245,.45),0 0 34px rgba(39,224,245,.22);
+}
+.neon-logo-sub{
+  font-size:11px;letter-spacing:.30em;margin-top:3px;
+  -webkit-text-stroke:.8px #4fe9ff;
+  text-shadow:0 0 3px rgba(39,224,245,.95),0 0 7px rgba(39,224,245,.6),
+              0 0 14px rgba(39,224,245,.32);
+}
+@media (min-width:768px){
+  .neon-logo-main{font-size:30px;}
+  .neon-logo-sub{font-size:13px;}
+  #header.scrolled .neon-logo-main{font-size:24px;}
+  #header.scrolled .neon-logo-sub{font-size:11px;}
+}
+
+/* Neon scroll-progress line — full-width bottom edge of the header, grows
+   left→right as the page scrolls (0% at top → 100% at bottom). Desktop only. */
+#scrollProgress{
+  position:absolute;left:0;bottom:0;height:2px;width:0;
+  background:#27E0F5;opacity:.6;
+  box-shadow:0 0 8px rgba(39,224,245,.5);
+  transition:width .1s linear;pointer-events:none;
+}
+@media (max-width:768px){ #scrollProgress{display:none;} }
+
 #mobileMenu{
   background:rgba(15,15,16,0.88);
   -webkit-backdrop-filter:blur(18px) saturate(1.1);
   backdrop-filter:blur(18px) saturate(1.1);
-}
-
-/* scrolled — glassy */
-#header.scrolled{
-  background:rgba(26,26,26,.85);
-  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
-  border-bottom-color:#3a3a3e;
-}
-#header.scrolled #headerContent{height:56px;}
-#header.scrolled .logo-img{height:32px;}
-
-/* desktop — floating, contained, rounded pill */
-@media (min-width:768px){
-  #header{
-    max-width:1180px;margin-left:auto;margin-right:auto;
-    border:1px solid transparent;border-radius:12px !important;
-    transition:max-width .4s cubic-bezier(.2,.7,.3,1),
-               top .4s cubic-bezier(.2,.7,.3,1),
-               background-color .3s ease, border-color .3s ease,
-               box-shadow .3s ease;
-  }
-  #header.scrolled{
-    top:16px;max-width:1048px;
-    background:rgba(26,26,26,.62);
-    border-color:#3a3a3e;
-    box-shadow:0 16px 40px -12px rgba(0,0,0,.62), 0 4px 14px -4px rgba(0,0,0,.5);
-  }
 }
 
 /* Service finder tile */
@@ -831,9 +865,11 @@ textarea#contactNote.note-shake{
   overflow:hidden;
   isolation:isolate;
 }
+#about.about-section.bg-loaded::before{
+  background-image:url('brand_assets/door-handle.webp');
+}
 #about.about-section::before{
   content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
-  background-image:url('brand_assets/door-handle.webp');
   background-size:cover;
   background-position:center;
   background-repeat:no-repeat;
@@ -931,7 +967,7 @@ textarea#contactNote.note-shake{
   .hero-side{margin-top:24px;}
 }
 
-/* ───── Loading overlay (Lottie) ───── */
+/* ───── Loading overlay (lightweight CSS spinner) ───── */
 #loadingOverlay{
   position:fixed;
   inset:0;
@@ -952,7 +988,17 @@ textarea#contactNote.note-shake{
   max-width:420px;
   aspect-ratio:1 / 1;
   background:transparent;
+  display:flex;align-items:center;justify-content:center;
 }
+.loader-ring{
+  width:62px;height:62px;border-radius:50%;
+  border:4px solid rgba(39,224,245,.16);
+  border-top-color:#27E0F5;
+  box-shadow:0 0 18px rgba(39,224,245,.35);
+  animation:loaderSpin .8s linear infinite;
+}
+@keyframes loaderSpin{ to{ transform:rotate(360deg); } }
+@media (prefers-reduced-motion: reduce){ .loader-ring{ animation-duration:1.8s; } }
 /* (dev-only #testLoadingBtn styles removed for production) */
 
 /* ── EN / FR language toggle — sliding pill ── */

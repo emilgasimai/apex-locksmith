@@ -9,13 +9,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="tailwind.css"/>
 <link rel="stylesheet" id="leafletCss" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" media="print" onload="this.media='all'" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-<link rel="stylesheet" href="styles.css?v=7"/>
+<link rel="stylesheet" href="styles.css?v=18"/>
 </head>
 <body class="bg-bg text-ink">
 
 <!-- ───── LOADING OVERLAY (Lottie) ───── -->
 <div id="loadingOverlay" role="status" aria-live="polite" aria-label="Loading">
-  <div id="loadingAnim"></div>
+  <div id="loadingAnim"><span class="loader-ring" aria-hidden="true"></span></div>
 </div>
 
 <!-- (dev-only "Test Loading" button removed for production) -->
@@ -42,8 +42,11 @@
 <!-- ───── HEADER ───── -->
 <header id="header">
   <div id="headerContent" class="px-5 sm:px-6 flex items-center justify-between">
-    <a href="#home" class="flex items-center gap-3">
-      <picture><source srcset="brand_assets/logo.webp" type="image/webp"/><img src="brand_assets/withoutbg.webp" alt="Aston Locksmith" class="logo-img" loading="eager" fetchpriority="high"/></picture>
+    <a href="#home" class="flex items-center" aria-label="Aston Locksmith — home">
+      <span class="neon-logo" aria-hidden="true">
+        <span class="neon-logo-main">ASTON</span>
+        <span class="neon-logo-sub">LOCKSMITH</span>
+      </span>
     </a>
 
     <!-- Desktop nav -->
@@ -86,6 +89,8 @@
       <span class="menu-lock-txt">MENU</span>
     </button>
   </div>
+  <!-- Neon scroll-progress line (desktop only; width driven by app.js) -->
+  <div id="scrollProgress" aria-hidden="true"></div>
 </header>
 
 <!-- Mobile menu — outside #header so its backdrop-filter survives the
@@ -110,7 +115,7 @@
 </div>
 
 <!-- ───── HERO ───── -->
-<section id="home" class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14 lg:py-16">
+<section id="home" class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-9 lg:py-9">
   <!-- Animated particle background (locksmith icons) — pure decoration -->
   <div id="heroParticles" class="hero-particles" aria-hidden="true"></div>
   <div class="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-8 lg:gap-10 hero-grid">
@@ -125,17 +130,17 @@
         Is our<br/>
         <span style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;margin-right:6px;">Priority.</span>
       </h1>
-      <p class="font-body t-body-lg" style="color:#9a9a9a;max-width:540px;margin-top:18px;">
+      <p class="font-body t-body-lg" style="color:#9a9a9a;max-width:540px;margin-top:14px;">
         Break-in Repair, Lockouts, Commercial, Residential, Apt/Condo, Cars, Safes, Lock Changes and Repairs, Burglary Repairs, UPVC Door &amp; Window Locks. Serving Toronto &amp; GTA since 2022.
       </p>
-      <div class="mt-6 lg:mt-8">
-        <a id="heroCallBtn" href="tel:+14372495464" data-biz-tel class="btn-hivis call-pulse flex flex-col gap-1 items-center justify-center" style="padding:22px 14px;background:#27E0F5;color:#1A1A1A;text-decoration:none;min-height:100px;">
+      <div class="mt-5 lg:mt-6">
+        <a id="heroCallBtn" href="tel:+14372495464" data-biz-tel class="btn-hivis call-pulse flex flex-col gap-1 items-center justify-center" style="padding:18px 28px;background:#27E0F5;color:#1A1A1A;text-decoration:none;min-height:84px;max-width:540px;">
           <span class="font-mono t-cap" style="opacity:.85;font-size:11px;">TAP TO CALL</span>
           <span class="font-display t-phone-md" data-biz-phone data-content-key="phone-number">(437) 249-5464</span>
         </a>
       </div>
       <!-- Trust row -->
-      <div class="mt-7 flex flex-wrap gap-5 items-center">
+      <div class="mt-5 flex flex-wrap gap-5 items-center">
         <!-- TODO: re-add "Licensed · Bonded · Insured" badge once official license is obtained -->
         <div class="flex items-center gap-2">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#27E0F5" stroke-width="2.2"><path d="M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z"/></svg>
@@ -319,7 +324,7 @@
     <!-- Hero photo + guarantee (photo moved here, sized to match the finder card) -->
     <div class="flex flex-col gap-4">
       <div class="relative flex-1 overflow-hidden">
-        <div class="photo-slot" style="height:100%;min-height:240px;background-image:url('upscaledimages/owneroperated.webp');background-size:cover;background-position:center;background-repeat:no-repeat;border:0;"></div>
+        <div class="photo-slot" data-bg="upscaledimages/owneroperated.webp" style="height:100%;min-height:240px;background-size:cover;background-position:center;background-repeat:no-repeat;border:0;"></div>
         <!-- Bottom-up dark gradient for caption legibility -->
         <div class="absolute inset-0 pointer-events-none" style="background:linear-gradient(to top, rgba(0,0,0,0.90) 0%, rgba(0,0,0,0.55) 30%, rgba(0,0,0,0) 65%);"></div>
         <!-- Top-left chip -->
@@ -365,7 +370,7 @@
 
       <div class="svc-slide">
         <a class="svc-card has-photo" href="#contact">
-          <div class="svc-photo" style="background-image:url('upscaledimages/24emergency.webp');"></div>
+          <div class="svc-photo" data-bg="upscaledimages/24emergency.webp"></div>
           <div class="svc-overlay"></div>
           <div class="svc-num">01</div>
           <div class="svc-tag">~15 MIN</div>
@@ -382,7 +387,7 @@
 
       <div class="svc-slide">
         <a class="svc-card has-photo" href="#contact">
-          <div class="svc-photo" style="background-image:url('upscaledimages/residental.webp');"></div>
+          <div class="svc-photo" data-bg="upscaledimages/residental.webp"></div>
           <div class="svc-overlay"></div>
           <div class="svc-num">02</div>
           <div class="svc-tag">SAME DAY</div>
@@ -399,7 +404,7 @@
 
       <div class="svc-slide">
         <a class="svc-card has-photo" href="#contact">
-          <div class="svc-photo" style="background-image:url('upscaledimages/commercial.webp');"></div>
+          <div class="svc-photo" data-bg="upscaledimages/commercial.webp"></div>
           <div class="svc-overlay"></div>
           <div class="svc-num">03</div>
           <div class="svc-tag">SAME DAY</div>
@@ -416,7 +421,7 @@
 
       <div class="svc-slide">
         <a class="svc-card has-photo" href="#contact">
-          <div class="svc-photo" style="background-image:url('brand_assets/carkey.jpg');"></div>
+          <div class="svc-photo" data-bg="brand_assets/carkey.jpg"></div>
           <div class="svc-overlay"></div>
           <div class="svc-num">04</div>
           <div class="svc-tag">~15 MIN</div>
@@ -433,7 +438,7 @@
 
       <div class="svc-slide">
         <a class="svc-card has-photo" href="#contact">
-          <div class="svc-photo" style="background-image:url('upscaledimages/padlock.webp');"></div>
+          <div class="svc-photo" data-bg="upscaledimages/padlock.webp"></div>
           <div class="svc-overlay"></div>
           <div class="svc-num">05</div>
           <div class="svc-tag">BY APPT</div>
@@ -450,7 +455,7 @@
 
       <div class="svc-slide">
         <a class="svc-card has-photo" href="#contact">
-          <div class="svc-photo" style="background-image:url('upscaledimages/safe.webp');"></div>
+          <div class="svc-photo" data-bg="upscaledimages/safe.webp"></div>
           <div class="svc-overlay"></div>
           <div class="svc-num">06</div>
           <div class="svc-tag">SAME DAY</div>
@@ -467,7 +472,7 @@
 
       <div class="svc-slide">
         <a class="svc-card has-photo" href="#contact">
-          <div class="svc-photo" style="background-image:url('upscaledimages/securitycamera.webp');"></div>
+          <div class="svc-photo" data-bg="upscaledimages/securitycamera.webp"></div>
           <div class="svc-overlay"></div>
           <div class="svc-num">07</div>
           <div class="svc-tag">SAME DAY</div>
@@ -534,7 +539,7 @@
 </section>
 
 <!-- ───── ABOUT ───── -->
-<section id="about" class="about-section section-divider">
+<section id="about" class="about-section section-divider" data-bg-class="bg-loaded">
   <div class="about-overlay" aria-hidden="true"></div>
   <div class="about-vignette" aria-hidden="true"></div>
   <div class="about-inner max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10">
@@ -823,73 +828,21 @@
 </div>
 
 <script src="apex-defaults.js?v=4" defer></script>
-<script src="content-patch.js?v=2" defer></script>
-<script src="app.js?v=5" defer></script>
+<script src="content-patch.js?v=3" defer></script>
+<script src="app.js?v=8" defer></script>
 <script src="i18n.js?v=6" defer></script>
 <script>
   (function(){
+    // Lightweight intro overlay: a CSS spinner (no 300KB Lottie lib) that
+    // fades out once the page has loaded.
     var overlay = document.getElementById('loadingOverlay');
-    var container = document.getElementById('loadingAnim');
-    if (!overlay || !container) return;
-
-    var anim = null;
-    var animDataPromise = fetch('new_icons/loading.json')
-      .then(function(r){ return r.json(); })
-      .then(function(data){
-        // The Lottie ships with a solid "BG" layer; hide it so the
-        // container reads as transparent against the overlay.
-        if (data && Array.isArray(data.layers)) {
-          data.layers.forEach(function(l){
-            if (l && (l.nm === 'BG' || l.ty === 1)) l.hd = true;
-          });
-        }
-        return data;
-      })
-      .catch(function(){ return null; });
-    function ensureAnim(){
-      if (anim || typeof lottie === 'undefined') return;
-      animDataPromise.then(function(data){
-        if (anim) return;
-        anim = lottie.loadAnimation({
-          container: container,
-          renderer: 'svg',
-          loop: true,
-          autoplay: true,
-          animationData: data || undefined,
-          path: data ? undefined : 'new_icons/loading.json'
-        });
-      });
-    }
-    function showLoading(){
-      overlay.classList.remove('is-hidden');
-      // Force reflow so the opacity transition restarts cleanly
-      void overlay.offsetWidth;
-      overlay.classList.remove('is-hiding');
-      ensureAnim();
-    }
+    if (!overlay) return;
     function hideLoading(){
       overlay.classList.add('is-hiding');
       setTimeout(function(){ overlay.classList.add('is-hidden'); }, 500);
     }
-
-    // Load Lottie only after window.onload — does not block initial render
-    function loadLottie() {
-      var s = document.createElement('script');
-      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js';
-      s.onload = ensureAnim;
-      document.head.appendChild(s);
-    }
-
-    if (document.readyState === 'complete') {
-      loadLottie();
-      hideLoading();
-    } else {
-      window.addEventListener('load', function() {
-        loadLottie();
-        hideLoading();
-      });
-    }
-
+    if (document.readyState === 'complete') hideLoading();
+    else window.addEventListener('load', hideLoading);
   })();
 </script>
 </body>

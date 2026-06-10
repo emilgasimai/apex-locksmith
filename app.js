@@ -574,13 +574,54 @@ document.getElementById('contactForm').addEventListener('submit', (e) => {
 const yearEl = document.getElementById('year');
 if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-// ── Header scroll-shrink ──
+// ── Header: scroll-driven size shrink + neon scroll-progress line ──
+// Style stays static (full-width, no float/transparency change). On desktop the
+// header is a touch larger at the very top and shrinks to its standard size once
+// scrolled — the `.scrolled` class drives the CSS sizes (mobile ignores it).
+// The cyan line tracks scroll progress 0%→100% along the bottom edge.
 const headerEl = document.getElementById('header');
+const progressEl = document.getElementById('scrollProgress');
+let headerTicking = false;
 const onHeaderScroll = () => {
-  headerEl.classList.toggle('scrolled', window.scrollY > 8);
+  if (headerEl) headerEl.classList.toggle('scrolled', window.scrollY > 10);
+  if (progressEl) {
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    const ratio = max > 0 ? window.scrollY / max : 0;
+    progressEl.style.width = (Math.max(0, Math.min(1, ratio)) * 100) + '%';
+  }
+  headerTicking = false;
 };
-window.addEventListener('scroll', onHeaderScroll, { passive: true });
+window.addEventListener('scroll', () => {
+  if (!headerTicking) { headerTicking = true; requestAnimationFrame(onHeaderScroll); }
+}, { passive: true });
+window.addEventListener('resize', onHeaderScroll, { passive: true });
 onHeaderScroll();
+
+// ── Lazy-load below-the-fold background photos ──
+// The carousel + about photos (~0.9MB of webp/jpg) start life as [data-bg] and
+// only fetch when they approach the viewport, keeping them off the critical
+// initial load. Exposed globally so content-patch can re-arm after re-render.
+(function () {
+  let io = null;
+  const load = (el) => {
+    const u = el.getAttribute('data-bg');
+    if (u) { el.style.backgroundImage = "url('" + u + "')"; el.removeAttribute('data-bg'); }
+    const cls = el.getAttribute('data-bg-class'); // for ::before backgrounds
+    if (cls) { el.classList.add(cls); el.removeAttribute('data-bg-class'); }
+  };
+  window.__astonObserveLazyBg = function () {
+    const els = document.querySelectorAll('[data-bg],[data-bg-class]');
+    if (!els.length) return;
+    if (!('IntersectionObserver' in window)) { els.forEach(load); return; }
+    if (!io) {
+      io = new IntersectionObserver((entries) => {
+        entries.forEach((e) => { if (e.isIntersecting) { load(e.target); io.unobserve(e.target); } });
+      }, { rootMargin: '200px 0px' });
+    }
+    els.forEach((el) => io.observe(el));
+  };
+  window.__astonObserveLazyBg();
+})();
 
 // ── Counter animation ──
 (function () {

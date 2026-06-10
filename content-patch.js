@@ -50,7 +50,7 @@
     return '' +
       '<div class="svc-slide">' +
         '<a class="svc-card has-photo" href="#contact">' +
-          '<div class="svc-photo" style="background-image:url(\'' + img + '\');"></div>' +
+          '<div class="svc-photo" data-bg="' + img + '"></div>' +
           '<div class="svc-overlay"></div>' +
           '<div class="svc-num">' + esc(num) + '</div>' +
           '<div class="svc-tag">' + esc(card.badge || '') + '</div>' +
@@ -84,6 +84,8 @@
     var track = document.getElementById('svcTrack');
     if (!track || !cards) return;
     track.innerHTML = cards.map(renderCard).join('') + ctaCardHtml();
+    // Re-arm the lazy-bg observer for the freshly rendered cards.
+    if (window.__astonObserveLazyBg) window.__astonObserveLazyBg();
   }
 
   /* ========================================================================
