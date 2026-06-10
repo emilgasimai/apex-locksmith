@@ -1,4 +1,4 @@
-/* ============================================================================
+﻿/* ============================================================================
    apex-defaults.js — canonical seed / default data for admin-managed content.
    ----------------------------------------------------------------------------
    Loaded in BOTH the public site (index.html) and the admin panel (admin.html),
@@ -9,6 +9,7 @@
 
    When the admin saves an override, it is stored in localStorage under the
    matching apex_admin_*_v1 key and takes precedence over these defaults.
+   // TODO: rename apex_admin_*_v1 → aston_admin_*_v1 once old localStorage data is no longer needed.
 
    TODO: replace with backend API call (fetch published content from server)
    ============================================================================ */
@@ -31,9 +32,9 @@
   var DEFAULT_ICON = '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#27E0F5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M10.85 12.15L19 4M18 5l2 2M15 8l2 2"/></svg>';
 
   // Placeholder image for a new card before the admin uploads/links one.
-  var PLACEHOLDER_IMG = 'https://placehold.co/600x800/1A1A1A/27E0F5?text=APEX';
+  var PLACEHOLDER_IMG = 'https://placehold.co/600x800/1A1A1A/27E0F5?text=ASTON';
 
-  window.APEX_DEFAULTS = {
+  window.ASTON_DEFAULTS = {
     DEFAULT_ICON: DEFAULT_ICON,
     PLACEHOLDER_IMG: PLACEHOLDER_IMG,
 
@@ -51,16 +52,16 @@
     // ── Reviews ──
     reviews: [
       { id: 'r1', name: 'DANA R.',  rating: 5, date: '2 weeks ago', text: 'Got locked out at 11pm with my dog inside. Tech was at my door in 14 minutes flat and had me back in within 5 more. Clean job, no damage to the lock, fair price. Saved as a contact.' },
-      { id: 'r2', name: 'ELI K.',   rating: 5, date: '1 month ago', text: 'Had Apex rekey the whole house after closing. Marcus walked through every door and recommended swapping two deadbolts that were past their service life. No upsell pressure. Two-year warranty on the work.' },
+      { id: 'r2', name: 'ELI K.',   rating: 5, date: '1 month ago', text: 'Had Aston rekey the whole house after closing. Marcus walked through every door and recommended swapping two deadbolts that were past their service life. No upsell pressure. Two-year warranty on the work.' },
       { id: 'r3', name: 'PRIYA S.', rating: 5, date: '1 month ago', text: 'Used them for our coffee shop — master key system across four doors plus a safe combination change. Took maybe 90 minutes. Receipt was exactly the quote.' }
     ],
 
     // ── Business info (single source for phone / email / address / hours) ──
     business: {
-      phoneTel: '+14165550000',       // used in tel:/sms: hrefs (E.164-ish)
-      phoneDisplay: '(416) 555-0000', // visible text
-      whatsapp: '14165550000',        // digits only, for wa.me
-      email: 'dispatch@apexlocksmith.co',
+      phoneTel: '+14372495464',       // used in tel:/sms: hrefs (E.164-ish)
+      phoneDisplay: '(437) 249-5464', // visible text
+      whatsapp: '14372495464',        // digits only, for wa.me
+      email: 'dispatch@astonlocksmith.co',
       addressLine1: '123 Queen St W',
       addressLine2: 'Toronto, ON M5V 1A1',
       hoursDispatch: '24/7',
@@ -79,7 +80,7 @@
         'Break-in Repair', 'Store Lockout', 'Office Lockout', 'Gates Lockout', 'Access Control',
         { main: 'Installation', sub: 'High Security Locks, Smart Locks, Access Point, Mortise Locks, Push Bar, Cylinders, Handles, Door Opener, Master Key' }
       ],
-      safe: ['Combination Locks', 'Keypad Locks', 'Key Locks'],
+      safe: ['Combination Locks', 'Keypad Locks', 'Key Locks', 'Safe Installation'],
       security: ['Security Camera Installation', 'Security System Setup', 'Camera Maintenance', 'Access Control Systems', 'Smart Home System']
     },
 
@@ -93,3 +94,5 @@
     }
   };
 })();
+
+

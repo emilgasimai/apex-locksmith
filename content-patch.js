@@ -1,17 +1,17 @@
-/* ============================================================================
+﻿/* ============================================================================
    content-patch.js — applies admin-managed overrides to the live public site.
    ----------------------------------------------------------------------------
    The admin panel (/admin) stores overrides in localStorage. This script is the
    PUBLIC-SIDE RENDERER: on load it reads those keys and patches the DOM so edits
    made in /admin appear on the site without a backend.
 
-   It also exposes window.APEX_PATCH — render/apply functions that take data as an
+   It also exposes window.ASTON_PATCH — render/apply functions that take data as an
    argument (they do NOT read storage themselves). The admin calls these on the
-   preview iframe (frame.contentWindow.APEX_PATCH.*) with its PENDING data for a
+   preview iframe (frame.contentWindow.ASTON_PATCH.*) with its PENDING data for a
    live preview, without committing anything to localStorage.
 
    localStorage keys (all written by admin-store.js):
-     apex_admin_carousel_v1  → array of service cards
+     apex_admin_carousel_v1 /* TODO: rename to aston_admin_*_v1 — keeping apex_ prefix to avoid wiping saved admin data */  → array of service cards
      apex_admin_reviews_v1   → array of reviews
      apex_admin_business_v1  → business info object
      apex_admin_services_v1  → service-finder map (consumed by app.js)
@@ -22,7 +22,7 @@
 (function () {
   'use strict';
 
-  var D = window.APEX_DEFAULTS || {};
+  var D = window.ASTON_DEFAULTS || {};
 
   function getStore(key, fallback) {
     try { var r = localStorage.getItem(key); return r == null ? fallback : JSON.parse(r); }
@@ -69,12 +69,12 @@
   function ctaCardHtml() {
     return '' +
       '<div class="svc-slide">' +
-        '<a class="svc-card svc-cta" href="tel:+14165550000" data-biz-tel>' +
+        '<a class="svc-card svc-cta" href="tel:+14372495464" data-biz-tel>' +
           '<div class="svc-num" style="background:#1A1A1A;color:#EDEDED;">HELP</div>' +
           '<div class="svc-body" style="top:0;display:flex;flex-direction:column;justify-content:center;">' +
             '<h3 class="font-display uppercase" style="font-size:clamp(24px,3.4vw,30px);line-height:.98;margin:0;">Not sure which? We&#39;ll figure it out.</h3>' +
             '<p class="font-body" style="font-size:14px;line-height:1.5;margin:12px 0 20px;">One phone call. Ninety seconds of triage — we&#39;ll tell you the fix and how long it&#39;ll take.</p>' +
-            '<span class="font-display" style="font-size:24px;letter-spacing:.02em;"><span data-biz-phone data-content-key="phone-number">(416) 555-0000</span> <span class="svc-arrow-ico">&rarr;</span></span>' +
+            '<span class="font-display" style="font-size:24px;letter-spacing:.02em;"><span data-biz-phone data-content-key="phone-number">(437) 249-5464</span> <span class="svc-arrow-ico">&rarr;</span></span>' +
           '</div>' +
         '</a>' +
       '</div>';
@@ -178,9 +178,9 @@
      ===================================================================== */
   function applyServices(s) {
     if (!s) return;
-    window.__APEX_SERVICES_OVERRIDE__ = s;
+    window.__ASTON_SERVICES_OVERRIDE__ = s;
     // If app.js has already initialised, re-render live (admin preview path).
-    if (typeof window.__apexSetServices === 'function') window.__apexSetServices(s);
+    if (typeof window.__astonSetServices === 'function') window.__astonSetServices(s);
   }
 
   /* ========================================================================
@@ -196,7 +196,7 @@
     '#zoneMap', '#zoneMapWrap', '#zipResult', '#zoneGeoStatus', '#zoneDistrict', '#noteToast',
     '#loadingOverlay', '#loadingAnim', '#testLoadingBtn', '#callFab', '#msgFab', '#scrollTop',
     '.caution-stripe', '.trust-frost', '.svc-overlay', '.svc-bg-overlay',
-    '.about-overlay', '.about-vignette', '.zone-map-scanline', '.apex-txt-skip'
+    '.about-overlay', '.about-vignette', '.zone-map-scanline', '.aston-txt-skip'
   ].join(', ');
 
   function wrapMixedText() {
@@ -206,7 +206,7 @@
         if (!n.nodeValue || !n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
         var p = n.parentElement;
         if (!p) return NodeFilter.FILTER_REJECT;
-        if (p.classList.contains('apex-txt')) return NodeFilter.FILTER_REJECT;
+        if (p.classList.contains('aston-txt')) return NodeFilter.FILTER_REJECT;
         try { if (p.closest(EXCLUDE_SEL)) return NodeFilter.FILTER_REJECT; } catch (e) { return NodeFilter.FILTER_REJECT; }
         var hasElChild = false;
         for (var i = 0; i < p.childNodes.length; i++) { if (p.childNodes[i].nodeType === 1) { hasElChild = true; break; } }
@@ -217,7 +217,7 @@
     while ((n = walker.nextNode())) nodes.push(n);
     nodes.forEach(function (tn) {
       var span = document.createElement('span');
-      span.className = 'apex-txt';
+      span.className = 'aston-txt';
       tn.parentNode.replaceChild(span, tn);
       span.appendChild(tn);
     });
@@ -261,7 +261,7 @@
   }
 
   /* ── Expose for admin live-preview ── */
-  window.APEX_PATCH = {
+  window.ASTON_PATCH = {
     renderCard: renderCard,
     renderCarousel: renderCarousel,
     renderReview: renderReview,
@@ -279,6 +279,7 @@
      freshly rendered CTA card), then services (before app.js reads the global),
      then click-to-edit content overrides last (against the final DOM).
      ===================================================================== */
+  // TODO: rename apex_admin_*_v1 keys to aston_admin_*_v1 — keeping apex_ prefix to avoid wiping saved admin data
   var carousel = getStore('apex_admin_carousel_v1', null);
   if (carousel && carousel.length) renderCarousel(carousel);
 
@@ -295,3 +296,6 @@
 
   applyNavLabels(getStore('apex_admin_menu_v1', null));
 })();
+
+
+

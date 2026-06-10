@@ -1,4 +1,4 @@
-/* ============================================================================
+﻿/* ============================================================================
    i18n.js — EN/FR language layer for the PUBLIC site (admin UI is NOT touched).
    ----------------------------------------------------------------------------
    • Default language: English. Selection persisted in localStorage (apex_lang).
@@ -7,7 +7,7 @@
      set of attributes; a scoped MutationObserver re-translates dynamically
      inserted content (service finder, zone-check results, toasts, etc.).
    • NOT translated: phone numbers, emails, postal codes, addresses, proper
-     nouns (Apex Locksmith, Toronto, GTA, ALOA, Google, Visa, brand names…).
+     nouns (Aston Locksmith, Toronto, GTA, ALOA, Google, Visa, brand names…).
    • Loaded LAST (after app.js) so scripts capture English defaults first.
    TODO: when a backend exists, source translations from a CMS/locale file and
          add more languages here instead of hardcoding the dictionary.
@@ -22,7 +22,6 @@
   var DICT = {
     /* ── Top stripe ── */
     'ON-DUTY · 24/7': 'DE GARDE · 24/7',
-    'LIC # — PENDING': 'PERMIS Nº — EN ATTENTE',
 
     /* ── Nav ── */
     'Home': 'Accueil',
@@ -36,11 +35,11 @@
     'Security': 'Sécurité',
     'Is our': 'est notre',
     'Priority.': 'priorité.',
-    'Break-in repair, lockouts, commercial, residential, Apt/Condo, cars, safes, lock changes and repairs, burglary repairs, UPVC door & window locks. Serving Toronto & GTA since 2008.':
-      "Réparation après effraction, ouvertures de porte, commercial, résidentiel, appartement/condo, voitures, coffres-forts, changement et réparation de serrures, réparations après cambriolage, serrures de portes et fenêtres UPVC. Au service de Toronto et du GTA depuis 2008.",
+    'Break-in Repair, Lockouts, Commercial, Residential, Apt/Condo, Cars, Safes, Lock Changes and Repairs, Burglary Repairs, UPVC Door & Window Locks. Serving Toronto & GTA since 2022.':
+      "Réparation après Effraction, Ouvertures de Porte, Commercial, Résidentiel, Appartement/Condo, Voitures, Coffres-forts, Changement et Réparation de Serrures, Réparations après Cambriolage, Serrures de Portes et Fenêtres UPVC. Au service de Toronto et du GTA depuis 2022.",
     'TAP TO CALL': 'TOUCHEZ POUR APPELER',
-    'LICENSED · BONDED · INSURED': 'AGRÉÉ · CAUTIONNÉ · ASSURÉ',
-    '18 YRS · EST. 2008': '18 ANS · DEPUIS 2008',
+    'NON-DESTRUCTIVE ENTRY': 'OUVERTURE NON DESTRUCTIVE',
+    '4 YRS · EST. 2022': '4 ANS · DEPUIS 2022',
     'LIVE · DISPATCH OPEN': 'EN DIRECT · RÉPARTITION OUVERTE',
     'ON ROAD': 'EN ROUTE',
     'to your door, anywhere in Toronto & GTA': 'à votre porte, partout à Toronto et dans le GTA',
@@ -56,9 +55,9 @@
 
     /* ── Trust strip ── */
     'YRS / TORONTO': 'ANS / TORONTO',
-    'EST. 2008': 'DEPUIS 2008',
-    '847 REVIEWS': '847 AVIS',
-    'GOOGLE / 5-STAR AVG': 'GOOGLE / MOY. 5 ÉTOILES',
+    'EST. 2022': 'DEPUIS 2022',
+    'SATISFACTION': 'SATISFACTION',
+    'GUARANTEED WORK': 'TRAVAIL GARANTI',
     'M MEDIAN ETA': 'M ETA MÉDIAN',
     '24/7 DISPATCH': 'RÉPARTITION 24/7',
     'JOBS COMPLETED': 'INTERVENTIONS RÉALISÉES',
@@ -76,27 +75,11 @@
     'Safe': 'Coffre-fort',
     'More': 'Plus',
     '▸ WHAT WE DO HERE': '▸ CE QUE NOUS FAISONS ICI',
-    '✓ LICENSED & INSURED': '✓ AGRÉÉ ET ASSURÉ',
-    'Real locksmith, bonded and insured.': 'Vrai serrurier, cautionné et assuré.',
-    '✓ NON-DESTRUCTIVE ENTRY': '✓ OUVERTURE NON DESTRUCTIVE',
-    'Manipulation first — drilling is a last resort.':
-      "Manipulation d'abord — le perçage est un dernier recours.",
-    '✓ CONTACTLESS PAYMENT': '✓ PAIEMENT SANS CONTACT',
-    'Apple Pay, Google Pay, tap to pay.': 'Apple Pay, Google Pay, paiement sans contact.',
-    '✓ ALL CARDS ACCEPTED': '✓ TOUTES CARTES ACCEPTÉES',
-    'Visa, Mastercard, Amex, debit.': 'Visa, Mastercard, Amex, débit.',
-    'STAFF TECH': 'TECH. MAISON',
+    'VETTED TECH': 'TECH. VÉRIFIÉ',
     'Background-': 'Antécédents',
     'checked': 'vérifiés',
     'On': 'En',
     'call': 'service',
-    'TRANSPARENT PRICING': 'TARIFS TRANSPARENTS',
-    'Pricing varies by lock type and complexity. Call for an accurate quote.':
-      'Les tarifs varient selon le type de serrure et la complexité. Appelez pour une estimation précise.',
-    'Pricing varies by lock type and job. Best to speak with a technician for an accurate quote.':
-      'Les tarifs varient selon le type de serrure et le travail. Mieux vaut parler à un technicien pour une estimation précise.',
-    '* Visa payments include a 3% processing surcharge.':
-      '* Les paiements Visa incluent un supplément de traitement de 3 %.',
 
     /* ── Services carousel ── */
     'Service catalogue': 'Catalogue de services',
@@ -150,20 +133,17 @@
     /* ── About ── */
     'The shop': "L'atelier",
     'ON THE ROAD': 'SUR LA ROUTE',
-    'Five licensed technicians. One dedicated dispatcher. Every truck is ours, every tech is staff — no subcontractors, ever. The locksmith at your door has been background-checked, trained, and trusted by thousands of Toronto families.':
-      "Cinq techniciens agréés. Un répartiteur dédié. Chaque camion est le nôtre, chaque technicien fait partie de l'équipe — jamais de sous-traitants. Le serrurier à votre porte a fait l'objet d'une vérification d'antécédents, est formé et a la confiance de milliers de familles torontoises.",
-    'LICENSED · LIC # PENDING': 'AGRÉÉ · PERMIS Nº EN ATTENTE',
-    'BONDED': 'CAUTIONNÉ',
-    'INSURED': 'ASSURÉ',
+    'Our technicians are experienced and supported by a dedicated dispatch operator. Every vehicle and every technician is ready to provide reliable service, backed by the experience and trust earned from thousands of families across Toronto. The technician who arrives at your door has passed a security check, completed training, and is trusted by thousands of Toronto families.':
+      "Nos techniciens sont expérimentés et appuyés par un répartiteur dédié. Chaque véhicule et chaque technicien est prêt à offrir un service fiable, fort de l'expérience et de la confiance acquises auprès de milliers de familles à Toronto. Le technicien qui se présente à votre porte a fait l'objet d'une vérification de sécurité, a suivi une formation et jouit de la confiance de milliers de familles torontoises.",
     'ALOA MEMBER': 'MEMBRE ALOA',
     'SERVING GTA': 'AU SERVICE DU GTA',
 
-    /* ── Why Apex ── */
+    /* ── Why Aston ── */
     'Why us': 'Pourquoi nous',
     'Why': 'Pourquoi',
-    'Licensed & Insured': 'Agréé et assuré',
-    'Fully licensed, bonded, and insured for your protection.':
-      'Entièrement agréé, cautionné et assuré pour votre protection.',
+    'Background Checked': 'Antécédents vérifiés',
+    'Every technician is vetted, trained, and trusted in your home.':
+      'Chaque technicien est contrôlé, formé et de confiance chez vous.',
     '15 Min Avg ETA': 'ETA moyen de 15 min',
     'Fast response across Toronto & GTA, 24/7.': 'Intervention rapide à Toronto et dans le GTA, 24/7.',
     '24/7 Available': 'Disponible 24/7',
@@ -174,15 +154,16 @@
       'Chaque travail est appuyé par notre garantie de satisfaction.',
 
     /* ── Reviews ── */
-    '847 Google reviews': '847 avis Google',
-    'on Google': 'sur Google',
-    'READ ALL 847 ↗': 'VOIR LES 847 ↗',
+    'From our customers': 'Témoignages de clients',
+    'What our': 'Ce que nos',
+    'customers': 'clients',
+    'say': 'disent',
     '2 weeks ago': 'il y a 2 semaines',
     '1 month ago': 'il y a 1 mois',
     '"Got locked out at 11pm with my dog inside. Tech was at my door in 14 minutes flat and had me back in within 5 more. Clean job, no damage to the lock, fair price. Saved as a contact."':
       "« Enfermée dehors à 23 h avec mon chien à l'intérieur. Le technicien était à ma porte en 14 minutes pile et m'a fait rentrer en 5 de plus. Travail propre, aucun dommage à la serrure, prix juste. Enregistré dans mes contacts. »",
-    '"Had Apex rekey the whole house after closing. Marcus walked through every door and recommended swapping two deadbolts that were past their service life. No upsell pressure. Two-year warranty on the work."':
-      "« Apex a reclé toute la maison après l'achat. Marcus a vérifié chaque porte et a recommandé de remplacer deux pênes dormants en fin de vie. Aucune pression de vente. Garantie de deux ans sur le travail. »",
+    '"Had Aston rekey the whole house after closing. Marcus walked through every door and recommended swapping two deadbolts that were past their service life. No upsell pressure. Two-year warranty on the work."':
+      "« Aston a reclé toute la maison après l'achat. Marcus a vérifié chaque porte et a recommandé de remplacer deux pênes dormants en fin de vie. Aucune pression de vente. Garantie de deux ans sur le travail. »",
     '"Used them for our coffee shop — master key system across four doors plus a safe combination change. Took maybe 90 minutes. Receipt was exactly the quote."':
       '« On les a utilisés pour notre café — système à clé maîtresse sur quatre portes plus un changement de combinaison de coffre. Environ 90 minutes. La facture correspondait exactement au devis. »',
 
@@ -194,13 +175,14 @@
     'Real human · 24 hours · 365 days': 'Vraie personne · 24 heures · 365 jours',
     'HOURS': 'HEURES',
     'Dispatch:': 'Répartition :',
-    'Shop walk-ins:': 'Atelier sans rdv :',
-    'Mon–Sat 8a–6p': 'Lun–Sam 8h–18h',
-    'SHOP': 'ATELIER',
+    'Open 365 days a year': 'Ouvert 365 jours par an',
+    'PAYMENTS': 'PAIEMENTS',
+    'All Payments Accepted': 'Tous paiements acceptés',
+    'Apple Pay, Google Pay, tap to pay · Visa, Mastercard, Amex, debit':
+      'Apple Pay, Google Pay, paiement sans contact · Visa, Mastercard, Amex, débit',
     'EMAIL': 'COURRIEL',
-    'CREDENTIALS': 'ACCRÉDITATIONS',
-    'LIC # — coming soon': 'PERMIS Nº — bientôt disponible',
-    'Bonded · Insured · ALOA': 'Cautionné · Assuré · ALOA',
+    'AREA': 'ZONE',
+    '24/7 mobile dispatch': 'Répartition mobile 24/7',
     'NON-URGENT REQUEST': 'DEMANDE NON URGENTE',
     'Send a note': 'Envoyez un mot',
     'NAME': 'NOM',
@@ -222,18 +204,11 @@
     'dialing.': 'le numéro.',
     'CALL DISPATCH': 'APPELEZ LA RÉPARTITION',
 
-    /* ── Credentials strip ── */
-    'Licensed Locksmith': 'Serrurier agréé',
-    'Serving GTA professionally': 'Au service du GTA, en professionnel',
-    'LICENSED': 'AGRÉÉ',
-    'License #': 'Permis Nº',
-    'COMING SOON': 'BIENTÔT DISPONIBLE',
-
     /* ── Footer ── */
     'SERVING:': 'AU SERVICE DE :',
     'Downtown Toronto · North York · Scarborough · Etobicoke · Mississauga · Vaughan · Richmond Hill · Markham · Brampton · + All GTA Locations':
       'Centre-ville de Toronto · North York · Scarborough · Etobicoke · Mississauga · Vaughan · Richmond Hill · Markham · Brampton · + tout le GTA',
-    '© 2025 APEX LOCKSMITH. ALL RIGHTS RESERVED.': '© 2025 APEX LOCKSMITH. TOUS DROITS RÉSERVÉS.',
+    '© 2025 ASTON LOCKSMITH. ALL RIGHTS RESERVED.': '© 2025 ASTON LOCKSMITH. TOUS DROITS RÉSERVÉS.',
     'PRIVACY · TERMS · WARRANTY': 'CONFIDENTIALITÉ · CONDITIONS · GARANTIE',
 
     /* ── Note toast ── */
@@ -478,7 +453,7 @@
     });
   }
 
-  window.APEX_I18N = {
+  window.ASTON_I18N = {
     setLang: setLang,
     getLang: getLang,
     t: function (en) { return getLang() === 'fr' ? (DICT[en] || en) : en; }
@@ -496,3 +471,5 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 })();
+
+

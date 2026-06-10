@@ -1,4 +1,4 @@
-// ── Lock icon dropdown ──
+﻿// ── Lock icon dropdown ──
 const lockBtn = document.getElementById('lockBtn');
 const lockSvg = document.getElementById('lockSvg');
 const mobileMenu = document.getElementById('mobileMenu');
@@ -85,6 +85,7 @@ const PLANS = {
       'Combination Locks',
       'Keypad Locks',
       'Key Locks',
+      'Safe Installation',
     ],
   },
   security: {
@@ -102,7 +103,7 @@ const PLANS = {
 // ── Apply admin Service-Finder override (set by content-patch.js before this
 //    script runs). Categories are fixed; only each category's services change. ──
 (function () {
-  const ov = window.__APEX_SERVICES_OVERRIDE__;
+  const ov = window.__ASTON_SERVICES_OVERRIDE__;
   if (ov && typeof ov === 'object') {
     Object.keys(ov).forEach((k) => {
       if (PLANS[k] && Array.isArray(ov[k])) PLANS[k].services = ov[k];
@@ -120,10 +121,15 @@ let currentKey = 'home';
 function measureCollapsedHeight() {
   const items = serviceList.querySelectorAll('li');
   if (!items.length) return 0;
-  const last = items[Math.min(VISIBLE_COUNT, items.length) - 1];
   const top = serviceList.getBoundingClientRect().top;
-  const bottom = last.getBoundingClientRect().bottom;
-  return Math.ceil(bottom - top);
+  const last = items[Math.min(VISIBLE_COUNT, items.length) - 1];
+  let bottom = last.getBoundingClientRect().bottom;
+  // When there are extra (hidden) services, reveal the blurred 5th item in full
+  // so users can clearly see there's more content behind the "Show All" toggle.
+  if (items.length > VISIBLE_COUNT) {
+    bottom = items[VISIBLE_COUNT].getBoundingClientRect().bottom;
+  }
+  return Math.ceil(bottom - top) + 2;
 }
 
 function applyHeights(animate) {
@@ -148,12 +154,15 @@ function renderServices(animate = true) {
   serviceList.innerHTML = p.services.map((s, i) => {
     const main = typeof s === 'object' ? s.main : s;
     const sub  = typeof s === 'object' ? s.sub  : null;
-    return `<li class="flex gap-3 items-baseline font-body service-item${i >= VISIBLE_COUNT ? ' service-item--extra' : ''}" style="font-size:14px;line-height:1.5;">
+    const extraCls = i >= VISIBLE_COUNT ? ' service-item--extra' : '';
+    const teaserCls = i === VISIBLE_COUNT ? ' service-item--teaser' : '';
+    return `<li class="flex gap-3 items-baseline font-body service-item${extraCls}${teaserCls}" style="font-size:14px;line-height:1.5;">
       <span class="font-mono" style="color:#27E0F5;font-size:14px;font-weight:700;line-height:1;flex-shrink:0;">✓</span>
       <span>${main}${sub ? `<br><span style="font-size:11px;color:#6f6f74;line-height:1.4;display:block;">${sub}</span>` : ''}</span>
     </li>`;
   }).join('');
   serviceList.classList.toggle('expanded', plansExpanded);
+  serviceList.classList.toggle('has-extra', p.services.length > VISIBLE_COUNT);
   if (p.services.length > VISIBLE_COUNT) {
     serviceToggle.style.display = 'inline-block';
     // Label is wrapped so i18n can translate it independently of the count.
@@ -194,9 +203,9 @@ document.querySelectorAll('[data-finder]').forEach(btn => {
 renderPlan('home');
 
 // ── Live-preview hook for the admin Service-Finder manager. The admin calls
-//    frame.contentWindow.__apexSetServices(pendingServices) to re-render the
+//    frame.contentWindow.__astonSetServices(pendingServices) to re-render the
 //    finder with unsaved changes (does not touch localStorage). ──
-window.__apexSetServices = function (ov) {
+window.__astonSetServices = function (ov) {
   if (!ov || typeof ov !== 'object') return;
   Object.keys(ov).forEach((k) => {
     if (PLANS[k] && Array.isArray(ov[k])) PLANS[k].services = ov[k];
@@ -885,3 +894,5 @@ scrollBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 's
     if (moved) { e.preventDefault(); e.stopPropagation(); }
   }, true);
 })();
+
+

@@ -1,4 +1,4 @@
-import puppeteer from 'puppeteer';
+﻿import puppeteer from 'puppeteer';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -62,7 +62,7 @@ const footerInfo = await page.evaluate(() => {
   const f = document.querySelector('footer');
   return {
     hasAreasLine: /Serving/.test(f.textContent),
-    hasCopyright: /© 2025 APEX LOCKSMITH\. ALL RIGHTS RESERVED\./.test(f.textContent),
+    hasCopyright: /© 2025 ASTON LOCKSMITH\. ALL RIGHTS RESERVED\./.test(f.textContent),
     areas: f.querySelector('.footer-areas')?.textContent.replace(/\s+/g,' ').trim().slice(0,180),
   };
 });
@@ -132,3 +132,4 @@ await page.screenshot({ path: fD, clip: heroRect });
 console.log(`Saved: ${fD}`);
 
 await browser.close();
+

@@ -1,4 +1,4 @@
-*{box-sizing:border-box}
+﻿*{box-sizing:border-box}
 html,body{margin:0;padding:0;background:#1A1A1A;color:#EDEDED;font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:clip;overflow-wrap:break-word}
 
 /* ── Navigation font (industrial control-panel feel) ── */
@@ -230,7 +230,7 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
 .logo-img{height:48px;width:auto;display:block}
 @media (max-width: 640px){ .logo-img{height:38px} }
 
-/* Header — 21st.dev floating-pill style (Apex palette + fonts) */
+/* Header — 21st.dev floating-pill style (Aston palette + fonts) */
 #header{
   position:sticky;top:0;z-index:1000;width:100%;
   border-bottom:1px solid transparent;
@@ -275,8 +275,14 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
 }
 
 /* Service finder tile */
-.finder-tile{cursor:pointer;border:2px solid #3a3a3e;background:#1A1A1A;color:#EDEDED;
+/* Equal-height tiles across every row (the 2-line "Office / Commercial" no longer
+   makes its row taller than the others). */
+.finder-grid{grid-auto-rows:1fr;}
+.finder-tile{cursor:pointer;border:2px solid #3a3a3e;background:#1A1A1A;color:#EDEDED;height:100%;
   transition:transform .15s cubic-bezier(.2,.7,.3,1.4),border-color .15s ease,background-color .15s ease,box-shadow .2s ease;}
+/* The "MORE" placeholder is mobile-only; keep the desktop 5-col row clean
+   (explicit rule because .finder-tile overrides the Tailwind md:hidden utility). */
+@media(min-width:768px){ .finder-tile--more{display:none;} }
 .finder-tile:hover:not(.active){border-color:#27E0F5;background:#202023;transform:translateY(-3px);
   box-shadow:0 8px 20px -10px rgba(39,224,245,.65);}
 .finder-tile:hover:not(.active) svg{color:#27E0F5;}
@@ -332,41 +338,46 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
 }
 
 /* Service list box — fixed footprint so it never jumps between categories */
-.service-list-box{display:flex;flex-direction:column;min-height:460px;}
+.service-list-box{display:flex;flex-direction:column;}
 .service-list-box #serviceList{overflow:hidden;transition:max-height .4s ease-in-out;}
-.service-list-box #serviceList li{transition:opacity .3s ease, transform .3s ease;}
+.service-list-box #serviceList li{transition:opacity .3s ease, transform .3s ease, filter .3s ease;}
 .service-list-box #serviceList li.service-item--extra{opacity:0;transform:translateY(-4px);transition:opacity .25s ease, transform .25s ease;}
-.service-list-box #serviceList.expanded li.service-item--extra{opacity:1;transform:translateY(0);transition:opacity .35s ease .1s, transform .35s ease .1s;}
+.service-list-box #serviceList.expanded li.service-item--extra{opacity:1;transform:translateY(0);filter:none;transition:opacity .35s ease .1s, transform .35s ease .1s, filter .35s ease .1s;}
+/* Blurred "peek" of the 5th service while collapsed — hints there's more behind the toggle.
+   A soft bottom mask fades the clip edge so it isn't a hard line. */
+.service-list-box #serviceList:not(.expanded) li.service-item--teaser{opacity:.55;filter:blur(1.2px);transform:none;pointer-events:none;}
+.service-list-box #serviceList.has-extra:not(.expanded){
+  -webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 30px),transparent 100%);
+  mask-image:linear-gradient(to bottom,#000 calc(100% - 30px),transparent 100%);
+}
 .service-list-box #serviceToggle:hover{color:#EDEDED;}
 .service-list-box #serviceToggle:focus-visible{outline:2px solid #27E0F5;outline-offset:3px;}
-@media(min-width:640px){ .service-list-box{min-height:340px;} }
-@media(min-width:1024px){ .service-list-box{min-height:380px;} }
 
 /* Credential tags hover lift */
 .cred-tag{transition:transform .2s ease, border-color .2s ease, box-shadow .2s ease;}
 .cred-tag:hover{transform:translateY(-4px);border-color:#27E0F5;box-shadow:0 12px 22px -10px rgba(39,224,245,.65);}
 
-/* Why Apex section */
+/* Why Aston section */
 .why-section{background:#1A1A1A;color:#EDEDED;}
 .why-pulse-line{position:relative;height:2px;background:#27E0F5;margin-bottom:36px;}
-.apex-pulse{position:relative;animation:apexHeartbeat 2.2s cubic-bezier(.4,0,.2,1) infinite;transform-origin:center;}
-.apex-q{display:inline-block;margin-left:14px;transform:rotate(28deg) translateY(8px);transform-origin:bottom left;color:#EDEDED;text-shadow:2px 4px 0 rgba(39,224,245,.35), 4px 8px 14px rgba(0,0,0,.5), 0 0 0px rgba(39,224,245,0);transition:transform .35s cubic-bezier(.2,.7,.3,1.4);animation:apexQPulse 2.2s cubic-bezier(.4,0,.2,1) infinite;}
-.apex-q:hover{transform:rotate(34deg) translateY(10px) scale(1.05);}
-@keyframes apexHeartbeat{
+.aston-pulse{position:relative;animation:astonHeartbeat 2.2s cubic-bezier(.4,0,.2,1) infinite;transform-origin:center;}
+.aston-q{display:inline-block;margin-left:14px;transform:rotate(28deg) translateY(8px);transform-origin:bottom left;color:#EDEDED;text-shadow:2px 4px 0 rgba(39,224,245,.35), 4px 8px 14px rgba(0,0,0,.5), 0 0 0px rgba(39,224,245,0);transition:transform .35s cubic-bezier(.2,.7,.3,1.4);animation:astonQPulse 2.2s cubic-bezier(.4,0,.2,1) infinite;}
+.aston-q:hover{transform:rotate(34deg) translateY(10px) scale(1.05);}
+@keyframes astonHeartbeat{
   0%, 55%, 100% {transform:scale(1);    box-shadow:0 0 0 0 rgba(39,224,245,0);}
   14% {transform:scale(1.025); box-shadow:0 0 10px 1px rgba(39,224,245,.45);}
   22% {transform:scale(1);     box-shadow:0 0 4px 0 rgba(39,224,245,.15);}
   34% {transform:scale(1.025); box-shadow:0 0 10px 1px rgba(39,224,245,.45);}
   46% {transform:scale(1);     box-shadow:0 0 0 0 rgba(39,224,245,0);}
 }
-@keyframes apexQPulse{
+@keyframes astonQPulse{
   0%, 55%, 100% {text-shadow:2px 4px 0 rgba(39,224,245,.35), 4px 8px 14px rgba(0,0,0,.5),  0 0 0px rgba(39,224,245,0);}
   14% {text-shadow:2px 4px 0 rgba(39,224,245,.9),  4px 8px 14px rgba(0,0,0,.55), 0 0 22px rgba(39,224,245,.55);}
   22% {text-shadow:2px 4px 0 rgba(39,224,245,.15), 4px 8px 14px rgba(0,0,0,.45), 0 0 0px rgba(39,224,245,0);}
   34% {text-shadow:2px 4px 0 rgba(39,224,245,.9),  4px 8px 14px rgba(0,0,0,.55), 0 0 22px rgba(39,224,245,.55);}
   46% {text-shadow:2px 4px 0 rgba(39,224,245,.35), 4px 8px 14px rgba(0,0,0,.5),  0 0 0px rgba(39,224,245,0);}
 }
-@media (prefers-reduced-motion: reduce){ .apex-pulse{animation:none;} .apex-q{animation:none;} }
+@media (prefers-reduced-motion: reduce){ .aston-pulse{animation:none;} .aston-q{animation:none;} }
 
 /* Pulsing green dot on the 24/7 pill — sits on top-right corner of cyan box */
 .onroad-247{position:relative;}
@@ -431,7 +442,7 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
 /* Section divider */
 .section-divider{border-top:3px solid #EDEDED;}
 
-/* Reviews / Why Apex / Three Steps — pure black layered shadow */
+/* Reviews / Why Aston / Three Steps — pure black layered shadow */
 .step-card{
   box-shadow:
     0 2px 4px rgba(0,0,0,.4),
@@ -508,7 +519,7 @@ html{scroll-behavior:smooth;}
   100% {box-shadow: 0 0 0 0 rgba(39,224,245,0);}
 }
 .call-pulse:hover{animation:callBoxPulse 1.9s ease-out infinite;}
-.safe-pulse{position:relative;animation:apexHeartbeat 2.2s cubic-bezier(.4,0,.2,1) infinite;transform-origin:center;}
+.safe-pulse{position:relative;animation:astonHeartbeat 2.2s cubic-bezier(.4,0,.2,1) infinite;transform-origin:center;}
 /* Hero button — always-on pulse, slightly stronger so it reads on mobile */
 @keyframes heroCallPulse{
   0%   {box-shadow: 0 0 0 0 rgba(39,224,245,.7);}
@@ -942,27 +953,7 @@ textarea#contactNote.note-shake{
   aspect-ratio:1 / 1;
   background:transparent;
 }
-/* Test Loading button (development only) */
-#testLoadingBtn{
-  position:fixed;
-  left:14px;
-  bottom:14px;
-  z-index:9000;
-  padding:8px 12px;
-  background:#1A1A1A;
-  color:#27E0F5;
-  border:1px solid #27E0F5;
-  font-family:'Space Grotesk', sans-serif;
-  font-size:11px;
-  font-weight:700;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  cursor:pointer;
-  opacity:.85;
-  transition:background-color .2s ease, color .2s ease, opacity .2s ease;
-}
-#testLoadingBtn:hover,
-#testLoadingBtn:focus-visible{ background:#27E0F5; color:#1A1A1A; opacity:1; }
+/* (dev-only #testLoadingBtn styles removed for production) */
 
 /* ── EN / FR language toggle — sliding pill ── */
 .lang-toggle{
@@ -1023,3 +1014,4 @@ body.lang-switching{ opacity:0; }
   body{ transition:none; }
   .lang-slider{ transition:none; }
 }
+

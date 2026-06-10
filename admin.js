@@ -1,5 +1,5 @@
-/* ============================================================================
-   admin.js — Apex Admin panel controller
+﻿/* ============================================================================
+   admin.js — Aston Admin panel controller
    ----------------------------------------------------------------------------
    Sections:
      1. Boot / auth gate
@@ -228,13 +228,13 @@
     '#callFab', '#msgFab', '#scrollTop',
     '#lockBtn', '#mobileMenu', '.menu-lock-btn', '.mobile-menu',  /* site's own mobile menu — keep interactive, not editable */
     '.caution-stripe', '.trust-frost', '.svc-overlay', '.svc-bg-overlay',
-    '.about-overlay', '.about-vignette', '.zone-map-scanline', '.apex-txt-skip'
+    '.about-overlay', '.about-vignette', '.zone-map-scanline', '.aston-txt-skip'
   ].join(', ');
 
   // Editor-only CSS injected into the iframe document.
   const EDITOR_CSS = `
-    .apex-ed-hover { outline: 2px dashed rgba(39,224,245,.75) !important; outline-offset: 1px !important; cursor: pointer !important; }
-    .apex-ed-selected { outline: 3px solid #27E0F5 !important; outline-offset: 1px !important; }
+    .aston-ed-hover { outline: 2px dashed rgba(39,224,245,.75) !important; outline-offset: 1px !important; cursor: pointer !important; }
+    .aston-ed-selected { outline: 3px solid #27E0F5 !important; outline-offset: 1px !important; }
     .svc-overlay, .trust-frost, .svc-bg-overlay, .about-overlay, .about-vignette,
     .hero-particles, .caution-stripe, .zone-map-scanline { pointer-events: none !important; }
     #callFab, #msgFab, #scrollTop { pointer-events: none !important; }
@@ -256,7 +256,7 @@
   let frameReady = false;
 
   // ── Part 2 channels (carousel + service finder) — share this Apply/Cancel ──
-  const DEFAULTS = window.APEX_DEFAULTS || {};
+  const DEFAULTS = window.ASTON_DEFAULTS || {};
   let savedCarousel = [], pendingCarousel = [];
   let savedServices = {}, pendingServices = {};
   let editorMode = 'inline';
@@ -317,10 +317,10 @@
   }
 
   function injectEditorStyles() {
-    let s = doc.getElementById('apex-editor-style');
+    let s = doc.getElementById('aston-editor-style');
     if (!s) {
       s = doc.createElement('style');
-      s.id = 'apex-editor-style';
+      s.id = 'aston-editor-style';
       doc.head.appendChild(s);
     }
     s.textContent = EDITOR_CSS;
@@ -340,7 +340,7 @@
         if (!n.nodeValue || !n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
         const p = n.parentElement;
         if (!p) return NodeFilter.FILTER_REJECT;
-        if (p.classList.contains('apex-txt')) return NodeFilter.FILTER_REJECT;
+        if (p.classList.contains('aston-txt')) return NodeFilter.FILTER_REJECT;
         if (p.closest(EXCLUDE_SEL)) return NodeFilter.FILTER_REJECT;
         // Only wrap when the text node sits beside element children (mixed).
         let hasElChild = false;
@@ -352,7 +352,7 @@
     let n; while ((n = walker.nextNode())) nodes.push(n);
     nodes.forEach(function (tn) {
       const span = doc.createElement('span');
-      span.className = 'apex-txt';
+      span.className = 'aston-txt';
       tn.parentNode.replaceChild(span, tn);
       span.appendChild(tn);
     });
@@ -483,19 +483,19 @@
   function onFrameHover(e) {
     const target = resolveTarget(e.target);
     const el = target ? target.el : null;
-    if (hoverEl && hoverEl !== el) hoverEl.classList.remove('apex-ed-hover');
-    if (el && el !== selectedEl) { el.classList.add('apex-ed-hover'); hoverEl = el; }
+    if (hoverEl && hoverEl !== el) hoverEl.classList.remove('aston-ed-hover');
+    if (el && el !== selectedEl) { el.classList.add('aston-ed-hover'); hoverEl = el; }
     else hoverEl = null;
   }
   function onFrameOut() {
-    if (hoverEl) { hoverEl.classList.remove('apex-ed-hover'); hoverEl = null; }
+    if (hoverEl) { hoverEl.classList.remove('aston-ed-hover'); hoverEl = null; }
   }
 
   function selectTarget(target) {
-    if (selectedEl) selectedEl.classList.remove('apex-ed-selected');
-    if (hoverEl) { hoverEl.classList.remove('apex-ed-hover'); hoverEl = null; }
+    if (selectedEl) selectedEl.classList.remove('aston-ed-selected');
+    if (hoverEl) { hoverEl.classList.remove('aston-ed-hover'); hoverEl = null; }
     selectedEl = target.el;
-    selectedEl.classList.add('apex-ed-selected');
+    selectedEl.classList.add('aston-ed-selected');
 
     const path = pathOf(target.el);
     target.path = path;
@@ -551,7 +551,7 @@
   function closePanel() {
     editPanel.classList.remove('is-open');
     editPanel.setAttribute('aria-hidden', 'true');
-    if (selectedEl) { selectedEl.classList.remove('apex-ed-selected'); selectedEl = null; }
+    if (selectedEl) { selectedEl.classList.remove('aston-ed-selected'); selectedEl = null; }
     active = null;
     sessionStarted = false;
   }
@@ -615,7 +615,7 @@
       const v = sharedSavedValue(key);
       delete pendingShared[key];
       const w = frame.contentWindow;
-      if (w && w.APEX_PATCH && w.APEX_PATCH.syncContentKey) { try { w.APEX_PATCH.syncContentKey(key, v); } catch (e) {} }
+      if (w && w.ASTON_PATCH && w.ASTON_PATCH.syncContentKey) { try { w.ASTON_PATCH.syncContentKey(key, v); } catch (e) {} }
     } else {
       const p = active.path;
       history = history.filter(function (h) { return h.path !== p; });
@@ -637,7 +637,7 @@
       delete pendingShared[key];
       editTextInput.value = v;
       const w = frame.contentWindow;
-      if (w && w.APEX_PATCH && w.APEX_PATCH.syncContentKey) { try { w.APEX_PATCH.syncContentKey(key, v); } catch (e) {} }
+      if (w && w.ASTON_PATCH && w.ASTON_PATCH.syncContentKey) { try { w.ASTON_PATCH.syncContentKey(key, v); } catch (e) {} }
     } else {
       const p = active.path;
       let idx = -1;
@@ -901,7 +901,7 @@
   /* ── Fix 2: inline shared-value (data-content-key) edits ── */
   function commitShared(key, value) {
     const w = frame.contentWindow;
-    if (w && w.APEX_PATCH && w.APEX_PATCH.syncContentKey) { try { w.APEX_PATCH.syncContentKey(key, value); } catch (e) {} }
+    if (w && w.ASTON_PATCH && w.ASTON_PATCH.syncContentKey) { try { w.ASTON_PATCH.syncContentKey(key, value); } catch (e) {} }
     const biz = readStoreSync('apex_admin_business_v1', null) || (DEFAULTS.business || {});
     const field = SHARED_FIELDS[key];
     const savedVal = field ? biz[field] : undefined;
@@ -918,10 +918,10 @@
     clearTimeout(cPrevTimer);
     const run = function () {
       const w = frame.contentWindow;
-      if (!w || !w.APEX_PATCH) return;
+      if (!w || !w.ASTON_PATCH) return;
       try {
-        w.APEX_PATCH.renderCarousel(pendingCarousel);
-        w.APEX_PATCH.applyBusiness(readStoreSync('apex_admin_business_v1', DEFAULTS.business));
+        w.ASTON_PATCH.renderCarousel(pendingCarousel);
+        w.ASTON_PATCH.applyBusiness(readStoreSync('apex_admin_business_v1', DEFAULTS.business));
       } catch (e) {}
     };
     if (immediate) run(); else cPrevTimer = setTimeout(run, 180);
@@ -1031,8 +1031,8 @@
 
   function previewServices() {
     const w = frame.contentWindow;
-    if (w && typeof w.__apexSetServices === 'function') {
-      try { w.__apexSetServices(pendingServices); } catch (e) {}
+    if (w && typeof w.__astonSetServices === 'function') {
+      try { w.__astonSetServices(pendingServices); } catch (e) {}
     }
   }
   function normItem(it) {
@@ -1141,7 +1141,7 @@
   }
   function previewBusiness() {
     const w = frame.contentWindow;
-    if (w && w.APEX_PATCH) { try { w.APEX_PATCH.applyBusiness(readBizInputs()); } catch (e) {} }
+    if (w && w.ASTON_PATCH) { try { w.ASTON_PATCH.applyBusiness(readBizInputs()); } catch (e) {} }
   }
   bizInputs.forEach(function (inp) {
     inp.addEventListener('input', function () { previewBusiness(); refreshBizControls(); });
@@ -1177,7 +1177,7 @@
   }
   function previewReviews() {
     const w = frame.contentWindow;
-    if (w && w.APEX_PATCH) { try { w.APEX_PATCH.renderReviews(pendingReviews); } catch (e) {} }
+    if (w && w.ASTON_PATCH) { try { w.ASTON_PATCH.renderReviews(pendingReviews); } catch (e) {} }
   }
   function renderReviewList() {
     reviewList.innerHTML = '';
@@ -1534,3 +1534,5 @@
   /* ── Go ── */
   boot();
 })();
+
+

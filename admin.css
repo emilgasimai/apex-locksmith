@@ -1,5 +1,5 @@
-/* ============================================================================
-   admin.css — Apex Admin panel
+﻿/* ============================================================================
+   admin.css — Aston Admin panel
    Plain, utilitarian (wp-admin style). Dark theme + cyan (#27E0F5) accent.
    Intentionally NOT a "designed dashboard": flat surfaces, clear controls.
    ============================================================================ */
@@ -837,3 +837,4 @@ input:focus, textarea:focus {
   .modal-actions { flex-direction: column-reverse; }
   .modal-actions .btn { width: 100%; justify-content: center; }
 }
+

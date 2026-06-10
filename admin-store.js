@@ -1,5 +1,5 @@
-/* ============================================================================
-   admin-store.js — Apex Admin storage layer
+﻿/* ============================================================================
+   admin-store.js — Aston Admin storage layer
    ----------------------------------------------------------------------------
    This is the ONLY module that talks to persistence. Everything is keyed and
    isolated here so that swapping localStorage for a real backend later is a
@@ -209,3 +209,4 @@ const AdminStore = (function () {
 
 // Expose globally for the (non-module) admin script.
 window.AdminStore = AdminStore;
+

@@ -1,15 +1,15 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Apex Locksmith — Open. Fast. 24/7. Toronto | GTA</title>
+<title>Aston Locksmith — Open. Fast. 24/7. Toronto | GTA</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="tailwind.css"/>
 <link rel="stylesheet" id="leafletCss" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" media="print" onload="this.media='all'" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-<link rel="stylesheet" href="styles.css?v=2"/>
+<link rel="stylesheet" href="styles.css?v=7"/>
 </head>
 <body class="bg-bg text-ink">
 
@@ -18,8 +18,7 @@
   <div id="loadingAnim"></div>
 </div>
 
-<!-- TODO: remove test button before production -->
-<button id="testLoadingBtn" type="button" aria-label="Test loading animation">Test Loading</button>
+<!-- (dev-only "Test Loading" button removed for production) -->
 
 <!-- ───── TOP STRIPE + DISPATCH BAR ───── -->
 <div class="bg-ink text-bg" style="background:#0f0f10;color:#EDEDED;border-top:3px solid #27E0F5;">
@@ -30,11 +29,12 @@
         <span class="hidden xs:inline">ON-DUTY · 24/7</span>
         <span class="xs:hidden">24/7</span>
       </span>
-      <span class="opacity-60 hidden sm:inline">LIC # — PENDING</span>
+      <!-- TODO: re-add "LIC # — PENDING / number" once official license is obtained -->
+      <span class="opacity-60 hidden sm:inline">TORONTO · GTA</span>
     </div>
-    <a href="tel:+14165550000" data-biz-tel class="text-hivis font-display flex items-center gap-2 hover:underline" style="font-size:14px;letter-spacing:.06em;">
+    <a href="tel:+14372495464" data-biz-tel class="text-hivis font-display flex items-center gap-2 hover:underline" style="font-size:14px;letter-spacing:.06em;">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 3h4l2 5-2 2a12 12 0 005 5l2-2 5 2v4a2 2 0 01-2 2A18 18 0 013 5a2 2 0 012-2z"/></svg>
-      <span data-biz-phone data-content-key="phone-number">(416) 555-0000</span>
+      +1 (437) 249-5464
     </a>
   </div>
 </div>
@@ -43,7 +43,7 @@
 <header id="header">
   <div id="headerContent" class="px-5 sm:px-6 flex items-center justify-between">
     <a href="#home" class="flex items-center gap-3">
-      <picture><source srcset="brand_assets/logo.webp" type="image/webp"/><img src="brand_assets/withoutbg.webp" alt="Apex Locksmith" class="logo-img" loading="eager" fetchpriority="high"/></picture>
+      <picture><source srcset="brand_assets/logo.webp" type="image/webp"/><img src="brand_assets/withoutbg.webp" alt="Aston Locksmith" class="logo-img" loading="eager" fetchpriority="high"/></picture>
     </a>
 
     <!-- Desktop nav -->
@@ -58,7 +58,7 @@
         <button type="button" class="lang-opt" data-lang="en" aria-pressed="true">EN</button>
         <button type="button" class="lang-opt" data-lang="fr" aria-pressed="false">FR</button>
       </div>
-      <a href="tel:+14165550000" data-biz-tel class="btn-hivis call-pulse ml-2 inline-flex items-center gap-2" style="padding:10px 18px;background:#27E0F5;color:#1A1A1A;text-decoration:none;font-family:'Archivo Black',sans-serif;font-size:13px;letter-spacing:.04em;">
+      <a href="tel:+14372495464" data-biz-tel class="btn-hivis call-pulse ml-2 inline-flex items-center gap-2" style="padding:10px 18px;background:#27E0F5;color:#1A1A1A;text-decoration:none;font-family:'Archivo Black',sans-serif;font-size:13px;letter-spacing:.04em;">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 3h4l2 5-2 2a12 12 0 005 5l2-2 5 2v4a2 2 0 01-2 2A18 18 0 013 5a2 2 0 012-2z"/></svg>
         CALL NOW
       </a>
@@ -102,9 +102,9 @@
     <a href="#about" class="mobile-link nav-link" data-nav-key="about" style="padding:12px 12px;font-weight:500;font-size:15px;letter-spacing:.01em;text-decoration:none;">About</a>
     <a href="#reviews" class="mobile-link nav-link" data-nav-key="reviews" style="padding:12px 12px;font-weight:500;font-size:15px;letter-spacing:.01em;text-decoration:none;">Reviews</a>
     <a href="#contact" class="mobile-link nav-link" data-nav-key="contact" style="padding:12px 12px;font-weight:500;font-size:15px;letter-spacing:.01em;text-decoration:none;">Contact</a>
-    <a href="tel:+14165550000" data-biz-tel class="btn-hivis call-pulse mt-2 inline-flex items-center justify-center gap-2" style="padding:14px 18px;background:#27E0F5;color:#1A1A1A;text-decoration:none;font-family:'Archivo Black',sans-serif;font-size:14px;letter-spacing:.04em;">
+    <a href="tel:+14372495464" data-biz-tel class="btn-hivis call-pulse mt-2 inline-flex items-center justify-center gap-2" style="padding:14px 18px;background:#27E0F5;color:#1A1A1A;text-decoration:none;font-family:'Archivo Black',sans-serif;font-size:14px;letter-spacing:.04em;">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 3h4l2 5-2 2a12 12 0 005 5l2-2 5 2v4a2 2 0 01-2 2A18 18 0 013 5a2 2 0 012-2z"/></svg>
-      CALL NOW · <span data-biz-phone data-content-key="phone-number">(416) 555-0000</span>
+      CALL NOW · <span data-biz-phone data-content-key="phone-number">(437) 249-5464</span>
     </a>
   </nav>
 </div>
@@ -126,33 +126,25 @@
         <span style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;margin-right:6px;">Priority.</span>
       </h1>
       <p class="font-body t-body-lg" style="color:#9a9a9a;max-width:540px;margin-top:18px;">
-        Break-in repair, lockouts, commercial, residential, Apt/Condo, cars, safes, lock changes and repairs, burglary repairs, UPVC door &amp; window locks. Serving Toronto &amp; GTA since 2008.
+        Break-in Repair, Lockouts, Commercial, Residential, Apt/Condo, Cars, Safes, Lock Changes and Repairs, Burglary Repairs, UPVC Door &amp; Window Locks. Serving Toronto &amp; GTA since 2022.
       </p>
       <div class="mt-6 lg:mt-8">
-        <a id="heroCallBtn" href="tel:+14165550000" data-biz-tel class="btn-hivis call-pulse flex flex-col gap-1 items-center justify-center" style="padding:22px 14px;background:#27E0F5;color:#1A1A1A;text-decoration:none;min-height:100px;">
+        <a id="heroCallBtn" href="tel:+14372495464" data-biz-tel class="btn-hivis call-pulse flex flex-col gap-1 items-center justify-center" style="padding:22px 14px;background:#27E0F5;color:#1A1A1A;text-decoration:none;min-height:100px;">
           <span class="font-mono t-cap" style="opacity:.85;font-size:11px;">TAP TO CALL</span>
-          <span class="font-display t-phone-md" data-biz-phone data-content-key="phone-number">(416) 555-0000</span>
+          <span class="font-display t-phone-md" data-biz-phone data-content-key="phone-number">(437) 249-5464</span>
         </a>
       </div>
       <!-- Trust row -->
       <div class="mt-7 flex flex-wrap gap-5 items-center">
+        <!-- TODO: re-add "Licensed · Bonded · Insured" badge once official license is obtained -->
         <div class="flex items-center gap-2">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#27E0F5" stroke-width="2.2"><path d="M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z"/></svg>
-          <span class="font-mono t-cap" style="font-weight:600;">LICENSED · BONDED · INSURED</span>
+          <span class="font-mono t-cap" style="font-weight:600;">NON-DESTRUCTIVE ENTRY</span>
         </div>
-        <div class="flex items-center gap-2">
-          <span class="inline-flex gap-0.5" style="color:#27E0F5;">
-            <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
-            <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
-            <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
-            <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
-            <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
-          </span>
-          <span class="font-mono t-cap" style="font-weight:600;">4.9 · 847 GOOGLE</span>
-        </div>
+        <!-- TODO: integrate real Google rating + review count via Google Places API once live -->
         <div class="flex items-center gap-2">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#27E0F5" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-          <span class="font-mono t-cap" style="font-weight:600;">18 YRS · EST. 2008</span>
+          <span class="font-mono t-cap" style="font-weight:600;">4 YRS · EST. 2022</span>
         </div>
       </div>
     </div>
@@ -228,14 +220,15 @@
   <div class="trust-frost" aria-hidden="true"></div>
   <div class="trust-content max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-9 grid grid-cols-2 lg:grid-cols-4 gap-y-6 gap-x-0">
     <div class="lg:border-r border-rule px-0 lg:pr-6 flex flex-col items-center lg:items-start">
-      <div class="font-display t-num-lg counter" data-target="18" style="color:#27E0F5;">0</div>
+      <div class="font-display t-num-lg counter" data-target="4" style="color:#27E0F5;">0</div>
       <div class="font-display mt-1.5" style="font-size:14px;letter-spacing:.06em;">YRS / TORONTO</div>
-      <div class="font-mono t-cap-sm mt-1" style="color:#9a9a9a;">EST. 2008</div>
+      <div class="font-mono t-cap-sm mt-1" style="color:#9a9a9a;">EST. 2022</div>
     </div>
     <div class="lg:border-r border-rule px-0 lg:px-6 flex flex-col items-center lg:items-start">
-      <div class="font-display t-num-lg counter" data-target="4.9" style="color:#27E0F5;">0</div>
-      <div class="font-display mt-1.5" style="font-size:14px;letter-spacing:.06em;">847 REVIEWS</div>
-      <div class="font-mono t-cap-sm mt-1" style="color:#9a9a9a;">GOOGLE / 5-STAR AVG</div>
+      <!-- TODO: integrate real Google rating + review count via Google Places API once live -->
+      <div class="font-display t-num-lg counter" data-target="100" data-suffix="%" style="color:#27E0F5;">0</div>
+      <div class="font-display mt-1.5" style="font-size:14px;letter-spacing:.06em;">SATISFACTION</div>
+      <div class="font-mono t-cap-sm mt-1" style="color:#9a9a9a;">GUARANTEED WORK</div>
     </div>
     <div class="lg:border-r border-rule px-0 lg:px-6 flex flex-col items-center lg:items-start">
       <div class="font-display t-num-lg counter" data-target="15" style="color:#27E0F5;">0</div>
@@ -271,7 +264,7 @@
       </div>
       <div class="p-5 sm:p-6">
         <div class="font-body t-body" style="color:#9a9a9a;margin-bottom:12px;">What did you lock yourself out of?</div>
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-2.5">
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-2.5 finder-grid">
           <button class="finder-tile active" data-finder="home">
             <div class="px-3 py-3.5 flex flex-col gap-2.5 items-start">
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 9.77806V16.2C19 17.8801 19 18.7202 18.673 19.3619C18.3854 19.9264 17.9265 20.3854 17.362 20.673C16.7202 21 15.8802 21 14.2 21H9.8C8.11984 21 7.27976 21 6.63803 20.673C6.07354 20.3854 5.6146 19.9264 5.32698 19.3619C5 18.7202 5 17.8801 5 16.2V9.7774M21 12L15.5668 5.96393C14.3311 4.59116 13.7133 3.90478 12.9856 3.65138C12.3466 3.42882 11.651 3.42887 11.0119 3.65153C10.2843 3.90503 9.66661 4.59151 8.43114 5.96446L3 12M14 12C14 13.1045 13.1046 14 12 14C10.8954 14 10 13.1045 10 12C10 10.8954 10.8954 9.99996 12 9.99996C13.1046 9.99996 14 10.8954 14 12Z"/></svg>
@@ -318,24 +311,7 @@
           </div>
           <ul id="serviceList" class="list-none p-0 m-0 grid gap-2"></ul>
           <button type="button" id="serviceToggle" class="font-mono mt-3" style="display:none;background:transparent;border:0;color:#27E0F5;font-size:11px;letter-spacing:.18em;text-transform:uppercase;padding:6px 0;cursor:pointer;font-weight:700;">+ Show All Services</button>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5 pt-4" style="border-top:1px dashed #3a3a3e;">
-            <div>
-              <div class="font-mono t-cap-sm" style="color:#27E0F5;font-weight:700;">✓ LICENSED &amp; INSURED</div>
-              <div class="font-body mt-1" style="font-size:12px;color:#9a9a9a;line-height:1.45;">Real locksmith, bonded and insured.</div>
-            </div>
-            <div>
-              <div class="font-mono t-cap-sm" style="color:#27E0F5;font-weight:700;">✓ NON-DESTRUCTIVE ENTRY</div>
-              <div class="font-body mt-1" style="font-size:12px;color:#9a9a9a;line-height:1.45;">Manipulation first — drilling is a last resort.</div>
-            </div>
-            <div>
-              <div class="font-mono t-cap-sm" style="color:#27E0F5;font-weight:700;">✓ CONTACTLESS PAYMENT</div>
-              <div class="font-body mt-1" style="font-size:12px;color:#9a9a9a;line-height:1.45;">Apple Pay, Google Pay, tap to pay.</div>
-            </div>
-            <div>
-              <div class="font-mono t-cap-sm" style="color:#27E0F5;font-weight:700;">✓ ALL CARDS ACCEPTED</div>
-              <div class="font-body mt-1" style="font-size:12px;color:#9a9a9a;line-height:1.45;">Visa, Mastercard, Amex, debit.</div>
-            </div>
-          </div>
+          <!-- Trust-bar/details block removed (Group 2). Payment info relocated to the "All Payments Accepted" section near the footer. -->
         </div>
       </div>
     </div>
@@ -348,24 +324,16 @@
         <div class="absolute inset-0 pointer-events-none" style="background:linear-gradient(to top, rgba(0,0,0,0.90) 0%, rgba(0,0,0,0.55) 30%, rgba(0,0,0,0) 65%);"></div>
         <!-- Top-left chip -->
         <div class="absolute top-3 left-3">
-          <span class="hazard" style="color:#1A1A1A;background:#f4c20a;border-color:#1A1A1A;">STAFF TECH</span>
+          <span class="hazard" style="color:#1A1A1A;background:#f4c20a;border-color:#1A1A1A;">VETTED TECH</span>
         </div>
         <!-- Bottom caption -->
         <div class="absolute left-4 right-4 bottom-4">
-          <div class="font-mono t-cap-sm" style="color:#27E0F5;font-weight:700;letter-spacing:.22em;">LICENSED · BONDED · INSURED</div>
+          <!-- TODO: re-add "Licensed · Bonded · Insured" caption once official license is obtained -->
+          <div class="font-mono t-cap-sm" style="color:#27E0F5;font-weight:700;letter-spacing:.22em;">TORONTO · GTA · 24/7</div>
           <div class="font-display uppercase mt-1.5" style="font-size:clamp(18px,2.2vw,24px);line-height:1.05;letter-spacing:-.005em;color:#EDEDED;">Background-<span style="color:#27E0F5;">checked</span>.<br/>On <span style="color:#27E0F5;">call</span>.</div>
         </div>
       </div>
-      <div class="price-card" style="background:#0f0f10;color:#EDEDED;padding:20px 22px;position:relative;">
-        <div class="caution-stripe absolute top-0 left-0 right-0" style="height:4px;"></div>
-        <button type="button" class="price-info" aria-label="More pricing info">
-          <span aria-hidden="true" class="price-info-glyph">i</span>
-          <span class="price-info-tooltip" role="tooltip">Pricing varies by lock type and complexity. Call for an accurate quote.</span>
-        </button>
-        <div class="font-mono t-cap mt-1.5" style="color:#27E0F5;">TRANSPARENT PRICING</div>
-        <p class="font-body mt-2 m-0" style="font-size:14px;line-height:1.55;">Pricing varies by lock type and job. Best to speak with a technician for an accurate quote.</p>
-        <div class="font-mono mt-2.5" style="font-size:10.5px;color:#6f6f74;letter-spacing:.04em;line-height:1.4;">* Visa payments include a 3% processing surcharge.</div>
-      </div>
+      <!-- Transparent Pricing box removed (Group 2): deleted on mobile; on desktop the photo above (flex-1) expands to fill this column. -->
     </div>
   </div>
 </section>
@@ -515,12 +483,12 @@
       </div>
 
       <div class="svc-slide">
-        <a class="svc-card svc-cta" href="tel:+14165550000" data-biz-tel>
+        <a class="svc-card svc-cta" href="tel:+14372495464" data-biz-tel>
           <div class="svc-num" style="background:#1A1A1A;color:#EDEDED;">HELP</div>
           <div class="svc-body" style="top:0;display:flex;flex-direction:column;justify-content:center;">
             <h3 class="font-display uppercase" style="font-size:clamp(24px,3.4vw,30px);line-height:.98;margin:0;">Not sure which? We'll figure it out.</h3>
             <p class="font-body" style="font-size:14px;line-height:1.5;margin:12px 0 20px;">One phone call. Ninety seconds of triage — we'll tell you the fix and how long it'll take.</p>
-            <span class="font-display" style="font-size:24px;letter-spacing:.02em;"><span data-biz-phone data-content-key="phone-number">(416) 555-0000</span> <span class="svc-arrow-ico">&rarr;</span></span>
+            <span class="font-display" style="font-size:24px;letter-spacing:.02em;"><span data-biz-phone data-content-key="phone-number">(437) 249-5464</span> <span class="svc-arrow-ico">&rarr;</span></span>
           </div>
         </a>
       </div>
@@ -579,12 +547,10 @@
         </div>
       </div>
       <p class="font-body" style="font-size:clamp(15px,1.7vw,17px);line-height:1.55;margin:0 0 14px;">
-        Five licensed technicians. One dedicated dispatcher. Every truck is ours, every tech is staff — no subcontractors, ever. The locksmith at your door has been background-checked, trained, and trusted by thousands of Toronto families.
+        Our technicians are experienced and supported by a dedicated dispatch operator. Every vehicle and every technician is ready to provide reliable service, backed by the experience and trust earned from thousands of families across Toronto. The technician who arrives at your door has passed a security check, completed training, and is trusted by thousands of Toronto families.
       </p>
       <div class="flex gap-2 flex-wrap mt-8 justify-center md:justify-start">
-        <span class="hazard cred-tag" style="color:#EDEDED;background:#242427;">LICENSED · LIC # PENDING</span>
-        <span class="hazard cred-tag" style="color:#EDEDED;background:#242427;">BONDED</span>
-        <span class="hazard cred-tag" style="color:#EDEDED;background:#242427;">INSURED</span>
+        <!-- TODO: re-add "Licensed · LIC # · Bonded · Insured" credential tags once official license is obtained -->
         <span class="hazard cred-tag" style="color:#EDEDED;background:#242427;">ALOA MEMBER</span>
         <span class="hazard cred-tag" style="color:#EDEDED;background:#242427;">SERVING GTA</span>
       </div>
@@ -593,7 +559,7 @@
   </div>
 </section>
 
-<!-- ───── WHY APEX ───── -->
+<!-- ───── WHY ASTON ───── -->
 <section id="why" class="why-section section-divider">
   <div class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-16 relative">
     <div class="why-pulse-line" aria-hidden="true"></div>
@@ -602,7 +568,7 @@
         <span class="hazard" style="color:#EDEDED;">NO.06</span>
         <div>
           <div class="font-mono t-cap" style="opacity:.6;">Why us</div>
-          <div class="font-display t-h2 uppercase mt-1">Why <span class="apex-pulse" style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;">Apex</span><span class="apex-q" aria-hidden="true">?</span></div>
+          <div class="font-display t-h2 uppercase mt-1">Why <span class="aston-pulse" style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;">Aston</span><span class="aston-q" aria-hidden="true">?</span></div>
         </div>
       </div>
     </div>
@@ -611,8 +577,9 @@
         <div class="why-icon" aria-hidden="true">
           <svg width="64" height="64" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="m3.003 4.702l4.22-2.025a1.8 1.8 0 0 1 1.554 0l4.22 2.025a.89.89 0 0 1 .503.8V6a8.55 8.55 0 0 1-3.941 7.201l-.986.631a1.06 1.06 0 0 1-1.146 0l-.986-.63A8.55 8.55 0 0 1 2.5 6v-.498c0-.341.196-.652.503-.8m3.57-3.377L2.354 3.35A2.39 2.39 0 0 0 1 5.502V6a10.05 10.05 0 0 0 4.632 8.465l.986.63a2.56 2.56 0 0 0 2.764 0l.986-.63A10.05 10.05 0 0 0 15 6v-.498c0-.918-.526-1.755-1.354-2.152l-4.22-2.025a3.3 3.3 0 0 0-2.852 0M8.47 9.97a.75.75 0 1 0 1.06 1.06c.575-.574 1.118-1.398 1.516-2.195c.386-.772.704-1.653.704-2.335a.75.75 0 0 0-1.5 0c0 .318-.182.937-.546 1.665c-.352.703-.809 1.379-1.234 1.805" clip-rule="evenodd"/></svg>
         </div>
-        <div class="why-title font-display uppercase">Licensed &amp; Insured</div>
-        <div class="why-sub font-body">Fully licensed, bonded, and insured for your protection.</div>
+        <!-- TODO: re-add "Licensed & Insured" benefit once official license is obtained -->
+        <div class="why-title font-display uppercase">Background Checked</div>
+        <div class="why-sub font-body">Every technician is vetted, trained, and trusted in your home.</div>
       </div>
       <div class="why-card">
         <div class="why-icon" aria-hidden="true">
@@ -645,11 +612,12 @@
     <div class="flex flex-col md:flex-row gap-2 md:gap-3 items-center md:items-end">
       <span class="hazard" style="color:#EDEDED;">NO.07</span>
       <div class="text-center md:text-left">
-        <div class="font-mono t-cap" style="opacity:.6;">847 Google reviews</div>
-        <div class="font-display t-h2 uppercase mt-1"><span style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;">4.9</span><span style="color:#27E0F5;margin-left:6px;">★</span> on Google</div>
+        <div class="font-mono t-cap" style="opacity:.6;">From our customers</div>
+        <div class="font-display t-h2 uppercase mt-1">What our <span style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;">customers</span> say</div>
       </div>
     </div>
-    <a href="#" class="font-mono t-cap" style="text-decoration:none;color:#EDEDED;border-bottom:2px solid #27E0F5;padding-bottom:2px;">READ ALL 847 ↗</a>
+    <!-- TODO: link to / embed real Google Reviews via Google Places API once live -->
+
   </div>
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="reviewGrid">
     <article class="review-card flex flex-col p-5" style="background:#242427;border:2px solid #EDEDED;">
@@ -677,7 +645,7 @@
         </span>
         <span class="font-mono t-cap-sm" style="color:#9a9a9a;">1 month ago</span>
       </div>
-      <p class="font-body mt-3.5 flex-1" style="font-size:15px;line-height:1.55;text-wrap:pretty;">"Had Apex rekey the whole house after closing. Marcus walked through every door and recommended swapping two deadbolts that were past their service life. No upsell pressure. Two-year warranty on the work."</p>
+      <p class="font-body mt-3.5 flex-1" style="font-size:15px;line-height:1.55;text-wrap:pretty;">"Had Aston rekey the whole house after closing. Marcus walked through every door and recommended swapping two deadbolts that were past their service life. No upsell pressure. Two-year warranty on the work."</p>
       <div class="font-display uppercase mt-3 pt-2.5" style="font-size:16px;letter-spacing:.03em;border-top:1px solid #3a3a3e;">ELI K.</div>
     </article>
     <article class="review-card flex flex-col p-5" style="background:#242427;border:2px solid #EDEDED;">
@@ -710,28 +678,30 @@
   </div>
   <div class="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6 lg:gap-8">
     <div>
-      <a href="tel:+14165550000" data-biz-tel class="btn-hivis call-pulse relative flex flex-col" style="padding:26px 28px;background:#27E0F5;color:#1A1A1A;text-decoration:none;border:3px solid #EDEDED;">
+      <a href="tel:+14372495464" data-biz-tel class="btn-hivis call-pulse relative flex flex-col" style="padding:26px 28px;background:#27E0F5;color:#1A1A1A;text-decoration:none;border:3px solid #EDEDED;">
         <div class="caution-stripe absolute top-0 left-0 right-0" style="height:6px"></div>
         <span class="font-mono t-cap mt-2" style="font-weight:700;">DISPATCH · OPEN NOW</span>
-        <span class="font-display t-phone-xl mt-2" data-biz-phone data-content-key="phone-number">(416) 555-0000</span>
+        <span class="font-display t-phone-xl mt-2" data-biz-phone data-content-key="phone-number">(437) 249-5464</span>
         <span class="font-body mt-2" style="font-size:14px;">Real human · 24 hours · 365 days</span>
       </a>
       <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div class="p-4" style="background:#242427;border:2px solid #EDEDED;">
           <span class="hazard" style="color:#EDEDED;">HOURS</span>
-          <div class="font-body mt-2.5" style="font-size:14px;line-height:1.7;">Dispatch: <strong data-biz-hours-dispatch data-content-key="hours-dispatch">24/7</strong><br/>Shop walk-ins: <span data-biz-hours-shop data-content-key="hours-shop">Mon–Sat 8a–6p</span></div>
+          <div class="font-body mt-2.5" style="font-size:14px;line-height:1.7;">Dispatch: <strong data-biz-hours-dispatch data-content-key="hours-dispatch">24/7</strong><br/>Open 365 days a year</div>
         </div>
+        <!-- Shop / walk-in address removed (Group 3): no physical storefront. Replaced with the payments block. -->
         <div class="p-4" style="background:#242427;border:2px solid #EDEDED;">
-          <span class="hazard" style="color:#EDEDED;">SHOP</span>
-          <div class="font-body mt-2.5" style="font-size:14px;line-height:1.7;"><span data-biz-addr1 data-content-key="address-line1">123 Queen St W</span><br/><span data-biz-addr2 data-content-key="address-line2">Toronto, ON M5V 1A1</span></div>
+          <span class="hazard" style="color:#EDEDED;">PAYMENTS</span>
+          <div class="font-body mt-2.5" style="font-size:13px;line-height:1.5;">All Payments Accepted<br/><span style="color:#9a9a9a;font-size:12px;">Apple Pay, Google Pay, tap to pay · Visa, Mastercard, Amex, debit</span></div>
         </div>
         <div class="p-4" style="background:#242427;border:2px solid #EDEDED;">
           <span class="hazard" style="color:#EDEDED;">EMAIL</span>
-          <div class="font-body mt-2.5" style="font-size:14px;line-height:1.7;"><span data-biz-email data-content-key="email">dispatch@apexlocksmith.co</span></div>
+          <div class="font-body mt-2.5" style="font-size:14px;line-height:1.7;"><span data-biz-email data-content-key="email">dispatch@astonlocksmith.co</span></div>
         </div>
+        <!-- TODO: re-add CREDENTIALS card (License # · Bonded · Insured · ALOA) once official license is obtained -->
         <div class="p-4" style="background:#242427;border:2px solid #EDEDED;">
-          <span class="hazard" style="color:#EDEDED;">CREDENTIALS</span>
-          <div class="font-body mt-2.5" style="font-size:13px;line-height:1.55;">LIC # — coming soon<br/>Bonded · Insured · ALOA</div>
+          <span class="hazard" style="color:#EDEDED;">AREA</span>
+          <div class="font-body mt-2.5" style="font-size:13px;line-height:1.55;">Toronto &amp; GTA<br/>24/7 mobile dispatch</div>
         </div>
       </div>
       <!-- TODO: replace [PHONE_NUMBER] with real WhatsApp Business number when available -->
@@ -773,7 +743,7 @@
 </section>
 
 <!-- ───── FLOATING CALL BUTTON ───── -->
-<a href="tel:+14165550000" data-biz-tel data-biz-aria-phone="Call dispatch — " id="callFab" aria-label="Call dispatch — (416) 555-0000">
+<a href="tel:+14372495464" data-biz-tel data-biz-aria-phone="Call dispatch — " id="callFab" aria-label="Call dispatch — (437) 249-5464">
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
     <path d="M5 3h4l2 5-2 2a12 12 0 005 5l2-2 5 2v4a2 2 0 01-2 2A18 18 0 013 5a2 2 0 012-2z"/>
   </svg>
@@ -794,7 +764,7 @@
       </svg>
       <span>WHATSAPP</span>
     </a>
-    <a href="sms:+14165550000" data-biz-sms class="msg-fab-opt msg-fab-sms" role="menuitem" aria-label="Send us an SMS">
+    <a href="sms:+14372495464" data-biz-sms class="msg-fab-opt msg-fab-sms" role="menuitem" aria-label="Send us an SMS">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
       </svg>
@@ -819,48 +789,14 @@
         Stop reading.<br/><span style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;">Start</span> dialing.
       </div>
     </div>
-    <a href="tel:+14165550000" data-biz-tel class="btn-hivis call-pulse inline-flex flex-col shrink-0" style="padding:18px 26px;background:#27E0F5;color:#1A1A1A;text-decoration:none;">
+    <a href="tel:+14372495464" data-biz-tel class="btn-hivis call-pulse inline-flex flex-col shrink-0" style="padding:18px 26px;background:#27E0F5;color:#1A1A1A;text-decoration:none;">
       <span class="font-mono" style="font-size:10px;letter-spacing:.24em;font-weight:700;">CALL DISPATCH</span>
-      <span class="font-display" style="font-size:clamp(26px,3.4vw,40px);line-height:1;letter-spacing:-.02em;white-space:nowrap;" data-biz-phone data-content-key="phone-number">(416) 555-0000</span>
+      <span class="font-display" style="font-size:clamp(26px,3.4vw,40px);line-height:1;letter-spacing:-.02em;white-space:nowrap;" data-biz-phone data-content-key="phone-number">(437) 249-5464</span>
     </a>
   </div>
 </section>
 
-<!-- ───── CREDENTIALS STRIP ───── -->
-<section aria-label="Licensing and credentials" style="background:#1A1A1A;border-top:1px solid #3a3a3e;">
-  <div class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-7">
-    <div class="cred-strip">
-      <!-- Licensed Locksmith badge -->
-      <div class="cred-badge">
-        <div class="cred-shield">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#27E0F5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z"/>
-            <path d="M9 12l2 2 4-4"/>
-          </svg>
-        </div>
-        <div>
-          <div class="font-display uppercase" style="font-size:14px;letter-spacing:.04em;line-height:1;">Licensed Locksmith</div>
-          <div class="font-mono t-cap-sm mt-1.5" style="color:#9a9a9a;">Serving GTA professionally</div>
-        </div>
-      </div>
-
-      <!-- Center: pillars -->
-      <div class="cred-pillars font-mono">
-        <span>LICENSED</span>
-        <span class="cred-dot" aria-hidden="true"></span>
-        <span>BONDED</span>
-        <span class="cred-dot" aria-hidden="true"></span>
-        <span>INSURED</span>
-      </div>
-
-      <!-- Right: license placeholder -->
-      <div class="cred-lic">
-        <span class="font-mono t-cap-sm" style="color:#9a9a9a;">License #</span>
-        <span class="font-display" style="font-size:15px;letter-spacing:.04em;color:#27E0F5;">COMING SOON</span>
-      </div>
-    </div>
-  </div>
-</section>
+<!-- TODO: re-add Credentials strip (Licensed Locksmith · License #) once official license is obtained. Payments now live in the "Pick up the phone" contact grid. -->
 
 <!-- ───── FOOTER ───── -->
 <footer style="background:#1A1A1A;border-top:3px solid #EDEDED;">
@@ -872,8 +808,8 @@
     </div>
     <!-- Meta row -->
     <div class="flex flex-wrap gap-3 justify-between items-center font-mono t-cap-sm pt-4" style="opacity:.7;font-weight:600;border-top:1px solid #3a3a3e;">
-      <span>© 2025 APEX LOCKSMITH. ALL RIGHTS RESERVED.</span>
-      <span class="hidden sm:inline">LIC # — PENDING</span>
+      <span>© 2025 Aston Locksmith. ALL RIGHTS RESERVED.</span>
+      <!-- TODO: re-add "LIC # — PENDING / number" once official license is obtained -->
       <span>TORONTO · GTA</span>
       <span>PRIVACY · TERMS · WARRANTY</span>
     </div>
@@ -886,15 +822,14 @@
   <span id="noteToastMsg">You have reached the maximum character limit (250)</span>
 </div>
 
-<script src="apex-defaults.js" defer></script>
-<script src="content-patch.js" defer></script>
-<script src="app.js?v=2" defer></script>
-<script src="i18n.js?v=2" defer></script>
+<script src="apex-defaults.js?v=4" defer></script>
+<script src="content-patch.js?v=2" defer></script>
+<script src="app.js?v=5" defer></script>
+<script src="i18n.js?v=6" defer></script>
 <script>
   (function(){
     var overlay = document.getElementById('loadingOverlay');
     var container = document.getElementById('loadingAnim');
-    var testBtn = document.getElementById('testLoadingBtn');
     if (!overlay || !container) return;
 
     var anim = null;
@@ -955,14 +890,11 @@
       });
     }
 
-    // TODO: remove test button before production
-    if (testBtn){
-      testBtn.addEventListener('click', function(){
-        showLoading();
-        setTimeout(hideLoading, 3000);
-      });
-    }
   })();
 </script>
 </body>
 </html>
+
+
+
+
