@@ -9,13 +9,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="tailwind.css"/>
 <link rel="stylesheet" id="leafletCss" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" media="print" onload="this.media='all'" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-<link rel="stylesheet" href="styles.css?v=18"/>
+<link rel="stylesheet" href="styles.css?v=21"/>
 </head>
 <body class="bg-bg text-ink">
 
 <!-- ───── LOADING OVERLAY (Lottie) ───── -->
 <div id="loadingOverlay" role="status" aria-live="polite" aria-label="Loading">
-  <div id="loadingAnim"><span class="loader-ring" aria-hidden="true"></span></div>
+  <div id="loadingAnim"></div>
 </div>
 
 <!-- (dev-only "Test Loading" button removed for production) -->
@@ -249,7 +249,7 @@
 </section>
 
 <!-- ───── SERVICE FINDER + ZIP ───── -->
-<section class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-16">
+<section class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16">
   <!-- Section heading -->
   <div class="flex items-end justify-between gap-4 pb-3 mb-7" style="border-bottom:3px solid #EDEDED;">
     <div class="flex gap-4 sm:gap-3 items-end">
@@ -346,7 +346,7 @@
 <!-- ───── SERVICES (carousel) ───── -->
 <section id="services" class="section-divider">
   <div class="svc-bg-overlay" aria-hidden="true"></div>
-  <div class="svc-content-wrap max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-16">
+  <div class="svc-content-wrap max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16">
   <div class="flex items-end justify-between gap-4 pb-3 mb-7" style="border-bottom:3px solid #EDEDED;">
     <div class="flex gap-4 sm:gap-3 items-end">
       <span class="hazard" style="color:#EDEDED;">NO.03</span>
@@ -506,7 +506,7 @@
 </section>
 
 <!-- ───── PROCESS ───── -->
-<section class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-16">
+<section class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16">
   <div class="flex items-end justify-between gap-4 pb-3 mb-7" style="border-bottom:3px solid #EDEDED;">
     <div class="flex gap-4 sm:gap-3 items-end">
       <span class="hazard" style="color:#EDEDED;">NO.04</span>
@@ -544,9 +544,9 @@
   <div class="about-vignette" aria-hidden="true"></div>
   <div class="about-inner max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10">
     <div class="max-w-[760px]">
-      <div class="flex flex-row items-end justify-center md:justify-start gap-2 md:gap-3 pb-3 mb-6" style="border-bottom:3px solid #EDEDED;">
+      <div class="flex flex-row items-end justify-start gap-2 md:gap-3 pb-3 mb-6" style="border-bottom:3px solid #EDEDED;">
         <span class="hazard" style="color:#EDEDED;">NO.05</span>
-        <div class="text-center md:text-left">
+        <div class="text-left">
           <div class="font-mono t-cap" style="opacity:.6;">The shop</div>
           <div class="font-display t-h2 uppercase mt-1">ON THE ROAD <span class="onroad-247" style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;position:relative;">24/7<span class="pulse-dot onroad-dot" aria-hidden="true"></span></span></div>
         </div>
@@ -554,7 +554,7 @@
       <p class="font-body" style="font-size:clamp(15px,1.7vw,17px);line-height:1.55;margin:0 0 14px;">
         Our technicians are experienced and supported by a dedicated dispatch operator. Every vehicle and every technician is ready to provide reliable service, backed by the experience and trust earned from thousands of families across Toronto. The technician who arrives at your door has passed a security check, completed training, and is trusted by thousands of Toronto families.
       </p>
-      <div class="flex gap-2 flex-wrap mt-8 justify-center md:justify-start">
+      <div class="flex gap-2 flex-wrap mt-8 justify-start">
         <!-- TODO: re-add "Licensed · LIC # · Bonded · Insured" credential tags once official license is obtained -->
         <span class="hazard cred-tag" style="color:#EDEDED;background:#242427;">ALOA MEMBER</span>
         <span class="hazard cred-tag" style="color:#EDEDED;background:#242427;">SERVING GTA</span>
@@ -566,7 +566,7 @@
 
 <!-- ───── WHY ASTON ───── -->
 <section id="why" class="why-section section-divider">
-  <div class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-16 relative">
+  <div class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16 relative">
     <div class="why-pulse-line" aria-hidden="true"></div>
     <div class="flex items-end justify-between gap-4 pb-3 mb-9">
       <div class="flex gap-4 sm:gap-3 items-end">
@@ -612,7 +612,7 @@
 </section>
 
 <!-- ───── REVIEWS ───── -->
-<section id="reviews" class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-16 section-divider">
+<section id="reviews" class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16 section-divider">
   <div class="flex flex-wrap items-center md:items-end justify-center md:justify-between gap-4 pb-3 mb-7" style="border-bottom:3px solid #EDEDED;">
     <div class="flex flex-col md:flex-row gap-2 md:gap-3 items-center md:items-end">
       <span class="hazard" style="color:#EDEDED;">NO.07</span>
@@ -671,7 +671,7 @@
 </section>
 
 <!-- ───── CONTACT ───── -->
-<section id="contact" class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-14 lg:py-16 section-divider">
+<section id="contact" class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16 section-divider">
   <div class="flex items-end justify-between gap-4 pb-3 mb-7" style="border-bottom:3px solid #EDEDED;">
     <div class="flex gap-4 sm:gap-3 items-end">
       <span class="hazard" style="color:#EDEDED;">NO.08</span>
@@ -794,7 +794,7 @@
         Stop reading.<br/><span style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;">Start</span> dialing.
       </div>
     </div>
-    <a href="tel:+14372495464" data-biz-tel class="btn-hivis call-pulse inline-flex flex-col shrink-0" style="padding:18px 26px;background:#27E0F5;color:#1A1A1A;text-decoration:none;">
+    <a id="stopCallBtn" href="tel:+14372495464" data-biz-tel class="btn-hivis call-pulse flex flex-col shrink-0" style="padding:18px 26px;background:#27E0F5;color:#1A1A1A;text-decoration:none;">
       <span class="font-mono" style="font-size:10px;letter-spacing:.24em;font-weight:700;">CALL DISPATCH</span>
       <span class="font-display" style="font-size:clamp(26px,3.4vw,40px);line-height:1;letter-spacing:-.02em;white-space:nowrap;" data-biz-phone data-content-key="phone-number">(437) 249-5464</span>
     </a>
@@ -833,16 +833,68 @@
 <script src="i18n.js?v=6" defer></script>
 <script>
   (function(){
-    // Lightweight intro overlay: a CSS spinner (no 300KB Lottie lib) that
-    // fades out once the page has loaded.
     var overlay = document.getElementById('loadingOverlay');
-    if (!overlay) return;
+    var container = document.getElementById('loadingAnim');
+    if (!overlay || !container) return;
+
+    var anim = null;
+    var animDataPromise = fetch('new_icons/loading.json')
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        // The Lottie ships with a solid "BG" layer; hide it so the
+        // container reads as transparent against the overlay.
+        if (data && Array.isArray(data.layers)) {
+          data.layers.forEach(function(l){
+            if (l && (l.nm === 'BG' || l.ty === 1)) l.hd = true;
+          });
+        }
+        return data;
+      })
+      .catch(function(){ return null; });
+    function ensureAnim(){
+      if (anim || typeof lottie === 'undefined') return;
+      animDataPromise.then(function(data){
+        if (anim) return;
+        anim = lottie.loadAnimation({
+          container: container,
+          renderer: 'svg',
+          loop: true,
+          autoplay: true,
+          animationData: data || undefined,
+          path: data ? undefined : 'new_icons/loading.json'
+        });
+      });
+    }
+    function showLoading(){
+      overlay.classList.remove('is-hidden');
+      // Force reflow so the opacity transition restarts cleanly
+      void overlay.offsetWidth;
+      overlay.classList.remove('is-hiding');
+      ensureAnim();
+    }
     function hideLoading(){
       overlay.classList.add('is-hiding');
       setTimeout(function(){ overlay.classList.add('is-hidden'); }, 500);
     }
-    if (document.readyState === 'complete') hideLoading();
-    else window.addEventListener('load', hideLoading);
+
+    // Load Lottie only after window.onload — does not block initial render
+    function loadLottie() {
+      var s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js';
+      s.onload = ensureAnim;
+      document.head.appendChild(s);
+    }
+
+    if (document.readyState === 'complete') {
+      loadLottie();
+      hideLoading();
+    } else {
+      window.addEventListener('load', function() {
+        loadLottie();
+        hideLoading();
+      });
+    }
+
   })();
 </script>
 </body>

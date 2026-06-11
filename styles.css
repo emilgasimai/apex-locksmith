@@ -291,16 +291,22 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
   #header.scrolled .neon-logo-main{font-size:24px;}
   #header.scrolled .neon-logo-sub{font-size:11px;}
 }
+/* Phones: dial the neon glow WAY down — it reads far too hot on a small screen. */
+@media (max-width:767px){
+  .neon-logo-main{ -webkit-text-stroke-width:1px;
+    text-shadow:0 0 2px rgba(39,224,245,.8),0 0 5px rgba(39,224,245,.32); }
+  .neon-logo-sub{ -webkit-text-stroke-width:.6px;
+    text-shadow:0 0 2px rgba(39,224,245,.75),0 0 4px rgba(39,224,245,.28); }
+}
 
 /* Neon scroll-progress line — full-width bottom edge of the header, grows
-   left→right as the page scrolls (0% at top → 100% at bottom). Desktop only. */
+   left→right as the page scrolls (0% at top → 100% at bottom). All screens. */
 #scrollProgress{
   position:absolute;left:0;bottom:0;height:2px;width:0;
   background:#27E0F5;opacity:.6;
   box-shadow:0 0 8px rgba(39,224,245,.5);
   transition:width .1s linear;pointer-events:none;
 }
-@media (max-width:768px){ #scrollProgress{display:none;} }
 
 #mobileMenu{
   background:rgba(15,15,16,0.88);
@@ -960,14 +966,17 @@ textarea#contactNote.note-shake{
 @media (max-width: 640px){
   /* Bolder, more commanding headline */
   .t-h1{font-size:clamp(44px, 12vw, 56px); line-height:.88;}
-  /* Force the left column to fill the viewport so the dispatch widget
-     falls below the fold on every phone size (short or tall). 160px
-     accounts for the 24/7 strip + header + hero section top padding. */
-  #home > .grid > div:first-child{min-height: calc(100vh - 160px);}
-  .hero-side{margin-top:24px;}
+  /* Dispatch widget follows the hero copy with a normal gap (no forced
+     full-viewport spacer, which left a large empty band on phones). */
+  .hero-side{margin-top:20px;}
 }
 
-/* ───── Loading overlay (lightweight CSS spinner) ───── */
+/* Bottom-CTA "Call dispatch" button: full-width + centred on phones/tablets,
+   natural width + left-aligned on desktop (the row goes side-by-side at lg). */
+#stopCallBtn{ align-items:flex-start; }
+@media (max-width:1023px){ #stopCallBtn{ width:100%; align-items:center; } }
+
+/* ───── Loading overlay (Lottie) ───── */
 #loadingOverlay{
   position:fixed;
   inset:0;
@@ -988,17 +997,7 @@ textarea#contactNote.note-shake{
   max-width:420px;
   aspect-ratio:1 / 1;
   background:transparent;
-  display:flex;align-items:center;justify-content:center;
 }
-.loader-ring{
-  width:62px;height:62px;border-radius:50%;
-  border:4px solid rgba(39,224,245,.16);
-  border-top-color:#27E0F5;
-  box-shadow:0 0 18px rgba(39,224,245,.35);
-  animation:loaderSpin .8s linear infinite;
-}
-@keyframes loaderSpin{ to{ transform:rotate(360deg); } }
-@media (prefers-reduced-motion: reduce){ .loader-ring{ animation-duration:1.8s; } }
 /* (dev-only #testLoadingBtn styles removed for production) */
 
 /* ── EN / FR language toggle — sliding pill ── */
