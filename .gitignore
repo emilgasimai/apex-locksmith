@@ -1,5 +1,7 @@
 # Local dev artifacts
 temporary screenshots/
+junk&screenshots/
+pw/
 *.log
 
 # Tooling / IDE
@@ -9,6 +11,9 @@ temporary screenshots/
 .DS_Store
 Thumbs.db
 
+# AI assistant instructions (kept locally, not part of the deployed site)
+CLAUDE.md
+
 # Node
 node_modules/
 npm-debug.log*
@@ -17,18 +22,17 @@ yarn-error.log*
 
 # Vercel
 .vercel/
+.vercel
 
 # Env
 .env
 .env.local
 .env.*.local
 
-.vercel
-
 # Source image originals — only the optimized .webp/.jpg are deployed
 *_original.*
 
-# Local Puppeteer test harnesses + one-off tooling (not needed for deploy)
-shot-*.mjs
-diag-*.mjs
-convert-images.cjs
+# Local Node tooling / one-off scripts (Puppeteer harnesses, dev server,
+# image converters) — not needed for the static deploy
+*.mjs
+*.cjs
