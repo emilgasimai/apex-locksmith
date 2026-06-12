@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="tailwind.css"/>
 <link rel="stylesheet" id="leafletCss" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" media="print" onload="this.media='all'" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-<link rel="stylesheet" href="styles.css?v=21"/>
+<link rel="stylesheet" href="styles.css?v=22"/>
 </head>
 <body class="bg-bg text-ink">
 
@@ -622,7 +622,7 @@
       </div>
     </div>
     <!-- TODO: link to / embed real Google Reviews via Google Places API once live -->
-
+    <button type="button" id="leaveReviewBtn" class="btn-msg-outline font-display uppercase inline-flex items-center justify-center shrink-0">Leave a review →</button>
   </div>
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="reviewGrid">
     <article class="review-card flex flex-col p-5" style="background:#242427;border:2px solid #EDEDED;">
@@ -714,6 +714,9 @@
         <a href="https://wa.me/[PHONE_NUMBER]" data-biz-wa class="btn-msg-outline font-display uppercase inline-flex items-center justify-center">WHATSAPP →</a>
         <a href="sms:[PHONE_NUMBER]" data-biz-sms class="btn-msg-outline font-display uppercase inline-flex items-center justify-center">SMS →</a>
       </div>
+      <div class="mt-3">
+        <button type="button" id="getQuoteBtn" class="btn-msg-outline font-display uppercase inline-flex items-center justify-center" style="width:100%;">Get a quote →</button>
+      </div>
     </div>
     <form id="contactForm" class="grid gap-3.5 p-6" style="background:#242427;border:3px solid #EDEDED;" novalidate>
       <span class="hazard" style="color:#1A1A1A;background:#f4c20a;border-color:#1A1A1A;width:fit-content;">NON-URGENT REQUEST</span>
@@ -737,8 +740,10 @@
         <span class="font-mono t-cap-sm" style="color:#9a9a9a;font-weight:700;">WHAT'S UP?</span>
         <textarea id="contactNote" rows="4" placeholder="Rekey after move-in, smart lock install, etc."></textarea>
         <div id="noteCounter" class="note-counter" aria-live="polite"><span id="noteCounterNum">0</span> / 250</div>
+        <div id="contactNote-error" class="form-error">Tell us what you need</div>
       </label>
       <button type="submit" class="btn-hivis font-display uppercase" style="padding:14px 22px;background:#27E0F5;color:#1A1A1A;border:2px solid #EDEDED;cursor:pointer;font-size:16px;letter-spacing:.06em;">Send →</button>
+      <div id="contactFail" class="form-error">Couldn&rsquo;t send right now — please try again, or just call us.</div>
       <div id="contactSuccess" class="form-success">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5cd97a" stroke-width="2.4" style="flex-shrink:0;"><path d="M4 12l5 5 11-12"/></svg>
         <span class="font-display uppercase" style="font-size:13px;letter-spacing:.04em;">Note received. We'll be in touch shortly.</span>
@@ -821,16 +826,108 @@
   </div>
 </footer>
 
+<!-- ───── GET A QUOTE MODAL ───── -->
+<div id="quoteModal" class="site-modal" hidden role="dialog" aria-modal="true" aria-labelledby="quoteModalTitle">
+  <div class="site-modal-box">
+    <button type="button" class="site-modal-close" data-close aria-label="Close">&times;</button>
+    <span class="hazard" style="color:#1A1A1A;background:#f4c20a;border-color:#1A1A1A;width:fit-content;">FREE QUOTE</span>
+    <div id="quoteModalTitle" class="font-display uppercase site-modal-title">Get a quote</div>
+    <form id="quoteForm" class="grid gap-3.5" novalidate>
+      <label class="grid gap-1.5">
+        <span class="font-mono t-cap-sm" style="color:#9a9a9a;font-weight:700;">NAME</span>
+        <input id="quoteName" placeholder="Marcus H." required/>
+        <div id="quoteName-error" class="form-error">Enter your name</div>
+      </label>
+      <label class="grid gap-1.5">
+        <span class="font-mono t-cap-sm" style="color:#9a9a9a;font-weight:700;">PHONE</span>
+        <input id="quotePhone" data-format="phone" placeholder="(416) 555-1234" inputmode="numeric" maxlength="14" autocomplete="tel" required/>
+        <div id="quotePhone-error" class="form-error">Enter a valid 10-digit phone</div>
+      </label>
+      <label class="grid gap-1.5">
+        <span class="font-mono t-cap-sm" style="color:#9a9a9a;font-weight:700;">POSTAL CODE</span>
+        <input id="quotePostal" data-format="postal" placeholder="A0A 0A0" maxlength="7" autocomplete="postal-code" autocapitalize="characters" spellcheck="false" required/>
+        <div id="quotePostal-error" class="form-error">Use Canadian format: A0A 0A0</div>
+      </label>
+      <label class="grid gap-1.5">
+        <span class="font-mono t-cap-sm" style="color:#9a9a9a;font-weight:700;">SERVICE</span>
+        <select id="quoteService" required>
+          <option value="">Select a service…</option>
+          <option>24/7 Emergency Lockouts</option>
+          <option>Residential Rekey &amp; Install</option>
+          <option>Commercial &amp; Business</option>
+          <option>Automotive</option>
+          <option>Smart Locks &amp; Access</option>
+          <option>Safes — Open, Move, Install</option>
+          <option>Security Systems</option>
+          <option>Other</option>
+        </select>
+        <div id="quoteService-error" class="form-error">Choose a service</div>
+      </label>
+      <label class="grid gap-1.5">
+        <span class="font-mono t-cap-sm" style="color:#9a9a9a;font-weight:700;">DETAILS (OPTIONAL)</span>
+        <textarea id="quoteDetails" rows="3" placeholder="Door type, number of locks, timing, etc."></textarea>
+      </label>
+      <button type="submit" class="btn-hivis font-display uppercase" style="padding:14px 22px;background:#27E0F5;color:#1A1A1A;border:2px solid #EDEDED;cursor:pointer;font-size:16px;letter-spacing:.06em;">Request quote →</button>
+      <div id="quoteFail" class="form-error" style="position:static;">Couldn&rsquo;t send right now — please try again, or just call us.</div>
+      <div id="quoteSuccess" class="form-success">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5cd97a" stroke-width="2.4" style="flex-shrink:0;"><path d="M4 12l5 5 11-12"/></svg>
+        <span class="font-display uppercase" style="font-size:13px;letter-spacing:.04em;">Quote request received. We&rsquo;ll call you shortly.</span>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ───── LEAVE A REVIEW MODAL ───── -->
+<div id="reviewModal" class="site-modal" hidden role="dialog" aria-modal="true" aria-labelledby="reviewModalTitle">
+  <div class="site-modal-box">
+    <button type="button" class="site-modal-close" data-close aria-label="Close">&times;</button>
+    <span class="hazard" style="color:#EDEDED;width:fit-content;">YOUR EXPERIENCE</span>
+    <div id="reviewModalTitle" class="font-display uppercase site-modal-title">Leave a review</div>
+    <form id="reviewForm" class="grid gap-3.5" novalidate>
+      <label class="grid gap-1.5">
+        <span class="font-mono t-cap-sm" style="color:#9a9a9a;font-weight:700;">NAME</span>
+        <input id="revName" placeholder="Dana R." maxlength="60" required/>
+        <div id="revName-error" class="form-error">Enter your name</div>
+      </label>
+      <div class="grid gap-1.5">
+        <span class="font-mono t-cap-sm" style="color:#9a9a9a;font-weight:700;">RATING</span>
+        <div id="revStars" class="rev-stars" role="radiogroup" aria-label="Rating">
+          <button type="button" class="rev-star" data-star="1" aria-label="1 star">★</button>
+          <button type="button" class="rev-star" data-star="2" aria-label="2 stars">★</button>
+          <button type="button" class="rev-star" data-star="3" aria-label="3 stars">★</button>
+          <button type="button" class="rev-star" data-star="4" aria-label="4 stars">★</button>
+          <button type="button" class="rev-star" data-star="5" aria-label="5 stars">★</button>
+        </div>
+        <div id="revStars-error" class="form-error" style="position:static;display:none;">Pick a rating</div>
+      </div>
+      <label class="grid gap-1.5">
+        <span class="font-mono t-cap-sm" style="color:#9a9a9a;font-weight:700;">YOUR REVIEW</span>
+        <textarea id="revText" rows="4" maxlength="500" placeholder="How did it go?" required></textarea>
+        <div id="revText-error" class="form-error">Tell us a bit more (at least 10 characters)</div>
+      </label>
+      <button type="submit" class="btn-hivis font-display uppercase" style="padding:14px 22px;background:#27E0F5;color:#1A1A1A;border:2px solid #EDEDED;cursor:pointer;font-size:16px;letter-spacing:.06em;">Submit review →</button>
+      <div id="reviewFail" class="form-error" style="position:static;">Couldn&rsquo;t submit right now — please try again later.</div>
+    </form>
+    <div id="reviewThanks" class="rev-thanks" hidden>
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#5cd97a" stroke-width="2.4"><path d="M4 12l5 5 11-12"/></svg>
+      <div class="font-display uppercase" style="font-size:18px;letter-spacing:.03em;">Thank you!</div>
+      <p class="font-body" style="font-size:14px;line-height:1.6;color:#9a9a9a;margin:0;">Your review has been received and will be published after it&rsquo;s approved by our team.</p>
+      <button type="button" class="btn-hivis font-display uppercase" data-close style="padding:12px 20px;background:#27E0F5;color:#1A1A1A;border:2px solid #EDEDED;cursor:pointer;font-size:14px;letter-spacing:.06em;">Done</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast / popup target (used by Send-a-Note char limit) -->
 <div id="noteToast" class="note-toast" role="alert" aria-live="assertive">
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0;"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16v.5"/></svg>
   <span id="noteToastMsg">You have reached the maximum character limit (250)</span>
 </div>
 
+<script src="config.js?v=1" defer></script>
 <script src="apex-defaults.js?v=4" defer></script>
-<script src="content-patch.js?v=3" defer></script>
-<script src="app.js?v=8" defer></script>
-<script src="i18n.js?v=6" defer></script>
+<script src="content-patch.js?v=4" defer></script>
+<script src="app.js?v=9" defer></script>
+<script src="i18n.js?v=7" defer></script>
 <script>
   (function(){
     var overlay = document.getElementById('loadingOverlay');

@@ -478,25 +478,48 @@ zipForm.addEventListener('submit', (e) => {
   });
 })();
 
-// ── Contact form (inline validation + inline success) ──
-document.getElementById('contactForm').addEventListener('submit', (e) => {
+// ── Contact form ("Send a Note") → POST {API}/api/contact ──
+document.getElementById('contactForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const form = e.target;
   let valid = true;
   const name = document.getElementById('contactName');
   const phone = document.getElementById('contactPhone');
   const postal = document.getElementById('contactPostal');
+  const note = document.getElementById('contactNote');
+  const fail = document.getElementById('contactFail');
 
   if (!name.value.trim()) { showError(name); valid = false; } else { clearError(name); }
   if (!isValidPhone(phone.value)) { showError(phone); valid = false; } else { clearError(phone); }
   if (!isValidPostal(postal.value)) { showError(postal); valid = false; } else { clearError(postal); }
+  if (!note.value.trim()) { showError(note); valid = false; } else { clearError(note); }
 
   if (!valid) return;
 
-  const success = document.getElementById('contactSuccess');
-  success.classList.add('show');
-  form.reset();
-  setTimeout(() => success.classList.remove('show'), 6000);
+  const btn = form.querySelector('button[type="submit"]');
+  btn.disabled = true;
+  if (fail) fail.classList.remove('show');
+
+  const res = await window.apiFetch('/api/contact', {
+    method: 'POST',
+    json: {
+      name: name.value.trim(),
+      phone: phone.value.replace(/\D/g, ''),
+      postalCode: postal.value.trim().toUpperCase(),
+      message: note.value.trim()
+    }
+  });
+
+  btn.disabled = false;
+  if (res.ok) {
+    const success = document.getElementById('contactSuccess');
+    success.classList.add('show');
+    form.reset();
+    setTimeout(() => success.classList.remove('show'), 6000);
+  } else {
+    // Friendly failure — keep the user's input untouched so they can retry.
+    if (fail) fail.classList.add('show');
+  }
 });
 
 // ── Send a Note — char-limit (250, spaces excluded) + live counter + toast ──
@@ -934,6 +957,209 @@ scrollBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 's
   track.addEventListener('click', (e) => {
     if (moved) { e.preventDefault(); e.stopPropagation(); }
   }, true);
+})();
+
+/* ════════════════════════════════════════════════════════════════════════
+   BACKEND INTEGRATION (public site)
+   - Approved reviews:  GET  {API}/api/reviews  → re-render #reviewGrid
+   - Get a Quote modal: POST {API}/api/quotes
+   - Leave a Review:    POST {API}/api/reviews  (published after approval)
+   All of it degrades gracefully: if the backend is unreachable the static /
+   admin-managed content stays exactly as it is today.
+   ══════════════════════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
+  if (typeof window.apiFetch !== 'function') return;          // config.js missing
+  const inAdminPreview = (window.self !== window.top);        // admin iframe → leave preview alone
+
+  /* ── Approved reviews from the backend ── */
+  function shortDate(iso) {
+    const d = new Date(iso);
+    if (isNaN(d)) return '';
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+  if (!inAdminPreview) {
+    window.apiFetch('/api/reviews').then((res) => {
+      const items = res.ok && res.data && (res.data.items || res.data.reviews || (Array.isArray(res.data) ? res.data : null));
+      if (!items || !items.length) return;                    // fallback: keep current cards
+      const mapped = items.map((r) => ({
+        name: r.name || '',
+        rating: r.rating || 5,
+        text: r.text || '',
+        date: r.date || (r.createdAt ? shortDate(r.createdAt) : '')
+      }));
+      if (window.ASTON_PATCH && typeof window.ASTON_PATCH.renderReviews === 'function') {
+        window.__ASTON_REVIEWS_FROM_API__ = true;   // approved reviews win over admin-curated list
+        window.ASTON_PATCH.renderReviews(mapped);
+      }
+    });
+  }
+
+  /* ── Modal helpers ── */
+  function openModal(el) {
+    el.hidden = false;
+    void el.offsetWidth;                                      // restart transition
+    el.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+    const first = el.querySelector('input,select,textarea');
+    if (first) setTimeout(() => first.focus(), 120);
+  }
+  function closeModal(el) {
+    el.classList.remove('is-open');
+    document.body.style.overflow = '';
+    setTimeout(() => { if (!el.classList.contains('is-open')) el.hidden = true; }, 220);
+  }
+  document.querySelectorAll('.site-modal').forEach((m) => {
+    m.addEventListener('click', (e) => {
+      if (e.target === m || e.target.closest('[data-close]')) closeModal(m);
+    });
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    document.querySelectorAll('.site-modal.is-open').forEach(closeModal);
+  });
+
+  /* ── GET A QUOTE ── */
+  const quoteModal = document.getElementById('quoteModal');
+  const quoteForm = document.getElementById('quoteForm');
+  if (quoteModal && quoteForm) {
+    const qName = document.getElementById('quoteName');
+    const qPhone = document.getElementById('quotePhone');
+    const qPostal = document.getElementById('quotePostal');
+    const qService = document.getElementById('quoteService');
+    const qDetails = document.getElementById('quoteDetails');
+    const qFail = document.getElementById('quoteFail');
+    const qSuccess = document.getElementById('quoteSuccess');
+
+    function openQuote(serviceTitle) {
+      qFail.classList.remove('show');
+      qSuccess.classList.remove('show');
+      if (serviceTitle) {
+        let matched = false;
+        Array.from(qService.options).forEach((o) => {
+          if (o.value && o.value.toLowerCase() === serviceTitle.toLowerCase()) { qService.value = o.value; matched = true; }
+        });
+        if (!matched) {
+          qService.value = 'Other';
+          if (!qDetails.value) qDetails.value = serviceTitle;
+        }
+      }
+      openModal(quoteModal);
+    }
+
+    const quoteBtn = document.getElementById('getQuoteBtn');
+    if (quoteBtn) quoteBtn.addEventListener('click', () => openQuote(''));
+
+    // Carousel "Book it" cards open the quote modal pre-filled with that
+    // service (the trailing HELP card keeps its tel: behaviour).
+    const svcTrack = document.getElementById('svcTrack');
+    if (svcTrack && !inAdminPreview) {
+      svcTrack.addEventListener('click', (e) => {
+        const card = e.target.closest('a.svc-card');
+        if (!card || card.classList.contains('svc-cta')) return;
+        e.preventDefault();
+        const h = card.querySelector('.svc-body h3');
+        openQuote(h ? h.textContent.trim() : '');
+      });
+    }
+
+    quoteForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      let valid = true;
+      if (!qName.value.trim()) { showError(qName); valid = false; } else { clearError(qName); }
+      if (!isValidPhone(qPhone.value)) { showError(qPhone); valid = false; } else { clearError(qPhone); }
+      if (!isValidPostal(qPostal.value)) { showError(qPostal); valid = false; } else { clearError(qPostal); }
+      if (!qService.value) { showError(qService); valid = false; } else { clearError(qService); }
+      if (!valid) return;
+
+      const btn = quoteForm.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      qFail.classList.remove('show');
+
+      const res = await window.apiFetch('/api/quotes', {
+        method: 'POST',
+        json: {
+          name: qName.value.trim(),
+          phone: qPhone.value.replace(/\D/g, ''),
+          postalCode: qPostal.value.trim().toUpperCase(),
+          serviceType: qService.value,
+          details: qDetails.value.trim()
+        }
+      });
+
+      btn.disabled = false;
+      if (res.ok) {
+        qSuccess.classList.add('show');
+        quoteForm.reset();
+        setTimeout(() => { closeModal(quoteModal); qSuccess.classList.remove('show'); }, 2600);
+      } else {
+        qFail.classList.add('show');                          // keep their input
+      }
+    });
+  }
+
+  /* ── LEAVE A REVIEW ── */
+  const reviewModal = document.getElementById('reviewModal');
+  const reviewForm = document.getElementById('reviewForm');
+  if (reviewModal && reviewForm) {
+    const rName = document.getElementById('revName');
+    const rText = document.getElementById('revText');
+    const rFail = document.getElementById('reviewFail');
+    const rThanks = document.getElementById('reviewThanks');
+    const starsWrap = document.getElementById('revStars');
+    const starsErr = document.getElementById('revStars-error');
+    let rating = 0;
+
+    function paintStars() {
+      starsWrap.querySelectorAll('.rev-star').forEach((b) => {
+        b.classList.toggle('on', Number(b.dataset.star) <= rating);
+      });
+    }
+    starsWrap.addEventListener('click', (e) => {
+      const b = e.target.closest('.rev-star');
+      if (!b) return;
+      rating = Number(b.dataset.star);
+      starsErr.style.display = 'none';
+      paintStars();
+    });
+
+    const openBtn = document.getElementById('leaveReviewBtn');
+    if (openBtn) openBtn.addEventListener('click', () => {
+      rFail.classList.remove('show');
+      reviewForm.hidden = false;
+      rThanks.hidden = true;
+      openModal(reviewModal);
+    });
+
+    reviewForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      let valid = true;
+      if (!rName.value.trim()) { showError(rName); valid = false; } else { clearError(rName); }
+      if (!rating) { starsErr.style.display = 'flex'; valid = false; }
+      if (rText.value.trim().length < 10) { showError(rText); valid = false; } else { clearError(rText); }
+      if (!valid) return;
+
+      const btn = reviewForm.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      rFail.classList.remove('show');
+
+      const res = await window.apiFetch('/api/reviews', {
+        method: 'POST',
+        json: { name: rName.value.trim(), rating: rating, text: rText.value.trim() }
+      });
+
+      btn.disabled = false;
+      if (res.ok) {
+        reviewForm.hidden = true;
+        rThanks.hidden = false;                               // "published after approval"
+        reviewForm.reset();
+        rating = 0;
+        paintStars();
+      } else {
+        rFail.classList.add('show');
+      }
+    });
+  }
 })();
 
 

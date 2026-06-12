@@ -532,6 +532,54 @@ input.invalid,textarea.invalid{border-color:#ff5d3b;background:rgba(255,93,59,.0
 .form-success{display:none;margin-top:14px;padding:14px 18px;border:2px solid #5cd97a;background:rgba(92,217,122,.10);align-items:center;gap:12px;}
 .form-success.show{display:flex;}
 
+/* ── Site modals (Get a Quote / Leave a Review) — brutalist, matches forms ── */
+.site-modal{
+  position:fixed;inset:0;z-index:6000;
+  display:flex;align-items:center;justify-content:center;
+  padding:18px;
+  background:rgba(0,0,0,.78);
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  opacity:0;pointer-events:none;
+  transition:opacity .2s ease;
+}
+.site-modal.is-open{opacity:1;pointer-events:auto;}
+.site-modal-box{
+  position:relative;width:100%;max-width:540px;max-height:calc(100vh - 36px);
+  overflow-y:auto;
+  background:#242427;border:3px solid #EDEDED;
+  padding:26px 26px 24px;
+  display:grid;gap:14px;
+  box-shadow:0 24px 60px -18px rgba(0,0,0,.8);
+  transform:translateY(10px);
+  transition:transform .22s cubic-bezier(.2,.7,.3,1.2);
+}
+.site-modal.is-open .site-modal-box{transform:translateY(0);}
+.site-modal-title{font-size:clamp(22px,3vw,30px);line-height:1;letter-spacing:-.01em;}
+.site-modal-close{
+  position:absolute;top:10px;right:10px;width:38px;height:38px;
+  background:#1A1A1A;color:#EDEDED;border:2px solid #3a3a3e;
+  font-size:20px;line-height:1;cursor:pointer;padding:0 !important;
+  transition:border-color .15s ease, color .15s ease, transform .15s ease;
+}
+.site-modal-close:hover,.site-modal-close:focus-visible{border-color:#27E0F5;color:#27E0F5;}
+.site-modal-close:active{transform:translateY(1px);}
+
+/* Star rating picker (Leave a Review) */
+.rev-stars{display:flex;gap:6px;}
+.rev-star{
+  width:46px;height:46px;font-size:24px;line-height:1;cursor:pointer;
+  background:#1A1A1A;color:#3a3a3e;border:2px solid #3a3a3e;padding:0 !important;
+  transition:color .12s ease, border-color .12s ease, transform .12s ease;
+}
+.rev-star:hover,.rev-star:focus-visible{border-color:#27E0F5;}
+.rev-star:active{transform:translateY(1px);}
+.rev-star.on{color:#27E0F5;border-color:#27E0F5;background:rgba(39,224,245,.08);}
+.rev-thanks{display:grid;justify-items:center;text-align:center;gap:12px;padding:18px 6px 6px;}
+.rev-thanks[hidden]{display:none !important;}   /* author display beats the hidden attr otherwise */
+
+/* Static-position variant of .form-error used inside modals (no absolute) */
+#quoteFail,#reviewFail{margin-top:2px;}
+
 /* Progress bar */
 .eta-bar{height:14px;background:#1A1A1A;position:relative;border:1px solid #3a3a3e;}
 .eta-fill{position:absolute;inset:0;background-image:repeating-linear-gradient(135deg,#27E0F5 0 10px,#1cb8c9 10px 20px);}

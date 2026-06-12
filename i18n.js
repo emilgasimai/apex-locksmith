@@ -196,6 +196,38 @@
       'Recléage après emménagement, installation de serrure intelligente, etc.',
     'Send →': 'Envoyer →',
     "Note received. We'll be in touch shortly.": 'Mot reçu. Nous vous contacterons sous peu.',
+    'Tell us what you need': 'Dites-nous ce dont vous avez besoin',
+    "Couldn't send right now — please try again, or just call us.":
+      "Échec de l'envoi — réessayez ou appelez-nous.",
+
+    /* ── Get a Quote modal ── */
+    'Get a quote →': 'Obtenez un devis →',
+    'FREE QUOTE': 'DEVIS GRATUIT',
+    'Get a quote': 'Obtenez un devis',
+    'SERVICE': 'SERVICE',
+    'Select a service…': 'Choisissez un service…',
+    'Choose a service': 'Choisissez un service',
+    'Other': 'Autre',
+    'DETAILS (OPTIONAL)': 'DÉTAILS (FACULTATIF)',
+    'Door type, number of locks, timing, etc.': 'Type de porte, nombre de serrures, délai, etc.',
+    'Request quote →': 'Demander un devis →',
+    "Quote request received. We'll call you shortly.": 'Demande de devis reçue. Nous vous appellerons sous peu.',
+
+    /* ── Leave a Review modal ── */
+    'Leave a review →': 'Laissez un avis →',
+    'YOUR EXPERIENCE': 'VOTRE EXPÉRIENCE',
+    'Leave a review': 'Laissez un avis',
+    'RATING': 'NOTE',
+    'Pick a rating': 'Choisissez une note',
+    'YOUR REVIEW': 'VOTRE AVIS',
+    'How did it go?': "Comment ça s'est passé ?",
+    'Tell us a bit more (at least 10 characters)': 'Dites-nous en un peu plus (au moins 10 caractères)',
+    'Submit review →': "Soumettre l'avis →",
+    "Couldn't submit right now — please try again later.": "Échec de l'envoi — veuillez réessayer plus tard.",
+    'Thank you!': 'Merci !',
+    "Your review has been received and will be published after it's approved by our team.":
+      'Votre avis a été reçu et sera publié après approbation par notre équipe.',
+    'Done': 'Terminé',
 
     /* ── Bottom CTA ── */
     "IF YOU'RE LOCKED OUT": 'SI VOUS ÊTES ENFERMÉ DEHORS',
@@ -286,6 +318,12 @@
     'Scroll to top': 'Retour en haut',
     'Message us on WhatsApp': 'Écrivez-nous sur WhatsApp',
     'Send us an SMS': 'Envoyez-nous un SMS',
+    'Close': 'Fermer',
+    '1 star': '1 étoile',
+    '2 stars': '2 étoiles',
+    '3 stars': '3 étoiles',
+    '4 stars': '4 étoiles',
+    '5 stars': '5 étoiles',
     'Message options': 'Options de message',
     'More services coming soon': 'Plus de services bientôt',
     'More pricing info': 'Plus d\'infos sur les tarifs',

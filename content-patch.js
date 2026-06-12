@@ -11,7 +11,8 @@
    live preview, without committing anything to localStorage.
 
    localStorage keys (all written by admin-store.js):
-     apex_admin_carousel_v1 /* TODO: rename to aston_admin_*_v1 — keeping apex_ prefix to avoid wiping saved admin data */  → array of service cards
+     (TODO: rename to aston_admin_*_v1 — keeping apex_ prefix to avoid wiping saved admin data)
+     apex_admin_carousel_v1  → array of service cards
      apex_admin_reviews_v1   → array of reviews
      apex_admin_business_v1  → business info object
      apex_admin_services_v1  → service-finder map (consumed by app.js)
@@ -282,21 +283,56 @@
      then click-to-edit content overrides last (against the final DOM).
      ===================================================================== */
   // TODO: rename apex_admin_*_v1 keys to aston_admin_*_v1 — keeping apex_ prefix to avoid wiping saved admin data
-  var carousel = getStore('apex_admin_carousel_v1', null);
-  if (carousel && carousel.length) renderCarousel(carousel);
+  var KEYS = {
+    carousel: 'apex_admin_carousel_v1',
+    reviews:  'apex_admin_reviews_v1',
+    business: 'apex_admin_business_v1',
+    services: 'apex_admin_services_v1',
+    content:  'apex_admin_content_v1',
+    menu:     'apex_admin_menu_v1'
+  };
 
-  var reviews = getStore('apex_admin_reviews_v1', null);
-  if (reviews && reviews.length) renderReviews(reviews);
+  function applyBundle(b) {
+    b = b || {};
+    if (b.carousel && b.carousel.length) renderCarousel(b.carousel);
+    // Approved visitor reviews (fetched in app.js from /api/reviews) win over
+    // the admin-curated list — don't clobber them once rendered.
+    if (b.reviews && b.reviews.length && !window.__ASTON_REVIEWS_FROM_API__) renderReviews(b.reviews);
+    applyBusiness(b.business || D.business);
+    if (b.services) applyServices(b.services);
+    applyContent(b.content);
+    applyNavLabels(b.menu);
+  }
 
-  // Always normalise business info (replaces [PHONE_NUMBER] placeholders too).
-  applyBusiness(getStore('apex_admin_business_v1', null) || D.business);
+  // 1) Instant: apply the last-known state from the localStorage mirror
+  //    (also the offline fallback when the backend is unreachable).
+  applyBundle({
+    carousel: getStore(KEYS.carousel, null),
+    reviews:  getStore(KEYS.reviews, null),
+    business: getStore(KEYS.business, null),
+    services: getStore(KEYS.services, null),
+    content:  getStore(KEYS.content, null),
+    menu:     getStore(KEYS.menu, null)
+  });
 
-  var services = getStore('apex_admin_services_v1', null);
-  if (services) applyServices(services);
-
-  applyContent(getStore('apex_admin_content_v1', null));
-
-  applyNavLabels(getStore('apex_admin_menu_v1', null));
+  // 2) Fresh: pull the published content from the backend, mirror it locally,
+  //    re-apply. Skipped inside the admin preview iframe (the admin drives the
+  //    preview itself) and skipped silently when the backend is unreachable.
+  if (window.self === window.top && typeof window.apiFetch === 'function') {
+    window.apiFetch('/api/content').then(function (res) {
+      if (!res.ok || !res.data) return;                       // backend down → keep local
+      var bundle = res.data.content || res.data;
+      if (!bundle || typeof bundle !== 'object') return;
+      if (!Object.keys(bundle).length) return;                // nothing published yet
+      Object.keys(KEYS).forEach(function (k) {
+        try {
+          if (bundle[k] != null) localStorage.setItem(KEYS[k], JSON.stringify(bundle[k]));
+          else localStorage.removeItem(KEYS[k]);
+        } catch (e) { /* storage full/blocked — non-fatal */ }
+      });
+      applyBundle(bundle);
+    });
+  }
 })();
 
 

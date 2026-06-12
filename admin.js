@@ -68,14 +68,29 @@
     e.preventDefault();
     loginError.hidden = true;
     loginNotice.hidden = true;
+    const btn = loginForm.querySelector('button[type="submit"]');
+    if (btn) btn.disabled = true;
     const session = await AdminStore.login(loginUser.value.trim(), loginPass.value);
+    if (btn) btn.disabled = false;
     if (session) {
       enterDashboard();
     } else {
+      loginError.textContent = AdminStore.lastLoginError === 'network'
+        ? 'Cannot reach the server — check your connection and try again.'
+        : 'Invalid username or password.';
       loginError.hidden = false;
       loginPass.value = '';
       loginPass.focus();
     }
+  });
+
+  // Backend session invalidated (401 on any admin API call) → back to login.
+  window.addEventListener('admin:unauthorized', function () {
+    doLogout('Your session expired — please sign in again.');
+  });
+  // Backend unreachable → make it loud, but let the admin keep working locally.
+  window.addEventListener('admin:offline', function (e) {
+    showToast((e.detail && e.detail.message) || 'Backend unreachable — working locally');
   });
 
   /* ========================================================================
@@ -667,18 +682,27 @@
     commitEdit(active.path, entryType(active), v);
   });
 
-  // Image file upload -> base64 data URL.
-  editImageFile.addEventListener('change', function () {
+  // Image file upload → POST /api/upload, save the returned URL. Falls back
+  // to an inline base64 data URL (with a warning) if the upload fails.
+  editImageFile.addEventListener('change', async function () {
     if (!active || active.kind !== 'image') return;
     const file = editImageFile.files && editImageFile.files[0];
     if (!file) return;
+    const path = active.path, type = entryType(active);
+    const up = await AdminStore.uploadImage(file);
+    if (up.ok) {
+      editImageUrl.value = up.url;
+      setPreview(up.url);
+      commitEdit(path, type, up.url);
+      return;
+    }
+    showToast('Upload unavailable — image stored inline for now');
     const reader = new FileReader();
     reader.onload = function () {
-      // TODO: upload image to backend/storage and save URL (currently base64 in localStorage)
       const dataUrl = String(reader.result);
       editImageUrl.value = '';
       setPreview(dataUrl);
-      commitEdit(active.path, entryType(active), dataUrl);
+      commitEdit(path, type, dataUrl);
     };
     reader.readAsDataURL(file);
   });
@@ -736,14 +760,17 @@
     }
   }
 
-  // Apply persists ALL channels (content + carousel + services), then reloads
+  // Apply persists ALL channels in ONE bulk PUT /api/content, then reloads
   // the iframe so it re-renders pristinely from storage via content-patch.js.
   applyBtn.addEventListener('click', async function () {
-    await AdminStore.saveContent(pending);
-    await AdminStore.saveCarousel(pendingCarousel);
-    await AdminStore.saveServices(pendingServices);
-    await AdminStore.saveMenu(pendingMenu);
-    // Persist inline shared-value edits into the single source (business store).
+    applyBtn.disabled = true;
+    const partial = {
+      content: pending,
+      carousel: pendingCarousel,
+      services: pendingServices,
+      menu: pendingMenu
+    };
+    // Fold inline shared-value edits into the single source (business info).
     if (Object.keys(pendingShared).length) {
       const biz = readStoreSync('apex_admin_business_v1', null) || clone(DEFAULTS.business || {});
       Object.keys(pendingShared).forEach(function (k) { const f = SHARED_FIELDS[k]; if (f) biz[f] = pendingShared[k]; });
@@ -752,8 +779,9 @@
         const norm = digits ? (digits.length === 10 ? '1' + digits : digits) : '';
         biz.phoneTel = norm ? '+' + norm : ''; biz.whatsapp = norm;
       }
-      await AdminStore.saveBusinessInfo(biz);
+      partial.business = biz;
     }
+    const res = await AdminStore.saveBundle(partial);
     saved = clone(pending);
     savedCarousel = clone(pendingCarousel);
     savedServices = clone(pendingServices);
@@ -761,10 +789,12 @@
     pendingShared = {};
     history = [];
     sessionStarted = false;
-    await recordSnapshot();
+    if (res && res.remote) await recordSnapshot();   // snapshot only when it reached the backend
     reloadFrame();
     refreshControls();
-    showToast('Changes applied & saved');
+    showToast(res && res.remote === false
+      ? 'Backend unreachable — changes saved locally only'
+      : 'Changes applied & saved');
   });
 
   // Cancel reverts every channel to its saved state and reloads the iframe.
@@ -972,12 +1002,22 @@
     wrap.querySelectorAll('input[data-field], textarea[data-field]').forEach(function (inp) {
       const f = inp.dataset.field;
       if (f === 'file') {
-        inp.addEventListener('change', function () {
+        inp.addEventListener('change', async function () {
           const file = inp.files && inp.files[0];
           if (!file) return;
+          // Upload to the backend first; keep the returned URL in the card.
+          const up = await AdminStore.uploadImage(file);
+          if (up.ok) {
+            pendingCarousel[i].image = up.url;
+            thumb.style.backgroundImage = "url('" + cssUrl(up.url) + "')";
+            const urlInp = wrap.querySelector('input[data-field="image"]');
+            if (urlInp) urlInp.value = up.url;
+            previewCarousel(true); refreshControls();
+            return;
+          }
+          showToast('Upload unavailable — image stored inline for now');
           const reader = new FileReader();
           reader.onload = function () {
-            // TODO: upload image to backend/storage and save URL (currently base64 in localStorage)
             const dataUrl = String(reader.result);
             pendingCarousel[i].image = dataUrl;
             thumb.style.backgroundImage = "url('" + cssUrl(dataUrl) + "')";
@@ -1148,12 +1188,14 @@
   });
   bizSaveBtn.addEventListener('click', async function () {
     const b = readBizInputs();
-    await AdminStore.saveBusinessInfo(b);   // TODO: replace localStorage with backend API call
+    const res = await AdminStore.saveBusinessInfo(b);
     bizSaved = clone(b);
     previewBusiness();
     refreshBizControls();
-    await recordSnapshot();
-    showToast('Business info saved');
+    if (res && res.remote) await recordSnapshot();
+    showToast(res && res.remote === false
+      ? 'Backend unreachable — business info saved locally only'
+      : 'Business info saved');
   });
   bizResetBtn.addEventListener('click', function () {
     if (bizSaved) fillBiz(bizSaved);
@@ -1241,12 +1283,14 @@
     reviewList.scrollTop = reviewList.scrollHeight;
   });
   reviewApplyBtn.addEventListener('click', async function () {
-    await AdminStore.saveReviews(pendingReviews);   // TODO: replace localStorage with backend API call
+    const res = await AdminStore.saveReviews(pendingReviews);
     savedReviews = clone(pendingReviews);
     previewReviews();
     refreshReviewControls();
-    await recordSnapshot();
-    showToast('Reviews saved');
+    if (res && res.remote) await recordSnapshot();
+    showToast(res && res.remote === false
+      ? 'Backend unreachable — reviews saved locally only'
+      : 'Reviews saved');
   });
   reviewCancelBtn.addEventListener('click', function () {
     pendingReviews = clone(savedReviews);
@@ -1281,18 +1325,10 @@
 
   /* ========================================================================
      8. SAVED CHANGES / VERSION HISTORY
-     Every Apply/Save records a timestamped snapshot of the entire persisted
-     site-content state. Capped at the 20 most recent.
+     Every Apply/Save records a snapshot on the BACKEND
+     (POST /api/content/snapshots); restore goes through the backend too.
      ===================================================================== */
-  const VERSION_LIMIT = 20;
   const versionList = document.getElementById('versionList');
-  const CONTENT_KEYS = {
-    content:  'apex_admin_content_v1',
-    carousel: 'apex_admin_carousel_v1',
-    services: 'apex_admin_services_v1',
-    business: 'apex_admin_business_v1',
-    reviews:  'apex_admin_reviews_v1'
-  };
 
   function formatTs(ts) {
     const d = new Date(ts);
@@ -1301,37 +1337,21 @@
     return date + ' — ' + time;
   }
 
-  // Capture the entire persisted site-content state as one snapshot.
-  function snapshotState() {
-    return {
-      content:  readStoreSync(CONTENT_KEYS.content, null),
-      carousel: readStoreSync(CONTENT_KEYS.carousel, null),
-      services: readStoreSync(CONTENT_KEYS.services, null),
-      business: readStoreSync(CONTENT_KEYS.business, null),
-      reviews:  readStoreSync(CONTENT_KEYS.reviews, null)
-    };
-  }
-
-  // Called after every Apply / Save.
+  // Called after every successful Apply / Save — the backend stores the
+  // snapshot (capping/retention is the server's job now).
   async function recordSnapshot() {
-    // TODO: move version history to backend database
-    const list = (await AdminStore.getVersions()) || [];
-    list.unshift({ id: 'v' + Date.now(), ts: Date.now(), name: null, data: snapshotState() });
-    // Cap at VERSION_LIMIT, dropping the oldest — but warn if it was named.
-    while (list.length > VERSION_LIMIT) {
-      const oldest = list[list.length - 1];
-      if (oldest.name) {
-        const ok = confirm('Version history is full (' + VERSION_LIMIT + '). The oldest saved version "' + oldest.name + '" is named and would be deleted to make room. Delete it?');
-        if (!ok) { list.shift(); break; } // keep the named one; drop the snapshot we just added
-      }
-      list.pop();
-    }
-    await AdminStore.saveVersions(list);
-    if (currentView === 'versions') renderVersionList(list);
+    const ok = await AdminStore.createSnapshot(null);
+    if (!ok) showToast('Snapshot not recorded — backend unreachable');
+    if (currentView === 'versions') loadVersions();
   }
 
   async function loadVersions() {
-    renderVersionList((await AdminStore.getVersions()) || []);
+    const list = await AdminStore.getVersions();
+    if (list == null) {
+      versionList.innerHTML = '<div class="manager-empty">Backend unreachable — version history is unavailable right now.</div>';
+    } else {
+      renderVersionList(list);
+    }
     renderDefaults();
   }
 
@@ -1356,55 +1376,47 @@
       '</div>' +
       '<div class="version-actions">' +
         '<button class="btn btn-ghost btn-sm" data-act="rename">Rename</button>' +
+        '<button class="btn btn-danger btn-sm" data-act="delete">Delete</button>' +
         '<button class="btn btn-primary btn-sm" data-act="restore">Restore</button>' +
-        '<button class="btn btn-ghost btn-sm" data-act="delete">Delete</button>' +
       '</div>';
-    row.querySelector('[data-act="rename"]').addEventListener('click', function () { renameVersion(v.id); });
+    row.querySelector('[data-act="rename"]').addEventListener('click', function () { renameVersion(v); });
+    row.querySelector('[data-act="delete"]').addEventListener('click', function () { deleteVersion(v); });
     row.querySelector('[data-act="restore"]').addEventListener('click', function () { restoreVersion(v.id); });
-    row.querySelector('[data-act="delete"]').addEventListener('click', function () { deleteVersion(v.id); });
     return row;
   }
 
-  async function renameVersion(id) {
-    const list = (await AdminStore.getVersions()) || [];
-    const v = list.find(function (x) { return x.id === id; });
-    if (!v) return;
-    const name = prompt('Name this version (e.g. "Original design", "Summer update"):', v.name || '');
-    if (name === null) return; // cancelled
-    v.name = name.trim() || null;
-    await AdminStore.saveVersions(list);
-    renderVersionList(list);
+  async function renameVersion(v) {
+    const next = prompt('New name for this version:', v.name || '');
+    if (next === null) return;          // cancelled
+    const label = next.trim();
+    if (!label) { showToast('Name cannot be empty'); return; }
+    const ok = await AdminStore.renameSnapshot(v.id, label);
+    if (!ok) { showToast('Rename failed — backend unreachable'); return; }
+    showToast('Version renamed');
+    loadVersions();
   }
 
-  async function deleteVersion(id) {
-    const list = (await AdminStore.getVersions()) || [];
-    const v = list.find(function (x) { return x.id === id; });
-    if (!v) return;
-    if (!confirm('Delete this saved version' + (v.name ? ' "' + v.name + '"' : '') + '? This cannot be undone.')) return;
-    const next = list.filter(function (x) { return x.id !== id; });
-    await AdminStore.saveVersions(next);
-    renderVersionList(next);
+  async function deleteVersion(v) {
+    const what = v.name ? '"' + v.name + '"' : 'this version';
+    if (!confirm('Delete ' + what + ' permanently? This cannot be undone.')) return;
+    const res = await AdminStore.deleteSnapshot(v.id);
+    if (!res.ok) {
+      showToast(res.status === 403
+        ? (res.message || 'This version is protected and cannot be deleted')
+        : 'Delete failed — backend unreachable');
+      return;
+    }
+    showToast('Version deleted');
+    loadVersions();
   }
 
   async function restoreVersion(id) {
-    const list = (await AdminStore.getVersions()) || [];
-    const v = list.find(function (x) { return x.id === id; });
-    if (!v) return;
     if (!confirm('Restore site to this version? Current unsaved changes will be lost.')) return;
-    const d = v.data || {};
-    // TODO: move version history to backend database (restore = re-publish the snapshot)
-    setOrRemove(CONTENT_KEYS.content, d.content);
-    setOrRemove(CONTENT_KEYS.carousel, d.carousel);
-    setOrRemove(CONTENT_KEYS.services, d.services);
-    setOrRemove(CONTENT_KEYS.business, d.business);
-    setOrRemove(CONTENT_KEYS.reviews, d.reviews);
+    const ok = await AdminStore.restoreSnapshot(id);
+    if (!ok) { showToast('Restore failed — backend unreachable'); return; }
     // A full reload re-initialises the editor + preview iframe cleanly from the
-    // restored state. The session lives in localStorage, so it survives.
+    // restored (and freshly mirrored) state.
     window.location.reload();
-  }
-  function setOrRemove(key, val) {
-    if (val == null) localStorage.removeItem(key);
-    else localStorage.setItem(key, JSON.stringify(val));
   }
 
   /* ========================================================================
@@ -1459,6 +1471,8 @@
     const hist = (await AdminStore.getDefaultHistory()) || [];
     if (cp) {
       defaultCurrent.innerHTML = 'Current Default: <strong>' + esc(cp.name || formatTs(cp.ts)) + '</strong>' + (cp.name ? ' · ' + esc(formatTs(cp.ts)) : '');
+    } else if (AdminStore.isOffline && AdminStore.isOffline()) {
+      defaultCurrent.textContent = 'Backend unreachable — Default checkpoint status unknown.';
     } else {
       defaultCurrent.textContent = 'No Default checkpoint set yet — save one to create a protected baseline.';
     }
@@ -1490,12 +1504,11 @@
   saveDefaultBtn.addEventListener('click', async function () {
     if (!confirm('This will set the current site content as the new Default checkpoint. Continue?')) return;
     const name = prompt('Name this Default checkpoint (optional):', '');
-    const cp = { id: 'd' + Date.now(), ts: Date.now(), name: (name && name.trim()) ? name.trim() : null, data: snapshotState() };
-    // TODO: store default checkpoints in secure backend, not localStorage
-    await AdminStore.saveDefaultCheckpoint(cp);
-    const hist = (await AdminStore.getDefaultHistory()) || [];
-    hist.unshift(cp);                         // kept forever — never auto-deleted
-    await AdminStore.saveDefaultHistory(hist);
+    if (name === null) return; // cancelled
+    // Stored as a protected backend snapshot ([DEFAULT]-labelled); the Default
+    // History below simply lists every such snapshot — nothing is auto-deleted.
+    const ok = await AdminStore.saveDefaultCheckpoint((name && name.trim()) ? name.trim() : null);
+    if (!ok) { showToast('Backend unreachable — Default checkpoint NOT saved'); return; }
     renderDefaults();
     showToast('Default checkpoint saved');
   });
@@ -1511,13 +1524,8 @@
       confirmLabel: 'Yes, Restore Default',
     });
     if (!ok) return;
-    const d = cp.data || {};
-    // TODO: store default checkpoints in secure backend, not localStorage
-    setOrRemove(CONTENT_KEYS.content, d.content);
-    setOrRemove(CONTENT_KEYS.carousel, d.carousel);
-    setOrRemove(CONTENT_KEYS.services, d.services);
-    setOrRemove(CONTENT_KEYS.business, d.business);
-    setOrRemove(CONTENT_KEYS.reviews, d.reviews);
+    const restored = await AdminStore.restoreSnapshot(cp.id);
+    if (!restored) { showToast('Restore failed — backend unreachable'); return; }
     window.location.reload();
   }
 
