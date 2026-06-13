@@ -793,7 +793,7 @@
     reloadFrame();
     refreshControls();
     showToast(res && res.remote === false
-      ? 'Backend unreachable — changes saved locally only'
+      ? (res.message || 'Backend unreachable — changes saved locally only')
       : 'Changes applied & saved');
   });
 
@@ -1194,7 +1194,7 @@
     refreshBizControls();
     if (res && res.remote) await recordSnapshot();
     showToast(res && res.remote === false
-      ? 'Backend unreachable — business info saved locally only'
+      ? (res.message || 'Backend unreachable — business info saved locally only')
       : 'Business info saved');
   });
   bizResetBtn.addEventListener('click', function () {
@@ -1289,7 +1289,7 @@
     refreshReviewControls();
     if (res && res.remote) await recordSnapshot();
     showToast(res && res.remote === false
-      ? 'Backend unreachable — reviews saved locally only'
+      ? (res.message || 'Backend unreachable — reviews saved locally only')
       : 'Reviews saved');
   });
   reviewCancelBtn.addEventListener('click', function () {
@@ -1502,11 +1502,11 @@
   }
 
   saveDefaultBtn.addEventListener('click', async function () {
-    if (!confirm('This will set the current site content as the new Default checkpoint. Continue?')) return;
+    if (!confirm('This will set the current site content as the Default checkpoint, REPLACING the previous one. Continue?')) return;
     const name = prompt('Name this Default checkpoint (optional):', '');
     if (name === null) return; // cancelled
-    // Stored as a protected backend snapshot ([DEFAULT]-labelled); the Default
-    // History below simply lists every such snapshot — nothing is auto-deleted.
+    // The backend keeps exactly ONE protected default snapshot (upsert) — it
+    // can never be deleted through the API, only overwritten here.
     const ok = await AdminStore.saveDefaultCheckpoint((name && name.trim()) ? name.trim() : null);
     if (!ok) { showToast('Backend unreachable — Default checkpoint NOT saved'); return; }
     renderDefaults();

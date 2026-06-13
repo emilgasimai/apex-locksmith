@@ -321,9 +321,18 @@
   if (window.self === window.top && typeof window.apiFetch === 'function') {
     window.apiFetch('/api/content').then(function (res) {
       if (!res.ok || !res.data) return;                       // backend down → keep local
-      var bundle = res.data.content || res.data;
-      if (!bundle || typeof bundle !== 'object') return;
-      if (!Object.keys(bundle).length) return;                // nothing published yet
+      var raw = res.data.content || {};
+      // The backend stores each section as { value:'<json-string>', type }
+      // under its key (carousel, services, ...) — unwrap + parse.
+      var bundle = {}, hasAny = false;
+      Object.keys(KEYS).forEach(function (k) {
+        var entry = raw[k];
+        var v = (entry && typeof entry === 'object' && 'value' in entry) ? entry.value : entry;
+        if (typeof v === 'string') { try { v = JSON.parse(v); } catch (e) { /* keep string */ } }
+        bundle[k] = (v == null) ? null : v;
+        if (bundle[k] != null) hasAny = true;
+      });
+      if (!hasAny) return;                                    // nothing published yet
       Object.keys(KEYS).forEach(function (k) {
         try {
           if (bundle[k] != null) localStorage.setItem(KEYS[k], JSON.stringify(bundle[k]));

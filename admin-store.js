@@ -7,17 +7,22 @@
 
    Backend (window.API_BASE_URL from config.js):
      POST /api/auth/login                  → { token }  (JWT)
-     GET  /api/content                     → { content: <bundle> }
-     PUT  /api/content                     → save the whole bundle (auth)
-     GET  /api/content/snapshots             → list snapshots (auth)
-     POST /api/content/snapshots             → create snapshot (auth)
+     GET  /api/content                     → { content: { [key]: {value,type,updatedAt} } }
+     PUT  /api/content                     → { updates: [{key, value, type?}] } (auth);
+                                             every value must be a STRING ≤ 10000 chars
+     GET  /api/content/snapshots             → { snapshots: [{id,label,isDefault,isProtected,createdAt}] }
+     POST /api/content/snapshots             → create snapshot of CURRENT server state; label required
      POST /api/content/snapshots/:id/restore → restore snapshot (auth)
-     PATCH  /api/content/snapshots/:id       → rename snapshot (auth)
+     PATCH  /api/content/snapshots/:id       → rename snapshot (auth; label required)
      DELETE /api/content/snapshots/:id       → delete snapshot (auth; 403 if protected)
+     POST /api/content/snapshots/default     → save/overwrite the ONE protected default checkpoint
+     POST /api/content/snapshots/restore-default → restore it
      POST /api/upload                        → upload image, returns { url, publicId } (auth)
 
-   The bundle is one document holding every admin-managed channel:
-     { content, carousel, services, business, reviews, menu }
+   The backend content store is FLAT key → {value:string, type}. Each admin
+   channel is stored as ONE key whose value is a JSON string:
+     key "carousel" → value "[{...card}, ...]", key "services" → "{...}", etc.
+   Channels: { content, carousel, services, business, reviews, menu }
 
    Offline fallback: every read/write is mirrored to the same localStorage keys
    the public site reads (apex_admin_*_v1), so (a) the public site keeps
@@ -40,7 +45,8 @@ const AdminStore = (function () {
     menu: 'apex_admin_menu_v1',
   };
   const BUNDLE_KEYS = ['content', 'carousel', 'services', 'business', 'reviews', 'menu'];
-  const DEFAULT_PREFIX = '[DEFAULT] ';
+  const AUTO_LABEL = 'Auto-saved';   // label for unnamed snapshots (backend requires one)
+  const VALUE_LIMIT = 10000;         // backend validator: each value ≤ 10000 chars
 
   /* ── tiny utils ── */
   function readLocal(key, fallback) {
@@ -113,14 +119,23 @@ const AdminStore = (function () {
     BUNDLE_KEYS.forEach(function (k) { writeLocal(KEYS[k], b[k] == null ? null : b[k]); });
   }
 
+  // GET wraps every key as { value, type, updatedAt }; the value is the JSON
+  // string we PUT. Tolerate raw objects too (defensive).
+  function decodeRemoteValue(entry) {
+    let v = (entry && typeof entry === 'object' && 'value' in entry) ? entry.value : entry;
+    if (typeof v === 'string') { try { v = JSON.parse(v); } catch { /* keep as string */ } }
+    return v == null ? null : v;
+  }
+
   async function ensureBundle(force) {
     if (bundleLoaded && !force) return bundle;
     const res = await api('/api/content');
     if (res.ok && res.data) {
       const remote = res.data.content || {};
-      if (remote && typeof remote === 'object' && Object.keys(remote).length) {
+      const hasAny = BUNDLE_KEYS.some(function (k) { return remote[k] != null; });
+      if (hasAny) {
         bundle = {};
-        BUNDLE_KEYS.forEach(function (k) { bundle[k] = remote[k] != null ? remote[k] : null; });
+        BUNDLE_KEYS.forEach(function (k) { bundle[k] = decodeRemoteValue(remote[k]); });
         mirrorBundle(bundle);
       } else {
         // Backend reachable but nothing published yet → seed from local mirror.
@@ -134,25 +149,41 @@ const AdminStore = (function () {
     return bundle;
   }
 
-  // PUT the whole bundle. Tolerates either { content: bundle } or raw-bundle
-  // request schemas. Returns true when persisted remotely.
+  // PUT the whole bundle as { updates: [{key, value:<json-string>}] } — the
+  // backend upserts one SiteContent document per key. All-or-nothing: if any
+  // section's JSON exceeds the backend's 10000-char value limit, abort with a
+  // clear message instead of saving a partial/inconsistent state.
+  // Returns { ok, message }.
   async function pushBundle() {
-    if (!bundle) return false;
-    let res = await api('/api/content', { method: 'PUT', json: { content: bundle } });
-    if (!res.ok && res.status === 400) {
-      res = await api('/api/content', { method: 'PUT', json: bundle });
+    if (!bundle) return { ok: false, message: null };
+    const updates = [];
+    const tooLarge = [];
+    BUNDLE_KEYS.forEach(function (k) {
+      const json = JSON.stringify(bundle[k] == null ? null : bundle[k]);
+      if (json.length > VALUE_LIMIT) tooLarge.push(k);
+      updates.push({ key: k, value: json });
+    });
+    if (tooLarge.length) {
+      return {
+        ok: false,
+        message: 'Too large to save (' + tooLarge.join(', ') + ') — use the image Upload instead of inline/base64 images, then Apply again.',
+      };
     }
-    if (!res.ok) { if (res.status === 0) markOffline(); return false; }
-    return true;
+    const res = await api('/api/content', { method: 'PUT', json: { updates: updates } });
+    if (!res.ok) {
+      if (res.status === 0) markOffline();
+      return { ok: false, message: (res.data && res.data.message) || null };
+    }
+    return { ok: true, message: null };
   }
 
   async function saveSection(key, value) {
     await ensureBundle();
     bundle[key] = value == null ? null : value;
     writeLocal(KEYS[key], value);
-    const remote = await pushBundle();
-    if (!remote) emit('admin:offline', { message: 'Backend unreachable — saved locally only.' });
-    return { ok: true, remote: remote };
+    const push = await pushBundle();
+    if (!push.ok) emit('admin:offline', { message: push.message || 'Backend unreachable — saved locally only.' });
+    return { ok: true, remote: push.ok, message: push.message };
   }
 
   /* ── snapshots (version history + Default checkpoints) ── */
@@ -161,14 +192,13 @@ const AdminStore = (function () {
 
   function mapSnapshot(s) {
     const label = s.label || s.name || null;
-    const isDefault = !!(label && label.indexOf(DEFAULT_PREFIX) === 0);
-    const cleanName = isDefault ? label.slice(DEFAULT_PREFIX.length).trim() : label;
     return {
       id: s.id || s._id || null,
       ts: s.ts || (s.createdAt ? Date.parse(s.createdAt) : Date.now()),
-      name: cleanName || null,
-      isDefault: isDefault,
-      data: s.content || s.data || null,
+      name: (label && label !== AUTO_LABEL) ? label : null,   // auto-saves render as unnamed
+      isDefault: !!s.isDefault,
+      isProtected: !!s.isProtected,
+      data: null,   // list endpoint strips contentState; restores happen server-side
     };
   }
 
@@ -184,13 +214,14 @@ const AdminStore = (function () {
     return lastSnapshotsRaw;
   }
 
+  // The backend snapshots its OWN current content state (the request body
+  // carries only the label) — so callers must push the bundle FIRST.
+  // Default checkpoints use the dedicated route: the backend keeps exactly ONE
+  // (upsert, isProtected) — saving again overwrites it.
   async function createSnapshot(name, isDefault) {
-    await ensureBundle();
-    const label = (isDefault ? DEFAULT_PREFIX : '') + (name || '');
-    const res = await api('/api/content/snapshots', {
-      method: 'POST',
-      json: { label: label || null, name: label || null, content: bundle },
-    });
+    const path = isDefault ? '/api/content/snapshots/default' : '/api/content/snapshots';
+    const body = isDefault ? (name ? { label: name } : {}) : { label: name || AUTO_LABEL };
+    const res = await api(path, { method: 'POST', json: body });
     if (res.ok) snapFetchedAt = 0;   // invalidate the short cache
     return res.ok;
   }
@@ -213,16 +244,9 @@ const AdminStore = (function () {
   }
 
   async function restoreSnapshot(id) {
-    let res = await api('/api/content/snapshots/' + encodeURIComponent(id) + '/restore', { method: 'POST' });
-    if (!res.ok) {
-      // Fallback: re-publish the snapshot's content ourselves (if we have it).
-      const snap = lastSnapshotsRaw.find(function (s) { return String(s.id) === String(id); });
-      if (!snap || !snap.data) return false;
-      bundle = {};
-      BUNDLE_KEYS.forEach(function (k) { bundle[k] = snap.data[k] != null ? snap.data[k] : null; });
-      const ok = await pushBundle();
-      if (!ok) return false;
-    }
+    const res = await api('/api/content/snapshots/' + encodeURIComponent(id) + '/restore', { method: 'POST' });
+    if (!res.ok) return false;
+    snapFetchedAt = 0;
     // Sync the restored state down + into the local mirror.
     await ensureBundle(true);
     return true;
