@@ -290,6 +290,18 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
   .neon-logo-sub{font-size:13px;}
   #header.scrolled .neon-logo-main{font-size:24px;}
   #header.scrolled .neon-logo-sub{font-size:11px;}
+  /* Desktop: drop the hot cyan neon. ASTON stays brand cyan with just a faint
+     hint of glow; LOCKSMITH is filled off-white. Both far calmer than the old
+     4-layer neon. (Phones keep the full cyan neon — see max-width:767px below.) */
+  .neon-logo-main,.neon-logo-sub{ -webkit-text-stroke:0; }
+  .neon-logo-main{
+    color:#27E0F5;
+    text-shadow:0 0 5px rgba(39,224,245,.22), 0 0 2px rgba(39,224,245,.3);
+  }
+  .neon-logo-sub{
+    color:#EDEDED;
+    text-shadow:0 1px 1px rgba(0,0,0,.4);
+  }
 }
 /* Phones: dial the neon glow WAY down — it reads far too hot on a small screen. */
 @media (max-width:767px){
@@ -297,6 +309,40 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
     text-shadow:0 0 2px rgba(39,224,245,.8),0 0 5px rgba(39,224,245,.32); }
   .neon-logo-sub{ -webkit-text-stroke-width:.6px;
     text-shadow:0 0 2px rgba(39,224,245,.75),0 0 4px rgba(39,224,245,.28); }
+}
+
+/* Elegant cyan divider beside the header wordmark. A thin line with faded ends
+   + a soft glow — deliberately shorter than the bar height. Shown on all sizes. */
+.logo-lockup{ display:flex;align-items:center;gap:14px; }
+.logo-divider{
+  display:block;width:2px;height:36px;flex-shrink:0;border-radius:2px;
+  background:linear-gradient(to bottom,
+    rgba(39,224,245,0) 0%, rgba(39,224,245,.85) 26%,
+    rgba(39,224,245,.85) 74%, rgba(39,224,245,0) 100%);
+  box-shadow:0 0 7px rgba(39,224,245,.4);
+}
+@media (min-width:1024px){
+  .logo-lockup{ gap:20px; }
+  .logo-divider{ height:46px; }
+  /* When the header shrinks on scroll, trim the divider to match. */
+  #header.scrolled .logo-divider{ height:36px; }
+}
+
+/* Brand wordmark echo below "Get a quote" in the Reach-us grid. Hidden on
+   mobile/tablet (single-column, no empty space); shown only once the 2-column
+   layout opens up at lg, where it fills the gap beside the form. */
+.reach-logo-wrap{ display:none; }
+@media (min-width:1024px){
+  /* Make the left column a flex column so the wordmark absorbs the leftover
+     height and the column bottom lines up with the taller "Send a note" form. */
+  .reach-left{ display:flex;flex-direction:column; }
+  .reach-logo-wrap{
+    display:flex;justify-content:center;align-items:center;
+    flex:1 1 auto;margin-top:22px;opacity:.82;
+  }
+  .reach-logo.neon-logo{ align-items:center;text-align:center;line-height:.9; }
+  .reach-logo .neon-logo-main{ font-size:62px;letter-spacing:.05em; }
+  .reach-logo .neon-logo-sub{ font-size:22px;letter-spacing:.40em;margin-top:8px; }
 }
 
 /* Neon scroll-progress line — full-width bottom edge of the header, grows
@@ -825,6 +871,42 @@ textarea#contactNote.note-shake{
   50%{transform:translateX(3px);}
   80%{transform:translateX(-2px);}
 }
+
+/* ── Send a Note — photo attach (drop zone + thumbnails) ── */
+#contactPhotos{display:none;}
+.photo-drop{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;padding:18px 16px;cursor:pointer;text-align:center;
+  background:#1A1A1A;border:2px dashed #2f6d77;
+  transition:border-color .15s ease, background-color .15s ease, transform .12s ease;
+}
+.photo-drop:hover{border-color:#27E0F5;background:#202023;}
+.photo-drop:focus-visible{outline:2px solid #27E0F5;outline-offset:2px;border-color:#27E0F5;}
+.photo-drop.is-dragover{border-color:#27E0F5;background:rgba(39,224,245,.06);}
+.photo-drop.is-full{opacity:.55;cursor:not-allowed;border-style:solid;border-color:#3a3a3e;}
+.photo-drop.is-full:hover{background:#1A1A1A;}
+.photo-drop-ico{flex-shrink:0;}
+.photo-drop-main{font-size:13px;letter-spacing:.05em;color:#27E0F5;}
+.photo-drop-sub{font-size:10px;letter-spacing:.16em;color:#6a6a6e;font-weight:700;}
+
+.photo-previews{display:flex;flex-wrap:wrap;gap:10px;}
+.photo-previews:empty{display:none;}
+.photo-thumb{
+  position:relative;width:64px;height:64px;flex-shrink:0;
+  background:#1A1A1A;border:2px solid #3a3a3e;overflow:hidden;
+  animation:thumbIn .22s cubic-bezier(.2,.7,.3,1.2);
+}
+.photo-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.photo-thumb-x{
+  position:absolute;top:2px;right:2px;width:20px;height:20px;
+  display:flex;align-items:center;justify-content:center;
+  background:#1A1A1A;color:#EDEDED;border:1.5px solid #EDEDED;
+  font-size:13px;line-height:1;cursor:pointer;padding:0 !important;
+  transition:background-color .14s ease, color .14s ease, border-color .14s ease, transform .12s ease;
+}
+.photo-thumb-x:hover,.photo-thumb-x:focus-visible{background:#ff5d3b;border-color:#ff5d3b;color:#1A1A1A;outline:none;}
+.photo-thumb-x:active{transform:scale(.9);}
+@keyframes thumbIn{from{opacity:0;transform:scale(.85);}to{opacity:1;transform:scale(1);}}
 
 /* ── Toast / popup for char-limit warning ── */
 .note-toast{

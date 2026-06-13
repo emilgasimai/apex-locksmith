@@ -478,6 +478,107 @@ zipForm.addEventListener('submit', (e) => {
   });
 })();
 
+// ── Send a Note — photo attach (max 2 · JPEG/PNG/WebP · 5MB each) ──
+const ContactPhotos = (function () {
+  const MAX = 2;
+  const MAX_BYTES = 5 * 1024 * 1024;
+  const OK_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+  const input = document.getElementById('contactPhotos');
+  const drop = document.getElementById('photoDrop');
+  const previews = document.getElementById('photoPreviews');
+  const errEl = document.getElementById('contactPhotos-error');
+  if (!input || !drop || !previews) {
+    return { files: () => [], clear() {}, uploadAll: async () => ({ urls: [], failed: 0 }) };
+  }
+
+  let selected = []; // [{ file, url }]
+
+  const showErr = (msg) => { if (errEl) { errEl.textContent = msg; errEl.classList.add('show'); } };
+  const clearErr = () => { if (errEl) errEl.classList.remove('show'); };
+  const syncFull = () => drop.classList.toggle('is-full', selected.length >= MAX);
+
+  function render() {
+    previews.innerHTML = '';
+    selected.forEach((item, i) => {
+      const thumb = document.createElement('div');
+      thumb.className = 'photo-thumb';
+      const img = document.createElement('img');
+      img.src = item.url;
+      img.alt = item.file.name;
+      const x = document.createElement('button');
+      x.type = 'button';
+      x.className = 'photo-thumb-x';
+      x.setAttribute('aria-label', 'Remove ' + item.file.name);
+      x.innerHTML = '&times;';
+      x.addEventListener('click', () => remove(i));
+      thumb.appendChild(img);
+      thumb.appendChild(x);
+      previews.appendChild(thumb);
+    });
+    syncFull();
+  }
+
+  function remove(i) {
+    const it = selected[i];
+    if (it) URL.revokeObjectURL(it.url);
+    selected.splice(i, 1);
+    clearErr();
+    render();
+  }
+
+  function addFiles(fileList) {
+    const incoming = Array.from(fileList || []);
+    if (!incoming.length) return;
+    clearErr();
+    let hitCount = false, hitSize = false, hitType = false;
+    for (const f of incoming) {
+      if (selected.length >= MAX) { hitCount = true; break; }
+      if (!OK_TYPES.includes(f.type)) { hitType = true; continue; }
+      if (f.size > MAX_BYTES) { hitSize = true; continue; }
+      selected.push({ file: f, url: URL.createObjectURL(f) });
+    }
+    // Error precedence matches the spec wording: count → size → type.
+    if (hitCount) showErr('Maximum 2 photos allowed');
+    else if (hitSize) showErr('File too large — maximum 5MB per photo');
+    else if (hitType) showErr('Only JPEG, PNG or WebP images are allowed');
+    render();
+    input.value = ''; // let the same file be picked again after a removal
+  }
+
+  input.addEventListener('change', (e) => addFiles(e.target.files));
+  drop.addEventListener('click', (e) => {
+    if (selected.length >= MAX) { e.preventDefault(); showErr('Maximum 2 photos allowed'); }
+  });
+  drop.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (selected.length < MAX) input.click(); else showErr('Maximum 2 photos allowed'); }
+  });
+  ['dragenter', 'dragover'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add('is-dragover'); }));
+  ['dragleave', 'drop'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove('is-dragover'); }));
+  drop.addEventListener('drop', (e) => { if (e.dataTransfer && e.dataTransfer.files) addFiles(e.dataTransfer.files); });
+
+  async function uploadAll() {
+    const urls = [];
+    let failed = 0;
+    for (const item of selected) {
+      const fd = new FormData();
+      fd.append('image', item.file);
+      const res = await window.apiFetch('/api/upload/contact', { method: 'POST', body: fd, timeout: 30000 });
+      if (res.ok && res.data && res.data.url) urls.push(res.data.url);
+      else failed++;
+    }
+    return { urls, failed };
+  }
+
+  function clear() {
+    selected.forEach((it) => URL.revokeObjectURL(it.url));
+    selected = [];
+    clearErr();
+    render();
+  }
+
+  return { files: () => selected.map((s) => s.file), uploadAll, clear };
+})();
+
 // ── Contact form ("Send a Note") → POST {API}/api/contact ──
 document.getElementById('contactForm').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -500,22 +601,41 @@ document.getElementById('contactForm').addEventListener('submit', async (e) => {
   btn.disabled = true;
   if (fail) fail.classList.remove('show');
 
+  // Upload any attached photos first. If an upload fails we still send the
+  // note (without the failed photos) and tell the user near the photo field.
+  let photoUrls = [];
+  let photoUploadFailed = false;
+  if (ContactPhotos.files().length) {
+    const up = await ContactPhotos.uploadAll();
+    photoUrls = up.urls;
+    photoUploadFailed = up.failed > 0;
+  }
+
   const res = await window.apiFetch('/api/contact', {
     method: 'POST',
-    json: {
+    json: Object.assign({
       name: name.value.trim(),
       phone: phone.value.replace(/\D/g, ''),
       postalCode: postal.value.trim().toUpperCase(),
       message: note.value.trim()
-    }
+    }, photoUrls.length ? { photoUrls } : {})
   });
 
   btn.disabled = false;
   if (res.ok) {
     const success = document.getElementById('contactSuccess');
     success.classList.add('show');
+    ContactPhotos.clear();
     form.reset();
-    setTimeout(() => success.classList.remove('show'), 6000);
+    const photoErr = document.getElementById('contactPhotos-error');
+    if (photoUploadFailed && photoErr) {
+      photoErr.textContent = "Photos couldn't be uploaded — your note was sent without them.";
+      photoErr.classList.add('show');
+    }
+    setTimeout(() => {
+      success.classList.remove('show');
+      if (photoErr) photoErr.classList.remove('show');
+    }, 6000);
   } else {
     // Friendly failure — keep the user's input untouched so they can retry.
     if (fail) fail.classList.add('show');
