@@ -170,8 +170,10 @@
     var theme = t === 'light' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', theme);
     if (themeToggle) {
-      var ico = themeToggle.querySelector('.theme-ico');
-      if (ico) ico.textContent = theme === 'light' ? '☀️' : '🌙';
+      var moonIco = themeToggle.querySelector('.theme-ico-moon');
+      var sunIco = themeToggle.querySelector('.theme-ico-sun');
+      if (moonIco) moonIco.style.display = theme === 'light' ? 'none' : '';
+      if (sunIco) sunIco.style.display = theme === 'light' ? '' : 'none';
       themeToggle.setAttribute('aria-label', theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme');
       themeToggle.setAttribute('title', theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme');
     }
