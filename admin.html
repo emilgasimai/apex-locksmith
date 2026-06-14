@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <meta name="robots" content="noindex,nofollow"/>
 <title>Aston Admin</title>
-<link rel="stylesheet" href="admin.css?v=10"/>
+<link rel="stylesheet" href="admin.css?v=11"/>
 </head>
 <body>
 
@@ -67,6 +67,10 @@
         <li><button type="button" class="nav-item" data-view="versions">Saved Changes</button></li>
         <li><button type="button" class="nav-item" data-view="requests">Incoming Requests</button></li>
         <li><button type="button" class="nav-item" data-view="analytics">Analytics</button></li>
+        <li class="nav-sep" role="separator"></li>
+        <li><a class="nav-item nav-item-dispatch" href="/dispatch.html" target="_blank" rel="noopener">Dispatch Control <span class="nav-ext" aria-hidden="true">→</span></a></li>
+        <li><button type="button" class="nav-item" data-view="dispatch-users">Dispatch Personnel</button></li>
+        <li><button type="button" class="nav-item" data-view="technicians">Technician Personnel</button></li>
       </ul>
       <div class="sidebar-foot">v1 · client-side preview</div>
     </nav>
@@ -321,6 +325,72 @@
         </div>
       </section>
 
+      <!-- ── Dispatch Personnel ── -->
+      <section class="view view-form" data-view="dispatch-users" hidden>
+        <div class="form-wrap form-wrap-wide">
+          <div class="form-head">
+            <div>
+              <h2>Dispatch Personnel</h2>
+              <p class="form-sub">Dispatch-team logins. Every change here writes straight to the database — there is no Apply step.</p>
+            </div>
+          </div>
+          <div id="duNotice" class="people-notice" hidden></div>
+          <div class="manager-list" id="dispatchUserList">
+            <div class="manager-empty">Loading…</div>
+          </div>
+
+          <div class="people-add">
+            <h3 class="people-add-title">Add Dispatch User</h3>
+            <form id="dispatchUserForm" class="people-form" autocomplete="off" novalidate>
+              <div class="people-form-grid">
+                <label class="field"><span class="field-label">First name</span><input id="duFirst" type="text" autocomplete="off" required/></label>
+                <label class="field"><span class="field-label">Last name</span><input id="duLast" type="text" autocomplete="off" required/></label>
+                <label class="field"><span class="field-label">Username</span><input id="duUser" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" required/></label>
+                <label class="field"><span class="field-label">Password</span><input id="duPass" type="password" autocomplete="new-password" required/></label>
+                <label class="field"><span class="field-label">Confirm password</span><input id="duPass2" type="password" autocomplete="new-password" required/></label>
+              </div>
+              <div class="people-form-foot">
+                <span class="people-form-err" id="duErr" hidden></span>
+                <button type="submit" class="btn btn-primary" id="duAddBtn">Add dispatch user</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Technician Personnel ── -->
+      <section class="view view-form" data-view="technicians" hidden>
+        <div class="form-wrap form-wrap-wide">
+          <div class="form-head">
+            <div>
+              <h2>Technician Personnel</h2>
+              <p class="form-sub">Field technicians shown in the dispatch board's assign dropdown. Saved to the database immediately.</p>
+            </div>
+          </div>
+          <div id="tcNotice" class="people-notice" hidden></div>
+          <div class="manager-list" id="techList">
+            <div class="manager-empty">Loading…</div>
+          </div>
+
+          <div class="people-add">
+            <h3 class="people-add-title">Add Technician</h3>
+            <form id="techForm" class="people-form" autocomplete="off" novalidate>
+              <div class="people-form-grid">
+                <label class="field"><span class="field-label">First name</span><input id="tcFirst" type="text" autocomplete="off" required/></label>
+                <label class="field"><span class="field-label">Last name</span><input id="tcLast" type="text" autocomplete="off" required/></label>
+                <label class="field"><span class="field-label">Phone</span><input id="tcPhone" type="tel" autocomplete="off" required/></label>
+                <label class="field"><span class="field-label">Email <span class="field-opt">(optional)</span></span><input id="tcEmail" type="email" autocomplete="off"/></label>
+                <label class="field people-form-wide"><span class="field-label">Notes <span class="field-opt">(optional)</span></span><input id="tcNotes" type="text" autocomplete="off"/></label>
+              </div>
+              <div class="people-form-foot">
+                <span class="people-form-err" id="tcErr" hidden></span>
+                <button type="submit" class="btn btn-primary" id="tcAddBtn">Add technician</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
     </main>
   </div>
 </div>
@@ -342,8 +412,8 @@
 
 <script src="config.js?v=1"></script>
 <script src="apex-defaults.js?v=12"></script>
-<script src="admin-store.js?v=13"></script>
-<script src="admin.js?v=13"></script>
+<script src="admin-store.js?v=14"></script>
+<script src="admin.js?v=14"></script>
 </body>
 </html>
 

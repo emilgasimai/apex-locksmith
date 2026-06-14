@@ -46,6 +46,7 @@
   var lastActivity = Date.now();
   var lastFetchTs = 0;
   var toastTimer = null;
+  var technicians = [];   // active technicians for the assign dropdown (Fix 3)
 
   /* ───────────── tiny helpers ───────────── */
   function esc(s) {
@@ -122,7 +123,18 @@
     var s = getSession();
     topUser.textContent = (s && s.username) ? s.username : '—';
     lastActivity = Date.now();
-    refresh();
+    // Load technicians first so the very first render of the queue already has
+    // the assign dropdown populated.
+    loadTechnicians().then(refresh);
+  }
+
+  /* ───────────── technicians (assign dropdown) ───────────── */
+  function loadTechnicians() {
+    return authedFetch('/api/dispatch/technicians').then(function (res) {
+      if (res.ok && res.data) {
+        technicians = (res.data.technicians || []).filter(function (t) { return t && (t._id || t.id); });
+      }
+    }).catch(function () { /* keep whatever we had; cards fall back to free-text */ });
   }
 
   /* ───────────── login / logout ───────────── */
@@ -274,6 +286,23 @@
       ? 'Assigned to <b>' + esc(job.assignedTo) + '</b>'
       : '';
 
+    // Assign control — a technician dropdown when any exist, otherwise the
+    // legacy free-text input plus a hint pointing to the admin panel (Fix 3).
+    var assignControl, techNote = '';
+    if (technicians.length) {
+      var jobTechId = job.technicianId ? String(job.technicianId) : '';
+      var opts = '<option value="">Select technician…</option>';
+      technicians.forEach(function (t) {
+        var tid = String(t._id || t.id);
+        var nm = ((t.firstName || '') + ' ' + (t.lastName || '')).trim();
+        opts += '<option value="' + esc(tid) + '"' + (tid === jobTechId ? ' selected' : '') + '>' + esc(nm) + '</option>';
+      });
+      assignControl = '<select class="tech-select" aria-label="Assign technician">' + opts + '</select>';
+    } else {
+      assignControl = '<input class="tech-input" type="text" maxlength="100" placeholder="Technician name" value="' + esc(job.assignedTo || '') + '" aria-label="Technician name"/>';
+      techNote = '<p class="tech-empty-note">No technicians added yet — add them in the admin panel.</p>';
+    }
+
     return '' +
       '<div class="job-top">' +
         '<div class="job-badges">' +
@@ -295,9 +324,10 @@
       '<div class="assigned-pill" data-assigned' + (assigned ? '' : ' hidden') + '>' + assigned + '</div>' +
       '<div class="job-controls">' +
         '<div class="assign-row">' +
-          '<input class="tech-input" type="text" maxlength="100" placeholder="Technician name" value="' + esc(job.assignedTo || '') + '" aria-label="Technician name"/>' +
+          assignControl +
           '<button type="button" class="btn btn-assign">Assign</button>' +
         '</div>' +
+        techNote +
         '<label class="status-row"><span>Update status</span>' +
           '<select class="status-select" data-current="' + status + '" aria-label="Update status">' + statusOptions(status) + '</select>' +
         '</label>' +
@@ -381,17 +411,32 @@
   function doAssign(btn) {
     var card = btn.closest('.job-card'); if (!card) return;
     var id = card.getAttribute('data-id');
+    var sel = card.querySelector('.tech-select');
     var input = card.querySelector('.tech-input');
-    var name = (input.value || '').trim();
-    if (!name) { toast('Enter a technician name first.', 'err'); input.focus(); return; }
+
+    var body, displayName;
+    if (sel) {
+      var tid = sel.value;
+      if (!tid) { toast('Select a technician first.', 'err'); sel.focus(); return; }
+      body = { technicianId: tid };
+      displayName = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : '';
+    } else if (input) {
+      var name = (input.value || '').trim();
+      if (!name) { toast('Enter a technician name first.', 'err'); input.focus(); return; }
+      body = { assignedTo: name };
+      displayName = name;
+    } else { return; }
+
     btn.disabled = true; var label = btn.textContent; btn.textContent = '…';
-    authedFetch('/api/dispatch/' + id + '/assign', { method: 'PATCH', json: { assignedTo: name } })
+    authedFetch('/api/dispatch/' + id + '/assign', { method: 'PATCH', json: body })
       .then(function (res) {
         btn.disabled = false; btn.textContent = label;
         if (res.ok) {
+          // Prefer the name the backend snapshotted onto the job.
+          var nm = (res.data && res.data.assignedTo) || displayName;
           var pill = card.querySelector('[data-assigned]');
-          if (pill) { pill.innerHTML = 'Assigned to <b>' + esc(name) + '</b>'; pill.hidden = false; }
-          toast('Assigned to ' + name, 'ok');
+          if (pill) { pill.innerHTML = 'Assigned to <b>' + esc(nm) + '</b>'; pill.hidden = false; }
+          toast('Assigned to ' + nm, 'ok');
         } else if (res.status !== 401) {
           toast((res.data && res.data.message) || 'Could not assign — try again.', 'err');
         }

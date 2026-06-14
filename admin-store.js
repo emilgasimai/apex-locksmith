@@ -270,7 +270,15 @@ const AdminStore = (function () {
                       (res.data.data && res.data.data.token);
         if (token) {
           const now = Date.now();
-          const session = { token: token, createdAt: now, lastActivity: now };
+          const u = res.data.user || {};
+          const session = {
+            token: token,
+            role: u.role || '',
+            username: u.username || username,
+            displayName: u.displayName || '',
+            createdAt: now,
+            lastActivity: now,
+          };
           writeSession(session);
           markOnline();
           return session;
@@ -358,6 +366,47 @@ const AdminStore = (function () {
     },
 
     async saveDefaultCheckpoint(name) { return createSnapshot(name, true); },
+
+    /* ───────────── PEOPLE MANAGEMENT (live DB ops, admin only) ─────────────
+       Unlike the content channels these are NOT bundled / staged — each call
+       hits the backend immediately and reflects straight into the database.
+       Every method resolves a small { ok, status, message, ... } envelope so
+       admin.js can surface the backend's own validation messages. A null list
+       (from listUsers/listTechnicians) means the backend was unreachable. */
+
+    async listUsers() {
+      const res = await api('/api/users');
+      return res.ok && res.data ? (res.data.users || []) : null;
+    },
+    async createUser(payload) {
+      const res = await api('/api/users', { method: 'POST', json: payload });
+      return { ok: res.ok, status: res.status, message: (res.data && res.data.message) || null, user: res.data && res.data.user };
+    },
+    async updateUser(id, payload) {
+      const res = await api('/api/users/' + encodeURIComponent(id), { method: 'PATCH', json: payload });
+      return { ok: res.ok, status: res.status, message: (res.data && res.data.message) || null, user: res.data && res.data.user };
+    },
+    async deleteUser(id) {
+      const res = await api('/api/users/' + encodeURIComponent(id), { method: 'DELETE' });
+      return { ok: res.ok, status: res.status, message: (res.data && res.data.message) || null };
+    },
+
+    async listTechnicians() {
+      const res = await api('/api/technicians');
+      return res.ok && res.data ? (res.data.technicians || []) : null;
+    },
+    async createTechnician(payload) {
+      const res = await api('/api/technicians', { method: 'POST', json: payload });
+      return { ok: res.ok, status: res.status, message: (res.data && res.data.message) || null, technician: res.data && res.data.technician };
+    },
+    async updateTechnician(id, payload) {
+      const res = await api('/api/technicians/' + encodeURIComponent(id), { method: 'PATCH', json: payload });
+      return { ok: res.ok, status: res.status, message: (res.data && res.data.message) || null, technician: res.data && res.data.technician };
+    },
+    async deleteTechnician(id) {
+      const res = await api('/api/technicians/' + encodeURIComponent(id), { method: 'DELETE' });
+      return { ok: res.ok, status: res.status, message: (res.data && res.data.message) || null };
+    },
 
     /* ───────────── IMAGE UPLOAD ───────────── */
     // POST /api/upload (multipart) → { url }. Falls back to ok:false so the

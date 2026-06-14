@@ -34,6 +34,14 @@
   async function boot() {
     const session = await AdminStore.getSession();
     if (session && !isExpired(session)) {
+      // Role gate: this panel is administrators only. A dispatch JWT left in
+      // sessionStorage (e.g. signed into both tools) must not open the admin.
+      if (isDispatchSession(session)) {
+        await AdminStore.clearSession();
+        showLoginNotice('Access denied. Administrators only.');
+        showLogin();
+        return;
+      }
       enterDashboard();
     } else {
       if (session) {
@@ -46,6 +54,9 @@
 
   function isExpired(session) {
     return (Date.now() - (session.lastActivity || 0)) > SESSION_TIMEOUT_MS;
+  }
+  function isDispatchSession(session) {
+    return !!session && session.role === 'dispatch';
   }
 
   /* ========================================================================
@@ -73,6 +84,15 @@
     const session = await AdminStore.login(loginUser.value.trim(), loginPass.value);
     if (btn) btn.disabled = false;
     if (session) {
+      // Valid credentials, wrong tool: dispatch staff can't use the admin panel.
+      if (isDispatchSession(session)) {
+        await AdminStore.clearSession();
+        loginError.textContent = 'Access denied. Administrators only.';
+        loginError.hidden = false;
+        loginPass.value = '';
+        loginUser.focus();
+        return;
+      }
       enterDashboard();
     } else {
       loginError.textContent = AdminStore.lastLoginError === 'network'
@@ -103,7 +123,9 @@
     loginView.hidden = true;
     loginNotice.hidden = true;
     dashView.hidden = false;
-    topbarUser.textContent = 'admin';
+    AdminStore.getSession().then(function (s) {
+      topbarUser.textContent = (s && (s.displayName || s.username)) || 'admin';
+    });
     startSessionWatch();
     setActiveView(currentView || 'content');
     initEditor();
@@ -189,6 +211,9 @@
   navList.addEventListener('click', function (e) {
     const btn = e.target.closest('.nav-item');
     if (!btn) return;
+    // "Dispatch Control →" is a real link (opens /dispatch.html in a new tab) —
+    // let the browser handle it, just close the mobile drawer.
+    if (btn.tagName === 'A' || !btn.dataset.view) { closeSidebar(); return; }
     setActiveView(btn.dataset.view);
     closeSidebar(); // collapse the mobile drawer after navigating
   });
@@ -204,6 +229,8 @@
     if (view === 'business') loadBusiness();
     if (view === 'reviews') loadReviews();
     if (view === 'versions') loadVersions();
+    if (view === 'dispatch-users') loadDispatchUsers();
+    if (view === 'technicians') loadTechnicians();
   }
 
   /* ========================================================================
@@ -1538,6 +1565,267 @@
     defaultHistoryList.hidden = !willOpen;
     defaultHistoryToggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
   });
+
+  /* ========================================================================
+     10. PEOPLE MANAGEMENT — Dispatch users + Technicians
+     Live database operations (admin only). No Apply/staging: each create,
+     toggle, edit and delete hits the backend immediately. Backend validation
+     messages are surfaced inline / via toast.
+     ===================================================================== */
+
+  // ── Dispatch users ──
+  const dispatchUserList = document.getElementById('dispatchUserList');
+  const dispatchUserForm = document.getElementById('dispatchUserForm');
+  const duFirst = document.getElementById('duFirst');
+  const duLast  = document.getElementById('duLast');
+  const duUser  = document.getElementById('duUser');
+  const duPass  = document.getElementById('duPass');
+  const duPass2 = document.getElementById('duPass2');
+  const duErr   = document.getElementById('duErr');
+  const duAddBtn = document.getElementById('duAddBtn');
+  const duNotice = document.getElementById('duNotice');
+
+  function peopleSwitchHtml(active) {
+    return '<label class="people-switch" title="Toggle active">' +
+      '<input type="checkbox" data-act="active"' + (active ? ' checked' : '') + '/>' +
+      '<span class="people-switch-track"><span class="people-switch-thumb"></span></span>' +
+      '<span class="people-switch-label">' + (active ? 'Active' : 'Inactive') + '</span>' +
+    '</label>';
+  }
+
+  async function loadDispatchUsers() {
+    dispatchUserList.innerHTML = '<div class="manager-empty">Loading…</div>';
+    duNotice.hidden = true;
+    const users = await AdminStore.listUsers();
+    if (users == null) {
+      dispatchUserList.innerHTML = '<div class="manager-empty">Backend unreachable — can’t load dispatch users right now.</div>';
+      return;
+    }
+    const dispatch = users.filter(function (u) { return u.role === 'dispatch'; });
+    dispatchUserList.innerHTML = '';
+    if (!dispatch.length) {
+      dispatchUserList.innerHTML = '<div class="manager-empty">No dispatch users yet. Add one below.</div>';
+      return;
+    }
+    dispatch.forEach(function (u) { dispatchUserList.appendChild(buildDispatchUserRow(u)); });
+  }
+
+  function buildDispatchUserRow(u) {
+    const id = u.id || u._id;
+    const name = u.displayName || u.username;
+    const row = document.createElement('div');
+    row.className = 'people-row';
+    row.setAttribute('data-id', id);
+    row.innerHTML =
+      '<div class="people-main">' +
+        '<span class="people-name">' + esc(name) + '</span>' +
+        '<span class="people-sub">@' + esc(u.username) + '</span>' +
+      '</div>' +
+      peopleSwitchHtml(u.active) +
+      '<div class="people-actions">' +
+        '<button type="button" class="btn btn-ghost btn-sm" data-act="pass">Password</button>' +
+        '<button type="button" class="btn btn-danger btn-sm" data-act="del">Delete</button>' +
+      '</div>' +
+      '<form class="people-inline" data-pass-form hidden autocomplete="off">' +
+        '<input type="password" data-f="p1" placeholder="New password" autocomplete="new-password"/>' +
+        '<input type="password" data-f="p2" placeholder="Confirm password" autocomplete="new-password"/>' +
+        '<button type="submit" class="btn btn-primary btn-sm">Save</button>' +
+        '<button type="button" class="btn btn-ghost btn-sm" data-act="pass-cancel">Cancel</button>' +
+        '<span class="people-inline-err" data-pass-err hidden></span>' +
+      '</form>';
+
+    const cb = row.querySelector('[data-act="active"]');
+    cb.addEventListener('change', async function () {
+      cb.disabled = true;
+      const res = await AdminStore.updateUser(id, { active: cb.checked });
+      cb.disabled = false;
+      if (!res.ok) { cb.checked = !cb.checked; showToast(res.message || 'Could not update — try again'); return; }
+      row.querySelector('.people-switch-label').textContent = cb.checked ? 'Active' : 'Inactive';
+      showToast('User ' + (cb.checked ? 'activated' : 'deactivated'));
+    });
+
+    const passForm = row.querySelector('[data-pass-form]');
+    const passErr  = passForm.querySelector('[data-pass-err]');
+    row.querySelector('[data-act="pass"]').addEventListener('click', function () {
+      passForm.hidden = !passForm.hidden;
+      passErr.hidden = true;
+      if (!passForm.hidden) passForm.querySelector('[data-f="p1"]').focus();
+    });
+    row.querySelector('[data-act="pass-cancel"]').addEventListener('click', function () {
+      passForm.hidden = true; passForm.reset(); passErr.hidden = true;
+    });
+    passForm.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      passErr.hidden = true;
+      const p1 = passForm.querySelector('[data-f="p1"]').value;
+      const p2 = passForm.querySelector('[data-f="p2"]').value;
+      if (p1.length < 8) { passErr.textContent = 'Min 8 characters'; passErr.hidden = false; return; }
+      if (p1 !== p2)     { passErr.textContent = 'Passwords do not match'; passErr.hidden = false; return; }
+      const res = await AdminStore.updateUser(id, { password: p1 });
+      if (!res.ok) { passErr.textContent = res.message || 'Could not update'; passErr.hidden = false; return; }
+      passForm.hidden = true; passForm.reset();
+      showToast('Password updated for ' + name);
+    });
+
+    row.querySelector('[data-act="del"]').addEventListener('click', async function () {
+      if (!confirm('Delete dispatch user "' + name + '"? This cannot be undone.')) return;
+      const res = await AdminStore.deleteUser(id);
+      if (!res.ok) { showToast(res.message || 'Could not delete — try again'); return; }
+      showToast('Dispatch user deleted');
+      loadDispatchUsers();
+    });
+    return row;
+  }
+
+  function showDuErr(msg) { duErr.textContent = msg; duErr.hidden = false; }
+  if (dispatchUserForm) {
+    dispatchUserForm.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      duErr.hidden = true;
+      const first = duFirst.value.trim(), last = duLast.value.trim();
+      const username = duUser.value.trim(), p1 = duPass.value, p2 = duPass2.value;
+      if (!first || !last) return showDuErr('Enter the first and last name');
+      if (username.length < 3) return showDuErr('Username must be at least 3 characters');
+      if (!/^[a-zA-Z0-9._-]+$/.test(username)) return showDuErr('Username: letters, numbers, dots, dashes, underscores only');
+      if (p1.length < 8) return showDuErr('Password must be at least 8 characters');
+      if (p1 !== p2) return showDuErr('Passwords do not match');
+      duAddBtn.disabled = true;
+      const res = await AdminStore.createUser({
+        username: username, password: p1, role: 'dispatch', displayName: (first + ' ' + last).trim(),
+      });
+      duAddBtn.disabled = false;
+      if (!res.ok) return showDuErr(res.message || (res.status === 409 ? 'Username already taken' : 'Could not create user'));
+      dispatchUserForm.reset();
+      showToast('Dispatch user added');
+      loadDispatchUsers();
+    });
+  }
+
+  // ── Technicians ──
+  const techList  = document.getElementById('techList');
+  const techForm  = document.getElementById('techForm');
+  const tcFirst = document.getElementById('tcFirst');
+  const tcLast  = document.getElementById('tcLast');
+  const tcPhone = document.getElementById('tcPhone');
+  const tcEmail = document.getElementById('tcEmail');
+  const tcNotes = document.getElementById('tcNotes');
+  const tcErr   = document.getElementById('tcErr');
+  const tcAddBtn = document.getElementById('tcAddBtn');
+  const PHONE_RE = /^[0-9+()\-.\s]{7,30}$/;
+
+  async function loadTechnicians() {
+    techList.innerHTML = '<div class="manager-empty">Loading…</div>';
+    const techs = await AdminStore.listTechnicians();
+    if (techs == null) {
+      techList.innerHTML = '<div class="manager-empty">Backend unreachable — can’t load technicians right now.</div>';
+      return;
+    }
+    techList.innerHTML = '';
+    if (!techs.length) {
+      techList.innerHTML = '<div class="manager-empty">No technicians yet. Add one below.</div>';
+      return;
+    }
+    techs.forEach(function (t) { techList.appendChild(buildTechRow(t)); });
+  }
+
+  function buildTechRow(t) {
+    const id = t.id || t._id;
+    const name = ((t.firstName || '') + ' ' + (t.lastName || '')).trim();
+    const row = document.createElement('div');
+    row.className = 'people-row';
+    row.setAttribute('data-id', id);
+    row.innerHTML =
+      '<div class="people-main">' +
+        '<span class="people-name">' + esc(name) + '</span>' +
+        '<span class="people-sub">' + esc(t.phone || '') + (t.email ? ' · ' + esc(t.email) : '') + '</span>' +
+      '</div>' +
+      peopleSwitchHtml(t.active) +
+      '<div class="people-actions">' +
+        '<button type="button" class="btn btn-ghost btn-sm" data-act="edit">Edit</button>' +
+        '<button type="button" class="btn btn-danger btn-sm" data-act="del">Delete</button>' +
+      '</div>' +
+      '<form class="people-inline people-inline-edit" data-edit-form hidden autocomplete="off">' +
+        '<input type="text" data-f="firstName" value="' + attr(t.firstName || '') + '" placeholder="First name"/>' +
+        '<input type="text" data-f="lastName" value="' + attr(t.lastName || '') + '" placeholder="Last name"/>' +
+        '<input type="tel" data-f="phone" value="' + attr(t.phone || '') + '" placeholder="Phone"/>' +
+        '<input type="email" data-f="email" value="' + attr(t.email || '') + '" placeholder="Email (optional)"/>' +
+        '<input type="text" data-f="notes" value="' + attr(t.notes || '') + '" placeholder="Notes (optional)"/>' +
+        '<div class="people-inline-foot">' +
+          '<span class="people-inline-err" data-edit-err hidden></span>' +
+          '<button type="submit" class="btn btn-primary btn-sm">Save</button>' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-act="edit-cancel">Cancel</button>' +
+        '</div>' +
+      '</form>';
+
+    const cb = row.querySelector('[data-act="active"]');
+    cb.addEventListener('change', async function () {
+      cb.disabled = true;
+      const res = await AdminStore.updateTechnician(id, { active: cb.checked });
+      cb.disabled = false;
+      if (!res.ok) { cb.checked = !cb.checked; showToast(res.message || 'Could not update'); return; }
+      row.querySelector('.people-switch-label').textContent = cb.checked ? 'Active' : 'Inactive';
+      showToast('Technician ' + (cb.checked ? 'activated' : 'deactivated'));
+    });
+
+    const editForm = row.querySelector('[data-edit-form]');
+    const editErr  = editForm.querySelector('[data-edit-err]');
+    row.querySelector('[data-act="edit"]').addEventListener('click', function () {
+      editForm.hidden = !editForm.hidden;
+      editErr.hidden = true;
+      if (!editForm.hidden) editForm.querySelector('[data-f="firstName"]').focus();
+    });
+    row.querySelector('[data-act="edit-cancel"]').addEventListener('click', function () { editForm.hidden = true; editErr.hidden = true; });
+    editForm.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      editErr.hidden = true;
+      const firstName = editForm.querySelector('[data-f="firstName"]').value.trim();
+      const lastName  = editForm.querySelector('[data-f="lastName"]').value.trim();
+      const phone     = editForm.querySelector('[data-f="phone"]').value.trim();
+      const email     = editForm.querySelector('[data-f="email"]').value.trim();
+      const notes     = editForm.querySelector('[data-f="notes"]').value.trim();
+      if (!firstName || !lastName) { editErr.textContent = 'First and last name required'; editErr.hidden = false; return; }
+      if (!PHONE_RE.test(phone))   { editErr.textContent = 'Enter a valid phone number'; editErr.hidden = false; return; }
+      // Backend rejects an empty email string (it must be a valid address) — omit
+      // it when blank rather than trying to clear it.
+      const payload = { firstName: firstName, lastName: lastName, phone: phone, notes: notes };
+      if (email) payload.email = email;
+      const res = await AdminStore.updateTechnician(id, payload);
+      if (!res.ok) { editErr.textContent = res.message || 'Could not save'; editErr.hidden = false; return; }
+      showToast('Technician updated');
+      loadTechnicians();
+    });
+
+    row.querySelector('[data-act="del"]').addEventListener('click', async function () {
+      if (!confirm('Delete technician "' + name + '"? This cannot be undone.')) return;
+      const res = await AdminStore.deleteTechnician(id);
+      if (!res.ok) { showToast(res.message || 'Could not delete'); return; }
+      showToast('Technician deleted');
+      loadTechnicians();
+    });
+    return row;
+  }
+
+  function showTcErr(msg) { tcErr.textContent = msg; tcErr.hidden = false; }
+  if (techForm) {
+    techForm.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      tcErr.hidden = true;
+      const firstName = tcFirst.value.trim(), lastName = tcLast.value.trim();
+      const phone = tcPhone.value.trim(), email = tcEmail.value.trim(), notes = tcNotes.value.trim();
+      if (!firstName || !lastName) return showTcErr('Enter the first and last name');
+      if (!PHONE_RE.test(phone)) return showTcErr('Enter a valid phone number');
+      const payload = { firstName: firstName, lastName: lastName, phone: phone };
+      if (email) payload.email = email;
+      if (notes) payload.notes = notes;
+      tcAddBtn.disabled = true;
+      const res = await AdminStore.createTechnician(payload);
+      tcAddBtn.disabled = false;
+      if (!res.ok) return showTcErr(res.message || 'Could not add technician');
+      techForm.reset();
+      showToast('Technician added');
+      loadTechnicians();
+    });
+  }
 
   /* ── Go ── */
   boot();
