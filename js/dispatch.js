@@ -92,17 +92,46 @@
   }
   function clearSession() { setSession(null); }
 
+  /* ───────────── embedded mode (inside the admin panel) ─────────────
+     When opened as /dispatch.html?embed=1 from the admin panel we run inside a
+     same-origin iframe. There's no separate dispatch login: we reuse the admin
+     JWT (apex_admin_session_v1), since the admin role has staff API access. The
+     topbar + login are hidden via CSS, and the admin panel owns idle-logout. */
+  var EMBED = /[?&]embed=1(?:&|$)/.test(location.search);
+  var ADMIN_SESSION_KEY = 'apex_admin_session_v1';
+  function getAdminSession() {
+    try {
+      var raw = sessionStorage.getItem(ADMIN_SESSION_KEY);
+      // Same-origin iframe shares the parent's sessionStorage, but fall back to
+      // reading it through window.parent defensively.
+      if (!raw && window.parent && window.parent !== window) {
+        raw = window.parent.sessionStorage.getItem(ADMIN_SESSION_KEY);
+      }
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+  function activeToken() {
+    if (EMBED) { var a = getAdminSession(); return a && a.token; }
+    var s = getSession(); return s && s.token;
+  }
+  function hasActiveSession() { return !!activeToken(); }
+
   /* ───────────── authed backend call (401 → back to login) ───────────── */
   function authedFetch(path, options) {
     options = options || {};
-    var s = getSession();
-    if (s && s.token) options.token = s.token;
+    var token = activeToken();
+    if (token) options.token = token;
     return window.apiFetch(path, options).then(function (res) {
       if (res.status === 401) { handleUnauthorized(); }
       return res;
     });
   }
   function handleUnauthorized() {
+    if (EMBED) {
+      // Don't show the dispatch login inside the admin panel — the admin owns auth.
+      if (queue) queue.innerHTML = '<div class="queue-empty">Your admin session expired — reload the admin panel to sign in again.</div>';
+      return;
+    }
     clearSession();
     showLogin('Your session ended — please sign in again.');
   }
@@ -216,6 +245,7 @@
     window.addEventListener(ev, bumpActivity, { passive: true });
   });
   setInterval(function () {
+    if (EMBED) return;            // admin panel owns idle-logout when embedded
     if (!getSession()) return;
     if (Date.now() - lastActivity > IDLE_MS) { logout('idle'); }
   }, 30000);
@@ -475,12 +505,19 @@
   }
 
   /* ───────────── tickers ───────────── */
-  setInterval(function () { if (getSession() && !dashView.hidden) updateAges(); }, 15000);     // freshen "X min ago" labels
-  setInterval(function () { if (getSession() && !dashView.hidden) refresh(); }, REFRESH_MS);    // 60s auto-refresh
+  setInterval(function () { if (hasActiveSession() && !dashView.hidden) updateAges(); }, 15000);     // freshen "X min ago" labels
+  setInterval(function () { if (hasActiveSession() && !dashView.hidden) refresh(); }, REFRESH_MS);    // 60s auto-refresh
 
   /* ───────────── boot ───────────── */
   function init() {
     initTheme();
+    if (EMBED) {
+      // Embedded in the admin panel: reuse the admin JWT, skip the login UI.
+      document.body.classList.add('is-embed');
+      if (activeToken()) showDashboard();
+      else if (queue) { dashView.hidden = false; loginView.hidden = true; queue.innerHTML = '<div class="queue-empty">Open the dispatch board from the admin panel.</div>'; }
+      return;
+    }
     var s = getSession();
     if (s && s.token) {
       // A tab left open past the idle window should not silently resume.

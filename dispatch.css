@@ -418,3 +418,11 @@ input:focus, select:focus {
 [data-theme="light"] .badge.status-in-progress    { color: #b35a00; border-color: rgba(179,90,0,.4); background: rgba(255,159,28,.14); }
 [data-theme="light"] .badge.status-completed      { color: #1f8a4c; border-color: rgba(31,138,76,.4); background: rgba(67,214,127,.16); }
 [data-theme="light"] .badge.status-cancelled      { color: #9a4040; border-color: rgba(154,64,64,.35); background: rgba(255,93,93,.08); }
+
+/* ============================ EMBEDDED (?embed=1) ============================
+   Rendered inside the admin panel's main area via an iframe. Hide the dispatch
+   topbar + login (the admin panel provides its own chrome and auth) and let the
+   board fill the full width of the panel. */
+body.is-embed .topbar { display: none; }
+body.is-embed .login-view { display: none !important; }
+body.is-embed .dash-main { max-width: none; }

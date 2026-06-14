@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <meta name="robots" content="noindex,nofollow"/>
 <title>Aston Admin</title>
-<link rel="stylesheet" href="admin.css?v=11"/>
+<link rel="stylesheet" href="admin.css?v=12"/>
 </head>
 <body>
 
@@ -68,7 +68,7 @@
         <li><button type="button" class="nav-item" data-view="requests">Incoming Requests</button></li>
         <li><button type="button" class="nav-item" data-view="analytics">Analytics</button></li>
         <li class="nav-sep" role="separator"></li>
-        <li><a class="nav-item nav-item-dispatch" href="/dispatch.html" target="_blank" rel="noopener">Dispatch Control <span class="nav-ext" aria-hidden="true">→</span></a></li>
+        <li><button type="button" class="nav-item nav-item-dispatch" data-view="dispatch-board">Dispatch Control</button></li>
         <li><button type="button" class="nav-item" data-view="dispatch-users">Dispatch Personnel</button></li>
         <li><button type="button" class="nav-item" data-view="technicians">Technician Personnel</button></li>
       </ul>
@@ -325,6 +325,11 @@
         </div>
       </section>
 
+      <!-- ── Dispatch Control (embedded dispatch board, reuses the admin JWT) ── -->
+      <section class="view view-embed" data-view="dispatch-board" hidden>
+        <iframe id="dispatchFrame" class="dispatch-frame" title="Dispatch board" loading="lazy"></iframe>
+      </section>
+
       <!-- ── Dispatch Personnel ── -->
       <section class="view view-form" data-view="dispatch-users" hidden>
         <div class="form-wrap form-wrap-wide">
@@ -413,7 +418,7 @@
 <script src="config.js?v=1"></script>
 <script src="apex-defaults.js?v=12"></script>
 <script src="admin-store.js?v=14"></script>
-<script src="admin.js?v=14"></script>
+<script src="admin.js?v=15"></script>
 </body>
 </html>
 

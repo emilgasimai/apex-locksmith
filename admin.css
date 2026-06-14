@@ -100,7 +100,8 @@ body {
   color: var(--muted);
   font-weight: 700;
 }
-input[type=text], input[type=password], input[type=url], input[type=file], textarea {
+input[type=text], input[type=password], input[type=url], input[type=email],
+input[type=tel], input[type=number], input[type=search], input[type=file], textarea {
   font: inherit;
   width: 100%;
   background: var(--bg-2);
@@ -845,17 +846,14 @@ input:focus, textarea:focus {
   height: 1px; margin: 8px 14px; padding: 0;
   background: var(--line); list-style: none;
 }
-/* "Dispatch Control →" — a real link to the dispatch tool; teal so it reads as
-   a hand-off to a different surface, not just another admin section. */
-.nav-item-dispatch {
-  color: var(--accent);
-  font-weight: 700;
-  display: flex; align-items: center; gap: 6px;
-  text-decoration: none;
-}
+/* "Dispatch Control" — opens the dispatch board embedded in the panel; teal so
+   it reads as a hand-off to a different surface, not just another admin section. */
+.nav-item-dispatch { color: var(--accent); font-weight: 700; }
 .nav-item-dispatch:hover { background: rgba(39, 224, 245, .1); }
-.nav-item-dispatch .nav-ext { transition: transform .15s ease; }
-.nav-item-dispatch:hover .nav-ext { transform: translateX(3px); }
+
+/* Embedded dispatch board — the iframe fills the whole main content area. */
+.view-embed { padding: 0; }
+.dispatch-frame { flex: 1 1 auto; width: 100%; border: 0; display: block; background: var(--bg); }
 
 /* ============================================================================
    People management — Dispatch users + Technicians

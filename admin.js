@@ -210,10 +210,7 @@
 
   navList.addEventListener('click', function (e) {
     const btn = e.target.closest('.nav-item');
-    if (!btn) return;
-    // "Dispatch Control →" is a real link (opens /dispatch.html in a new tab) —
-    // let the browser handle it, just close the mobile drawer.
-    if (btn.tagName === 'A' || !btn.dataset.view) { closeSidebar(); return; }
+    if (!btn || !btn.dataset.view) return;
     setActiveView(btn.dataset.view);
     closeSidebar(); // collapse the mobile drawer after navigating
   });
@@ -231,6 +228,18 @@
     if (view === 'versions') loadVersions();
     if (view === 'dispatch-users') loadDispatchUsers();
     if (view === 'technicians') loadTechnicians();
+    if (view === 'dispatch-board') loadDispatchBoard();
+  }
+
+  /* ── Dispatch Control — embedded dispatch board ──
+     Lazily point the iframe at /dispatch.html?embed=1 the first time the view
+     is opened. In embed mode dispatch.js reuses this admin's JWT (shared
+     same-origin sessionStorage), so there's no second login. */
+  let dispatchFrameLoaded = false;
+  function loadDispatchBoard() {
+    if (dispatchFrameLoaded) return;
+    const f = document.getElementById('dispatchFrame');
+    if (f) { f.src = '/dispatch.html?embed=1'; dispatchFrameLoaded = true; }
   }
 
   /* ========================================================================
