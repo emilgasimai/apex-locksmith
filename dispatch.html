@@ -8,7 +8,7 @@
 <title>Aston Dispatch</title>
 <!-- Apply the saved theme before first paint to avoid a flash of the wrong theme. -->
 <script>try{var t=localStorage.getItem('aston_dispatch_theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}</script>
-<link rel="stylesheet" href="dispatch.css?v=6"/>
+<link rel="stylesheet" href="dispatch.css?v=7"/>
 </head>
 <body>
 
@@ -108,7 +108,7 @@
       </div>
       <div class="filter-spacer"></div>
       <div class="refresh-meta">
-        <span class="live"><span class="pulse" aria-hidden="true"></span>Auto-refresh 60s</span>
+        <span class="live"><span class="pulse" aria-hidden="true"></span>Auto-refresh 25s</span>
         <span id="lastUpdated">Updated just now</span>
         <button id="refreshBtn" type="button" class="btn btn-ghost" style="min-height:32px;padding:6px 11px;">Refresh</button>
       </div>
@@ -136,6 +136,6 @@
 </div>
 
 <script src="config.js?v=1" defer></script>
-<script src="js/dispatch.js?v=7" defer></script>
+<script src="js/dispatch.js?v=8" defer></script>
 </body>
 </html>

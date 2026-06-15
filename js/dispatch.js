@@ -19,7 +19,7 @@
   /* ───────────── Config / constants ───────────── */
   var SESSION_KEY = 'aston_dispatch_session_v1';
   var IDLE_MS     = 30 * 60 * 1000;  // 30-minute inactivity auto-logout
-  var REFRESH_MS  = 60 * 1000;       // job-queue auto-refresh
+  var REFRESH_MS  = 25 * 1000;       // job-queue auto-refresh
   var JOB_LIMIT   = 100;
   var THEME_KEY   = 'aston_dispatch_theme';   // localStorage — persists across sessions
   var MUTE_KEY    = 'aston_dispatch_muted';   // localStorage — notification-sound preference
@@ -91,6 +91,112 @@
     if (s < 60) return s + 's ago';
     var m = Math.floor(s / 60);
     return m + 'm ago';
+  }
+
+  /* ───────────── inline-edit helpers (Fix 2) ─────────────
+     Dispatch (and admin) can fix bad/missing job info right on the card. Each
+     editable field is wrapped in a .editable container that carries its raw
+     value + metadata; a pencil swaps the static view for an inline editor that
+     PATCHes /api/dispatch/:id. jobId is editable by admins only. */
+  var EDIT_MAX = { customerName: 100, address: 300, eta: 100, aiSummary: 1000, jobId: 7 };
+
+  // EMBED means we're inside the admin panel (admin role); standalone uses the
+  // dispatch session's stored role.
+  function isAdminUser() {
+    if (EMBED) return true;
+    var s = getSession();
+    return !!(s && s.role === 'admin');
+  }
+
+  function pencilSvg() {
+    return '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+  }
+
+  // Builds an inline editable: optional `lead` markup, the value span, and a
+  // pencil (unless opts.canEdit === false). opts: { label, type, placeholder,
+  // valClass, lead, canEdit }.
+  function editable(field, value, opts) {
+    opts = opts || {};
+    var raw = value == null ? '' : String(value);
+    var isEmpty = raw.trim() === '';
+    var ph = opts.placeholder || '—';
+    var valCls = 'ed-val' + (opts.valClass ? ' ' + opts.valClass : '') + (isEmpty ? ' is-empty' : '');
+    return '<span class="editable" data-edit="' + field + '" data-type="' + (opts.type || 'text') +
+      '" data-label="' + esc(opts.label || field) + '" data-value="' + esc(raw) +
+      '" data-placeholder="' + esc(ph) + '">' +
+        (opts.lead || '') +
+        '<span class="' + valCls + '" data-val>' + esc(isEmpty ? ph : raw) + '</span>' +
+        (opts.canEdit === false ? '' :
+          '<button type="button" class="ed-pencil" aria-label="Edit ' + esc(opts.label || field) + '">' + pencilSvg() + '</button>') +
+      '</span>';
+  }
+
+  // Swap the static view for an editor.
+  function startEdit(pencil) {
+    var box = pencil.closest('.editable');
+    if (!box || box.querySelector('.ed-editor')) return;
+    var field = box.getAttribute('data-edit');
+    var type = box.getAttribute('data-type') || 'text';
+    var raw = box.getAttribute('data-value') || '';
+    var label = box.getAttribute('data-label') || '';
+    var max = EDIT_MAX[field] || 200;
+    box._editBackup = box.innerHTML;
+    var control = (type === 'textarea')
+      ? '<textarea class="ed-input" rows="3" maxlength="' + max + '" aria-label="' + esc(label) + '">' + esc(raw) + '</textarea>'
+      : '<input class="ed-input" type="text" maxlength="' + max + '"' +
+          (field === 'jobId' ? ' inputmode="numeric" pattern="\\d{7}"' : '') +
+          ' value="' + esc(raw) + '" aria-label="' + esc(label) + '"/>';
+    box.innerHTML =
+      '<span class="ed-editor">' + control +
+        '<span class="ed-actions">' +
+          '<button type="button" class="btn btn-primary ed-save">Save</button>' +
+          '<button type="button" class="btn btn-ghost ed-cancel">Cancel</button>' +
+        '</span>' +
+      '</span>';
+    var input = box.querySelector('.ed-input');
+    if (input) { input.focus(); try { input.setSelectionRange(input.value.length, input.value.length); } catch (e) {} }
+  }
+
+  function restoreView(box) {
+    if (box._editBackup != null) { box.innerHTML = box._editBackup; box._editBackup = null; }
+  }
+
+  // Restore the static view, then patch in the new value (text + empty styling).
+  function applyValue(box, raw) {
+    restoreView(box);
+    raw = raw == null ? '' : String(raw);
+    box.setAttribute('data-value', raw);
+    var val = box.querySelector('[data-val]');
+    if (val) {
+      var empty = raw.trim() === '';
+      val.textContent = empty ? (box.getAttribute('data-placeholder') || '—') : raw;
+      val.classList.toggle('is-empty', empty);
+    }
+  }
+
+  function commitEdit(box) {
+    if (!box) return;
+    var card = box.closest('.job-card'); if (!card) return;
+    var id = card.getAttribute('data-id');
+    var field = box.getAttribute('data-edit');
+    var label = box.getAttribute('data-label') || 'Field';
+    var input = box.querySelector('.ed-input'); if (!input) return;
+    var val = (input.value || '').trim();
+    if (field === 'jobId' && val && !/^\d{7}$/.test(val)) { toast('Job ID must be 7 digits.', 'err'); input.focus(); return; }
+    if (field === 'customerName' && !val) { toast('Customer name can’t be empty.', 'err'); input.focus(); return; }
+    var saveBtn = box.querySelector('.ed-save');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '…'; }
+    var body = {}; body[field] = val;
+    authedFetch('/api/dispatch/' + id, { method: 'PATCH', json: body }).then(function (res) {
+      if (res.ok) {
+        var saved = (res.data && res.data[field] != null) ? res.data[field] : val;
+        applyValue(box, saved);
+        toast(label + ' updated', 'ok');
+      } else if (res.status !== 401) {
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save'; }
+        toast((res.data && res.data.message) || 'Could not save — try again.', 'err');
+      }
+    });
   }
 
   /* ───────────── session ───────────── */
@@ -306,13 +412,20 @@
       ? '<button type="button" class="job-phone" data-phone="' + esc(phoneStr) + '" title="View customer history" aria-label="View customer history for ' + esc(phoneStr) + '">' + phoneInner + '</button>'
       : '<span class="job-phone is-empty">' + esc(phoneStr) + '</span>';
 
-    var ai = '';
-    if (job.aiSummary) {
-      var aiPrio = job.aiSuggestedPriority
-        ? '<span class="ai-prio"> · suggests ' + esc(PRIORITY_LABEL[job.aiSuggestedPriority] || job.aiSuggestedPriority) + '</span>'
-        : '';
-      ai = '<div class="job-ai"><span class="job-ai-label">AI Summary' + aiPrio + '</span><p>' + esc(job.aiSummary) + '</p></div>';
-    }
+    // AI summary — always rendered (editable), so dispatch can add one when the
+    // AI failed or fix a wrong one. Pencil sits in the corner of the box.
+    var aiPrio = job.aiSuggestedPriority
+      ? '<span class="ai-prio"> · suggests ' + esc(PRIORITY_LABEL[job.aiSuggestedPriority] || job.aiSuggestedPriority) + '</span>'
+      : '';
+    var aiEmpty = !(job.aiSummary && String(job.aiSummary).trim());
+    var aiPh = 'No AI summary yet — click to add one.';
+    var ai =
+      '<div class="job-ai editable editable-block" data-edit="aiSummary" data-type="textarea" data-label="AI summary"' +
+        ' data-value="' + esc(job.aiSummary || '') + '" data-placeholder="' + esc(aiPh) + '">' +
+        '<span class="job-ai-label">AI Summary' + aiPrio + '</span>' +
+        '<button type="button" class="ed-pencil ed-pencil-corner" aria-label="Edit AI summary">' + pencilSvg() + '</button>' +
+        '<p class="ed-val' + (aiEmpty ? ' is-empty' : '') + '" data-val>' + esc(aiEmpty ? aiPh : job.aiSummary) + '</p>' +
+      '</div>';
 
     // Full notes — show description plus any serviceDetails/notes the source
     // carried, deduped, each on its own line below the service type.
@@ -323,9 +436,21 @@
     });
     var desc = detailParts.map(function (p) { return '<p class="job-desc">' + esc(p) + '</p>'; }).join('');
     var sourceTag = job.source ? '<span class="job-source">' + esc(job.source) + '</span>' : '';
+
+    // Address (editable) — street address for routing a tech. Postal code stays
+    // as a read-only line beneath it.
+    var pinSvg = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0118 0z"/><circle cx="12" cy="10" r="2.6"/></svg>';
+    var clockSvg = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+    var addrHtml = '<div class="job-line job-loc">' + pinSvg +
+      editable('address', job.address || '', { label: 'Address', placeholder: 'Add address' }) + '</div>';
     var postalHtml = job.postalCode
-      ? '<div class="job-postal"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0118 0z"/><circle cx="12" cy="10" r="2.6"/></svg>' + esc(job.postalCode) + '</div>'
+      ? '<div class="job-postal">' + pinSvg + esc(job.postalCode) + '</div>'
       : '';
+    // ETA (editable).
+    var etaHtml = '<div class="job-line job-eta">' + clockSvg +
+      '<span class="job-line-label">ETA</span>' +
+      editable('eta', job.eta || '', { label: 'ETA', placeholder: 'Set ETA' }) + '</div>';
+
     var assigned = job.assignedTo
       ? 'Assigned to <b>' + esc(job.assignedTo) + '</b>'
       : '';
@@ -347,6 +472,12 @@
       techNote = '<p class="tech-empty-note">No technicians added yet — add them in the admin panel.</p>';
     }
 
+    // Job ID — editable by admins only (display-only for dispatch). The "#" is
+    // drawn via CSS so it isn't part of the editable value.
+    var jobIdHtml = job.jobId
+      ? editable('jobId', job.jobId, { label: 'Job ID', valClass: 'job-id', canEdit: isAdminUser() })
+      : '';
+
     return '' +
       '<div class="job-top">' +
         '<div class="job-badges">' +
@@ -354,15 +485,17 @@
           '<span class="badge status status-' + status + '" data-status-badge>' + STATUS_LABEL[status] + '</span>' +
         '</div>' +
         '<div class="job-top-right">' +
-          (job.jobId ? '<span class="job-id">#' + esc(job.jobId) + '</span>' : '') +
+          jobIdHtml +
           '<time class="job-age" data-created="' + esc(job.createdAt) + '">' + timeAgo(job.createdAt) + '</time>' +
         '</div>' +
       '</div>' +
       '<div class="job-customer">' +
-        '<span class="job-name">' + esc(job.customerName || 'Unknown') + '</span>' +
+        editable('customerName', job.customerName || '', { label: 'Customer name', valClass: 'job-name', placeholder: 'Unknown' }) +
         phoneHtml + sourceTag +
       '</div>' +
+      addrHtml +
       postalHtml +
+      etaHtml +
       '<div class="job-service">' +
         '<span class="job-service-type">' + esc(job.serviceType || '—') + '</span>' +
         desc +
@@ -447,7 +580,7 @@
   function refresh() {
     return loadStats().then(function () {
       var a = document.activeElement;
-      var editing = a && queue.contains(a) && (a.matches && a.matches('input, select'));
+      var editing = a && queue.contains(a) && (a.matches && a.matches('input, select, textarea'));
       if (editing) { markUpdated(); return; } // don't clobber a dispatcher mid-edit
       return loadJobs();
     });
@@ -469,6 +602,12 @@
   /* ───────────── per-card actions (event delegation) ───────────── */
   queue.addEventListener('click', function (e) {
     if (!e.target.closest) return;
+    var pencil = e.target.closest('.ed-pencil');
+    if (pencil) { startEdit(pencil); return; }
+    var edSave = e.target.closest('.ed-save');
+    if (edSave) { commitEdit(edSave.closest('.editable')); return; }
+    var edCancel = e.target.closest('.ed-cancel');
+    if (edCancel) { restoreView(edCancel.closest('.editable')); return; }
     var assignBtn = e.target.closest('.btn-assign');
     if (assignBtn) { doAssign(assignBtn); return; }
     var priceBtn = e.target.closest('.btn-price');
@@ -487,6 +626,17 @@
       var card = e.target.closest('.job-card');
       var btn = card && card.querySelector('.btn-price');
       if (btn) doSetPrice(btn);
+      return;
+    }
+    // Inline editors: Enter saves (single-line only), Escape cancels.
+    if (e.target.classList && e.target.classList.contains('ed-input')) {
+      if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        commitEdit(e.target.closest('.editable'));
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        restoreView(e.target.closest('.editable'));
+      }
     }
   });
 
@@ -748,7 +898,7 @@
 
   /* ───────────── tickers ───────────── */
   setInterval(function () { if (hasActiveSession() && !dashView.hidden) updateAges(); }, 15000);     // freshen "X min ago" labels
-  setInterval(function () { if (hasActiveSession() && !dashView.hidden) refresh(); }, REFRESH_MS);    // 60s auto-refresh
+  setInterval(function () { if (hasActiveSession() && !dashView.hidden) refresh(); }, REFRESH_MS);    // 25s auto-refresh
 
   /* ───────────── boot ───────────── */
   function init() {
