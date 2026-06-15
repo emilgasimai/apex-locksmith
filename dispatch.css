@@ -213,6 +213,33 @@ input:focus, select:focus {
   text-transform: uppercase; color: var(--muted);
 }
 
+/* Status tabs (Active / Completed / Cancelled) */
+.tab-bar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.tab {
+  font: inherit; font-weight: 700; font-size: 13px;
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 14px; min-height: 40px;
+  border: 1px solid var(--line); background: var(--panel-2); color: var(--muted);
+  border-radius: 6px; cursor: pointer;
+  transition: color .12s ease, border-color .12s ease, background-color .12s ease;
+}
+.tab:hover { color: var(--ink); border-color: #38595a; }
+.tab:active { transform: translateY(1px); }
+.tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tab.is-active { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+.tab .count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 20px; height: 18px; padding: 0 6px; border-radius: 999px;
+  font-family: var(--mono); font-size: 11px; font-weight: 800;
+  background: var(--panel-3); color: var(--muted);
+}
+.tab.is-active .count { background: rgba(4,24,28,.22); color: var(--accent-ink); }
+
+/* "My jobs" toggle — ghost button that lights up when on */
+.my-jobs-toggle { min-height: 42px; }
+.my-jobs-toggle.is-on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.my-jobs-toggle.is-on:hover { background: #54e9f9; border-color: #54e9f9; }
+
 /* Filter bar */
 .filter-bar {
   display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
@@ -247,8 +274,10 @@ input:focus, select:focus {
   border-left: 4px solid var(--low);
   border-radius: 9px;
   padding: 14px 15px 13px;
-  animation: cardIn .26s cubic-bezier(.2,.7,.3,1) both;
 }
+/* Entrance animation only on intentional renders (first load, tab/filter change)
+   — not on optimistic updates or the 25s auto-refresh, so the queue never flickers. */
+.queue.animate-in .job-card { animation: cardIn .26s cubic-bezier(.2,.7,.3,1) both; }
 @keyframes cardIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .job-card.prio-emergency { border-left-color: var(--emergency); box-shadow: 0 0 0 1px rgba(255,77,77,.18), 0 0 22px -8px rgba(255,77,77,.5); }
 .job-card.prio-high      { border-left-color: var(--priority-high); }
@@ -273,6 +302,16 @@ input:focus, select:focus {
 .badge.status-in-progress    { color: #ffc06b; border-color: rgba(255,159,28,.45); background: rgba(255,159,28,.12); }
 .badge.status-completed      { color: #7ee2a4; border-color: rgba(67,214,127,.45); background: rgba(67,214,127,.12); }
 .badge.status-cancelled      { color: #c0a0a0; border-color: rgba(255,93,93,.35); background: rgba(255,93,93,.08); }
+
+/* Assignment tags — prominent in the badge row so dispatch sees coverage at a
+   glance. Assigned = who's on it; Unassigned = an active job still needing a tech. */
+.badge.assigned-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  text-transform: none; letter-spacing: .01em; max-width: 100%;
+  color: #9fd0ff; border-color: rgba(96,160,255,.45); background: rgba(96,160,255,.12);
+}
+.badge.assigned-tag svg { flex: 0 0 auto; opacity: .9; }
+.badge.unassigned-tag { color: #ffc06b; border-color: rgba(255,159,28,.5); background: rgba(255,159,28,.12); }
 
 .job-age { font-size: 11.5px; color: var(--muted-2); white-space: nowrap; font-family: var(--mono); }
 
@@ -331,6 +370,31 @@ input:focus, select:focus {
   font-size: 11.5px; color: var(--muted); margin-top: 2px;
 }
 .assigned-pill b { color: var(--ink); font-weight: 600; }
+
+/* Per-card history (status timeline) */
+.job-history-toggle {
+  margin-top: 11px; font: inherit; font-size: 12px; font-weight: 700; letter-spacing: .03em;
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 6px 11px; min-height: 34px;
+  background: transparent; border: 1px solid var(--line-soft); color: var(--muted);
+  border-radius: 5px; cursor: pointer;
+  transition: color .12s ease, border-color .12s ease, background-color .12s ease;
+}
+.job-history-toggle:hover { color: var(--ink); border-color: var(--line); background: var(--panel-2); }
+.job-history-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.hist-caret { font-size: 10px; color: var(--muted-2); }
+.job-history { margin-top: 9px; padding-top: 10px; border-top: 1px dashed var(--line-soft); display: flex; flex-direction: column; gap: 8px; }
+.hist-row { display: flex; align-items: flex-start; gap: 9px; font-size: 12.5px; color: var(--muted); line-height: 1.4; }
+.hist-row b { color: var(--ink); font-weight: 600; }
+.hist-dot { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; margin-top: 4px; background: var(--muted-2); }
+.hist-dot.status-pending-review { background: var(--warn); }
+.hist-dot.status-approved       { background: var(--accent); }
+.hist-dot.status-assigned       { background: #60a0ff; }
+.hist-dot.status-in-progress    { background: var(--high); }
+.hist-dot.status-completed      { background: var(--ok); }
+.hist-dot.status-cancelled      { background: var(--danger); }
+.hist-note { display: block; color: var(--muted-2); font-style: italic; margin-top: 1px; }
+.job-history-empty { font-size: 12.5px; color: var(--muted-2); }
 
 /* ============================ INLINE EDIT (Fix 2) ============================ */
 /* Address / ETA info lines. */
@@ -393,6 +457,9 @@ textarea.ed-input { resize: vertical; min-height: 72px; line-height: 1.5; }
   .dash-main { padding: 12px; }
   .stats-bar { grid-template-columns: repeat(2, 1fr); gap: 8px; }
   .stat-num { font-size: 22px; }
+  .tab-bar { gap: 6px; }
+  .tab { flex: 1 1 0; justify-content: center; padding: 8px 8px; }
+  .my-jobs-toggle { flex: 1 1 100%; }
   .filter-bar { gap: 8px; }
   .filter-group { flex: 1 1 calc(50% - 4px); }
   .filter-bar select { min-width: 0; max-width: none; width: 100%; }
@@ -465,6 +532,12 @@ textarea.ed-input { resize: vertical; min-height: 72px; line-height: 1.5; }
 [data-theme="light"] .badge.status-in-progress    { color: #b35a00; border-color: rgba(179,90,0,.4); background: rgba(255,159,28,.14); }
 [data-theme="light"] .badge.status-completed      { color: #1f8a4c; border-color: rgba(31,138,76,.4); background: rgba(67,214,127,.16); }
 [data-theme="light"] .badge.status-cancelled      { color: #9a4040; border-color: rgba(154,64,64,.35); background: rgba(255,93,93,.08); }
+
+/* Light theme — tabs, tags, history */
+[data-theme="light"] .tab:not(.is-active) .count { background: var(--panel-3); color: var(--muted); }
+[data-theme="light"] .badge.assigned-tag   { color: #2b5fb0; border-color: rgba(43,95,176,.4); background: rgba(43,95,176,.1); }
+[data-theme="light"] .badge.unassigned-tag { color: #b35a00; border-color: rgba(179,90,0,.45); background: rgba(255,159,28,.14); }
+[data-theme="light"] .hist-dot.status-assigned { background: #2b5fb0; }
 
 /* ============================ EMBEDDED (?embed=1) ============================
    Rendered inside the admin panel's main area via an iframe. Hide the dispatch

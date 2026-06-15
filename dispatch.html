@@ -8,7 +8,7 @@
 <title>Aston Dispatch</title>
 <!-- Apply the saved theme before first paint to avoid a flash of the wrong theme. -->
 <script>try{var t=localStorage.getItem('aston_dispatch_theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}</script>
-<link rel="stylesheet" href="dispatch.css?v=7"/>
+<link rel="stylesheet" href="dispatch.css?v=8"/>
 </head>
 <body>
 
@@ -82,18 +82,23 @@
       <div class="stat is-done">  <div class="stat-num" id="statCompleted">—</div><div class="stat-label">Completed Today</div></div>
     </section>
 
+    <!-- Status tabs -->
+    <section class="tab-bar" id="tabBar" role="tablist" aria-label="Job status views">
+      <button type="button" class="tab is-active" data-tab="active" role="tab" aria-selected="true">Active <span class="count" id="countActive">0</span></button>
+      <button type="button" class="tab" data-tab="completed" role="tab" aria-selected="false">Completed <span class="count" id="countCompleted">0</span></button>
+      <button type="button" class="tab" data-tab="cancelled" role="tab" aria-selected="false">Cancelled <span class="count" id="countCancelled">0</span></button>
+    </section>
+
     <!-- Filters -->
     <section class="filter-bar" aria-label="Filters">
-      <div class="filter-group">
+      <div class="filter-group" id="statusFilterGroup">
         <span class="field-label">Status</span>
         <select id="filterStatus" aria-label="Filter by status">
-          <option value="">All statuses</option>
+          <option value="">All active</option>
           <option value="pending-review">Pending Review</option>
           <option value="approved">Approved</option>
           <option value="assigned">Assigned</option>
           <option value="in-progress">In Progress</option>
-          <option value="completed">Completed</option>
-          <option value="cancelled">Cancelled</option>
         </select>
       </div>
       <div class="filter-group">
@@ -106,6 +111,7 @@
           <option value="low">Low</option>
         </select>
       </div>
+      <button type="button" id="myJobsToggle" class="btn btn-ghost my-jobs-toggle" hidden aria-pressed="false">My jobs</button>
       <div class="filter-spacer"></div>
       <div class="refresh-meta">
         <span class="live"><span class="pulse" aria-hidden="true"></span>Auto-refresh 25s</span>
@@ -136,6 +142,6 @@
 </div>
 
 <script src="config.js?v=1" defer></script>
-<script src="js/dispatch.js?v=8" defer></script>
+<script src="js/dispatch.js?v=9" defer></script>
 </body>
 </html>

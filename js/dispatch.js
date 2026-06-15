@@ -33,6 +33,36 @@
   var STATUS_ORDER = ['pending-review', 'approved', 'assigned', 'in-progress', 'completed', 'cancelled'];
   var TERMINAL = { completed: 1, cancelled: 1 }; // sorted to the bottom of the live queue
 
+  // Top-level views. Each tab owns a set of statuses; the queue is grouped by
+  // these client-side (the working set is fetched once, unfiltered, into the
+  // store below — so a status change can move a card between tabs instantly).
+  var TAB_STATUSES = {
+    active:    ['pending-review', 'approved', 'assigned', 'in-progress'],
+    completed: ['completed'],
+    cancelled: ['cancelled']
+  };
+  // statusHistory entries are status transitions; map each to a past-tense verb
+  // for the per-card history panel ("Assigned by dispatch1 · 2h ago").
+  var STATUS_VERB = {
+    'pending-review': 'Opened', 'approved': 'Approved', 'assigned': 'Assigned',
+    'in-progress': 'Started', 'completed': 'Completed', 'cancelled': 'Cancelled'
+  };
+
+  /* ───────────── client-side store (single source of truth) ─────────────
+     state.jobs is the full working set from the last fetch. The visible queue
+     is derived from it (tab → status/priority filters → sort), so mutations can
+     update the store and re-render without a round-trip — cards move tabs and
+     count badges update live. searchResults overrides the store while a search
+     is active. */
+  var state = {
+    jobs: [],            // working set (all statuses), newest-first from server
+    searchResults: [],   // results while searchActive
+    tab: 'active',       // active | completed | cancelled
+    myJobsOnly: false,   // dispatch-only "My jobs" toggle
+    expanded: {},        // { [jobId]: true } open history panels (survive re-render)
+    pending: 0           // in-flight optimistic mutations (auto-refresh pauses while > 0)
+  };
+
   /* ───────────── DOM refs ───────────── */
   var $ = function (id) { return document.getElementById(id); };
   var loginView = $('loginView'), dashView = $('dashView');
@@ -40,7 +70,9 @@
   var loginBtn = $('loginBtn'), loginError = $('loginError'), loginNotice = $('loginNotice');
   var topUser = $('topUser'), logoutBtn = $('logoutBtn'), themeToggle = $('themeToggle');
   var statToday = $('statToday'), statPending = $('statPending'), statProgress = $('statProgress'), statCompleted = $('statCompleted');
-  var filterStatus = $('filterStatus'), filterPriority = $('filterPriority');
+  var filterStatus = $('filterStatus'), filterPriority = $('filterPriority'), statusFilterGroup = $('statusFilterGroup');
+  var tabBar = $('tabBar'), myJobsToggle = $('myJobsToggle');
+  var countActive = $('countActive'), countCompleted = $('countCompleted'), countCancelled = $('countCancelled');
   var queue = $('queue'), lastUpdatedEl = $('lastUpdated'), refreshBtn = $('refreshBtn'), toastEl = $('toast');
   var searchForm = $('searchForm'), searchInput = $('searchInput'), searchClear = $('searchClear'), searchMeta = $('searchMeta');
   var muteToggle = $('muteToggle');
@@ -191,6 +223,7 @@
       if (res.ok) {
         var saved = (res.data && res.data[field] != null) ? res.data[field] : val;
         applyValue(box, saved);
+        var jb = findJob(id); if (jb) jb[field] = saved; // keep the store in sync for re-renders
         toast(label + ' updated', 'ok');
       } else if (res.status !== 401) {
         if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save'; }
@@ -269,10 +302,12 @@
     dashView.hidden = false;
     var s = getSession();
     topUser.textContent = (s && s.username) ? s.username : '—';
+    // "My jobs" only makes sense for a dispatch user (admins see everything).
+    if (myJobsToggle) myJobsToggle.hidden = isAdminUser();
     lastActivity = Date.now();
     // Load technicians first so the very first render of the queue already has
-    // the assign dropdown populated.
-    loadTechnicians().then(refresh);
+    // the assign dropdown populated. Animate the first paint.
+    loadTechnicians().then(function () { loadStats(); return loadJobs(true); });
   }
 
   /* ───────────── technicians (assign dropdown) ───────────── */
@@ -402,8 +437,10 @@
   }
 
   function cardHtml(job) {
+    var id = String(job._id || job.id || '');
     var prio = PRIORITY_RANK[job.priority] != null ? job.priority : 'normal';
     var status = STATUS_LABEL[job.status] ? job.status : 'pending-review';
+    var isActive = TAB_STATUSES.active.indexOf(status) !== -1;
     // Phone is a button that opens the customer-history modal (the modal itself
     // offers a tap-to-call link for the actual dialing).
     var phoneStr = job.phone || '';
@@ -451,9 +488,14 @@
       '<span class="job-line-label">ETA</span>' +
       editable('eta', job.eta || '', { label: 'ETA', placeholder: 'Set ETA' }) + '</div>';
 
-    var assigned = job.assignedTo
-      ? 'Assigned to <b>' + esc(job.assignedTo) + '</b>'
-      : '';
+    // Assignment visibility — a prominent chip at the top of the card so dispatch
+    // sees who's on it at a glance. Unassigned *active* jobs get a distinct tag so
+    // it's obvious they still need a technician. (data-assign-tag so it can be
+    // refreshed in place after an assign.)
+    var personSvg = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+    var assignTag = job.assignedTo
+      ? '<span class="badge assigned-tag" data-assign-tag>' + personSvg + esc(job.assignedTo) + '</span>'
+      : (isActive ? '<span class="badge unassigned-tag" data-assign-tag>Unassigned</span>' : '<span data-assign-tag hidden></span>');
 
     // Assign control — a technician dropdown when any exist, otherwise the
     // legacy free-text input plus a hint pointing to the admin panel (Fix 3).
@@ -478,11 +520,22 @@
       ? editable('jobId', job.jobId, { label: 'Job ID', valClass: 'job-id', canEdit: isAdminUser() })
       : '';
 
+    // History panel (per-card toggle). statusHistory comes back on every job from
+    // the list endpoint, newest entry last — we reverse for display.
+    var expanded = !!state.expanded[id];
+    var hist = job.statusHistory || [];
+    var historyBlock =
+      '<button type="button" class="job-history-toggle" data-history-toggle aria-expanded="' + (expanded ? 'true' : 'false') + '">' +
+        '<span class="hist-caret" aria-hidden="true">' + (expanded ? '▾' : '▸') + '</span> History (' + hist.length + ')' +
+      '</button>' +
+      '<div class="job-history" data-history' + (expanded ? '' : ' hidden') + '>' + historyHtml(job) + '</div>';
+
     return '' +
       '<div class="job-top">' +
         '<div class="job-badges">' +
           '<span class="badge prio prio-' + prio + '">' + PRIORITY_LABEL[prio] + '</span>' +
           '<span class="badge status status-' + status + '" data-status-badge>' + STATUS_LABEL[status] + '</span>' +
+          assignTag +
         '</div>' +
         '<div class="job-top-right">' +
           jobIdHtml +
@@ -501,7 +554,6 @@
         desc +
       '</div>' +
       ai +
-      '<div class="assigned-pill" data-assigned' + (assigned ? '' : ' hidden') + '>' + assigned + '</div>' +
       '<div class="job-controls">' +
         '<div class="assign-row">' +
           assignControl +
@@ -517,18 +569,140 @@
           '<input class="price-input" type="number" min="0" step="0.01" inputmode="decimal" value="' + (job.price != null ? esc(job.price) : '') + '" placeholder="0.00" aria-label="Job price"/>' +
           '<button type="button" class="btn btn-ghost btn-price">Save</button>' +
         '</div>' +
-      '</div>';
+      '</div>' +
+      historyBlock;
   }
 
-  function renderJobs(items, emptyMsg) {
-    if (!items.length) {
-      var none = emptyMsg || ((filters.status || filters.priority)
-        ? 'No jobs match these filters.'
-        : 'No dispatch jobs yet.');
-      queue.innerHTML = '<div class="queue-empty">' + esc(none) + '</div>';
+  // statusHistory → readable rows, newest first. Each entry is a status
+  // transition; `note` (e.g. a merge note) is shown when present.
+  function historyHtml(job) {
+    var h = (job.statusHistory || []).slice().reverse();
+    if (!h.length) return '<div class="job-history-empty">No history recorded yet.</div>';
+    return h.map(function (e) {
+      var st = STATUS_LABEL[e.status] ? e.status : 'pending-review';
+      var verb = STATUS_VERB[e.status] || STATUS_LABEL[st] || e.status;
+      // Entries with a note (assignment, repeat-contact merge) lead with the note;
+      // plain status transitions lead with the verb.
+      var headline = e.note ? esc(e.note) : esc(verb);
+      var who = e.changedBy ? ' by <b>' + esc(e.changedBy) + '</b>' : '';
+      var when = e.timestamp ? ' · ' + timeAgo(e.timestamp) : '';
+      return '<div class="hist-row">' +
+        '<span class="hist-dot status-' + st + '" aria-hidden="true"></span>' +
+        '<span class="hist-text">' + headline + who + when + '</span>' +
+      '</div>';
+    }).join('');
+  }
+
+  // Completed/cancelled tabs sort by most-recent activity; the active tab keeps
+  // priority order (emergency → low) then newest-first within a tier.
+  function jobTs(j) { return new Date(j.updatedAt || j.createdAt || 0).getTime(); }
+  function sortForTab(items, tab) {
+    if (tab !== 'active') {
+      return items.slice().sort(function (a, b) { return jobTs(b) - jobTs(a); });
+    }
+    return items.slice().sort(function (a, b) {
+      var ar = PRIORITY_RANK[a.priority] != null ? PRIORITY_RANK[a.priority] : 9;
+      var br = PRIORITY_RANK[b.priority] != null ? PRIORITY_RANK[b.priority] : 9;
+      if (ar !== br) return ar - br;
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+  }
+
+  function findJob(id) {
+    id = String(id);
+    for (var i = 0; i < state.jobs.length; i++) {
+      if (String(state.jobs[i]._id || state.jobs[i].id) === id) return state.jobs[i];
+    }
+    return null;
+  }
+  // Replace a store job with the authoritative server doc after a successful
+  // mutation, then re-render so every derived view stays consistent.
+  function reconcileJob(doc) {
+    if (!doc) return;
+    var id = String(doc._id || doc.id || '');
+    for (var i = 0; i < state.jobs.length; i++) {
+      if (String(state.jobs[i]._id || state.jobs[i].id) === id) { state.jobs[i] = doc; break; }
+    }
+    render(false);
+  }
+
+  function currentUserName() { var s = getSession(); return (s && s.username) ? s.username : ''; }
+  // "My jobs": strictly jobs whose assignedTo equals the logged-in user's name.
+  function jobIsMine(job) {
+    var me = currentUserName();
+    return !!(me && job.assignedTo && job.assignedTo === me);
+  }
+
+  function jobInTab(job, tab) { return TAB_STATUSES[tab].indexOf(job.status) !== -1; }
+
+  // The store filtered down to what the current tab + dropdowns + toggle should show.
+  function visibleJobs() {
+    var list = state.jobs.filter(function (j) { return jobInTab(j, state.tab); });
+    if (state.tab === 'active' && filters.status) {
+      list = list.filter(function (j) { return j.status === filters.status; });
+    }
+    if (filters.priority) {
+      list = list.filter(function (j) { return (j.priority || 'normal') === filters.priority; });
+    }
+    if (state.myJobsOnly && !isAdminUser()) list = list.filter(jobIsMine);
+    return list;
+  }
+
+  function tabCounts() {
+    var c = { active: 0, completed: 0, cancelled: 0 };
+    state.jobs.forEach(function (j) {
+      if (jobInTab(j, 'active')) c.active++;
+      else if (j.status === 'completed') c.completed++;
+      else if (j.status === 'cancelled') c.cancelled++;
+    });
+    return c;
+  }
+
+  function updateTabCounts() {
+    var c = tabCounts();
+    if (countActive) countActive.textContent = c.active;
+    if (countCompleted) countCompleted.textContent = c.completed;
+    if (countCancelled) countCancelled.textContent = c.cancelled;
+  }
+  function syncTabButtons() {
+    if (!tabBar) return;
+    var tabs = tabBar.querySelectorAll('[data-tab]');
+    for (var i = 0; i < tabs.length; i++) {
+      var on = tabs[i].getAttribute('data-tab') === state.tab;
+      tabs[i].classList.toggle('is-active', on);
+      tabs[i].setAttribute('aria-selected', on ? 'true' : 'false');
+    }
+  }
+  // The status dropdown only applies to the Active tab (Completed/Cancelled have a
+  // single status, so the filter would be pointless/confusing there).
+  function syncStatusFilter() {
+    var onActive = state.tab === 'active';
+    if (statusFilterGroup) statusFilterGroup.hidden = !onActive;
+    if (!onActive && filters.status) { filters.status = ''; if (filterStatus) filterStatus.value = ''; }
+  }
+
+  function emptyMessage() {
+    if (searchActive) return 'No jobs found.';
+    if (filters.status || filters.priority || state.myJobsOnly) return 'No jobs match these filters.';
+    if (state.tab === 'completed') return 'No completed jobs in the current window.';
+    if (state.tab === 'cancelled') return 'No cancelled jobs in the current window.';
+    return 'No active jobs right now.';
+  }
+
+  // Single render path. `animate` plays the entrance animation (first load, tab
+  // switch, filter change) — suppressed on optimistic/refresh re-renders so the
+  // queue doesn't flash every 25s or on every click.
+  function render(animate) {
+    if (tabBar) tabBar.hidden = searchActive;
+    if (!searchActive) { updateTabCounts(); syncTabButtons(); syncStatusFilter(); }
+
+    var list = searchActive ? state.searchResults : visibleJobs();
+    if (!list.length) {
+      queue.classList.remove('animate-in');
+      queue.innerHTML = '<div class="queue-empty">' + esc(emptyMessage()) + '</div>';
       return;
     }
-    var sorted = sortJobs(items);
+    var sorted = searchActive ? sortJobs(list) : sortForTab(list, state.tab);
     var frag = document.createDocumentFragment();
     sorted.forEach(function (job) {
       var card = document.createElement('article');
@@ -537,28 +711,32 @@
       card.innerHTML = cardHtml(job);
       frag.appendChild(card);
     });
+    queue.classList.toggle('animate-in', !!animate);
     queue.innerHTML = '';
     queue.appendChild(frag);
+    if (animate) setTimeout(function () { queue.classList.remove('animate-in'); }, 340);
+    updateAges();
   }
 
-  function loadJobs() {
+  function loadJobs(animate) {
     if (searchActive) return Promise.resolve(); // don't clobber search results
+    // Filtering is client-side now: fetch the full working set once, derive every
+    // tab/filter view from the store so a mutation can move cards live.
     var params = new URLSearchParams();
     params.set('limit', String(JOB_LIMIT));
-    if (filters.status) params.set('status', filters.status);
-    if (filters.priority) params.set('priority', filters.priority);
     return authedFetch('/api/dispatch?' + params.toString()).then(function (res) {
       if (!res.ok) {
         if (res.status !== 401) {
           queue.innerHTML = '<div class="queue-empty">Couldn’t load the job queue' +
             (res.status === 0 ? ' — backend unreachable.' : '.') + ' <button type="button" class="btn btn-ghost" id="retryBtn" style="margin-top:10px;">Retry</button></div>';
-          var rb = $('retryBtn'); if (rb) rb.addEventListener('click', loadJobs);
+          var rb = $('retryBtn'); if (rb) rb.addEventListener('click', function () { loadJobs(true); });
         }
         return;
       }
       var items = (res.data && res.data.items) || [];
       detectNewJobs(items);
-      renderJobs(items);
+      state.jobs = items;
+      render(!!animate);
       markUpdated();
     });
   }
@@ -579,10 +757,11 @@
   /* ───────────── refresh orchestration ───────────── */
   function refresh() {
     return loadStats().then(function () {
+      if (state.pending > 0) { markUpdated(); return; } // don't clobber an in-flight optimistic change
       var a = document.activeElement;
       var editing = a && queue.contains(a) && (a.matches && a.matches('input, select, textarea'));
       if (editing) { markUpdated(); return; } // don't clobber a dispatcher mid-edit
-      return loadJobs();
+      return loadJobs(false);
     });
   }
   function markUpdated() { lastFetchTs = Date.now(); updateAges(); }
@@ -596,8 +775,43 @@
   }
 
   refreshBtn.addEventListener('click', function () { refresh(); });
-  filterStatus.addEventListener('change', function () { filters.status = filterStatus.value; loadJobs(); });
-  filterPriority.addEventListener('change', function () { filters.priority = filterPriority.value; loadJobs(); });
+  // Filters are client-side: changing one re-derives the view from the store (no
+  // refetch) and exits search mode so the dropdown can't silently do nothing.
+  filterStatus.addEventListener('change', function () {
+    if (searchActive) clearSearch();
+    filters.status = filterStatus.value;
+    render(true);
+  });
+  filterPriority.addEventListener('change', function () {
+    if (searchActive) clearSearch();
+    filters.priority = filterPriority.value;
+    render(true);
+  });
+
+  // Tabs (Active / Completed / Cancelled).
+  if (tabBar) {
+    tabBar.addEventListener('click', function (e) {
+      var btn = e.target.closest && e.target.closest('[data-tab]');
+      if (!btn) return;
+      var tab = btn.getAttribute('data-tab');
+      if (!TAB_STATUSES[tab]) return;
+      if (searchActive) clearSearch();
+      if (tab === state.tab) return;
+      state.tab = tab;
+      filters.status = ''; if (filterStatus) filterStatus.value = ''; // status filter is per-active-tab
+      render(true);
+    });
+  }
+
+  // "My jobs" toggle (dispatch only).
+  if (myJobsToggle) {
+    myJobsToggle.addEventListener('click', function () {
+      state.myJobsOnly = !state.myJobsOnly;
+      myJobsToggle.classList.toggle('is-on', state.myJobsOnly);
+      myJobsToggle.setAttribute('aria-pressed', state.myJobsOnly ? 'true' : 'false');
+      render(true);
+    });
+  }
 
   /* ───────────── per-card actions (event delegation) ───────────── */
   queue.addEventListener('click', function (e) {
@@ -608,6 +822,8 @@
     if (edSave) { commitEdit(edSave.closest('.editable')); return; }
     var edCancel = e.target.closest('.ed-cancel');
     if (edCancel) { restoreView(edCancel.closest('.editable')); return; }
+    var histBtn = e.target.closest('[data-history-toggle]');
+    if (histBtn) { toggleHistory(histBtn); return; }
     var assignBtn = e.target.closest('.btn-assign');
     if (assignBtn) { doAssign(assignBtn); return; }
     var priceBtn = e.target.closest('.btn-price');
@@ -640,6 +856,21 @@
     }
   });
 
+  // Expand/collapse a card's history panel. Tracked in state.expanded so the
+  // panel stays open through re-renders (auto-refresh, optimistic updates).
+  function toggleHistory(btn) {
+    var card = btn.closest('.job-card'); if (!card) return;
+    var id = card.getAttribute('data-id');
+    var panel = card.querySelector('[data-history]');
+    var open = btn.getAttribute('aria-expanded') === 'true';
+    var next = !open;
+    btn.setAttribute('aria-expanded', next ? 'true' : 'false');
+    if (panel) panel.hidden = !next;
+    var caret = btn.querySelector('.hist-caret');
+    if (caret) caret.textContent = next ? '▾' : '▸';
+    if (next) state.expanded[id] = true; else delete state.expanded[id];
+  }
+
   function doSetPrice(btn) {
     var card = btn.closest('.job-card'); if (!card) return;
     var id = card.getAttribute('data-id');
@@ -654,6 +885,7 @@
         btn.disabled = false; btn.textContent = label;
         if (res.ok) {
           if (res.data && res.data.price != null) input.value = res.data.price;
+          var jb = findJob(id); if (jb) jb.price = (res.data && res.data.price != null) ? res.data.price : price;
           toast('Price saved · ' + fmtMoney(res.data ? res.data.price : price), 'ok');
           loadStats(); // revenue counters may shift
         } else if (res.status !== 401) {
@@ -681,18 +913,30 @@
       displayName = name;
     } else { return; }
 
+    var job = findJob(id);
+    var prevAssigned = job ? job.assignedTo : '';
+    var prevTechId = job ? job.technicianId : null;
+    // Optimistic: show the name immediately (prominent tag updates on re-render).
+    if (job) {
+      job.assignedTo = displayName;
+      job.technicianId = body.technicianId || null;
+      render(false);
+    }
     btn.disabled = true; var label = btn.textContent; btn.textContent = '…';
+    state.pending++;
     authedFetch('/api/dispatch/' + id + '/assign', { method: 'PATCH', json: body })
       .then(function (res) {
-        btn.disabled = false; btn.textContent = label;
+        state.pending--;
         if (res.ok) {
-          // Prefer the name the backend snapshotted onto the job.
           var nm = (res.data && res.data.assignedTo) || displayName;
-          var pill = card.querySelector('[data-assigned]');
-          if (pill) { pill.innerHTML = 'Assigned to <b>' + esc(nm) + '</b>'; pill.hidden = false; }
+          reconcileJob(res.data); // authoritative; also re-enables the (rebuilt) button
           toast('Assigned to ' + nm, 'ok');
         } else if (res.status !== 401) {
+          if (job) { job.assignedTo = prevAssigned; job.technicianId = prevTechId; render(false); }
+          else { btn.disabled = false; btn.textContent = label; }
           toast((res.data && res.data.message) || 'Could not assign — try again.', 'err');
+        } else {
+          btn.disabled = false; btn.textContent = label;
         }
       });
   }
@@ -703,18 +947,44 @@
     var next = sel.value;
     var current = sel.getAttribute('data-current');
     if (next === current) return;
-    sel.disabled = true;
-    authedFetch('/api/dispatch/' + id + '/status', { method: 'PATCH', json: { status: next } })
-      .then(function (res) {
+
+    var job = findJob(id);
+    if (!job) {
+      // Not in the store (e.g. a search result) — patch + update this card only.
+      sel.disabled = true;
+      authedFetch('/api/dispatch/' + id + '/status', { method: 'PATCH', json: { status: next } }).then(function (res) {
         sel.disabled = false;
         if (res.ok) {
           sel.setAttribute('data-current', next);
-          var badge = card.querySelector('[data-status-badge]');
-          if (badge) { badge.className = 'badge status status-' + next; badge.setAttribute('data-status-badge', ''); badge.textContent = STATUS_LABEL[next]; }
-          toast('Status → ' + STATUS_LABEL[next], 'ok');
-          loadStats(); // keep the counters honest
+          var b = card.querySelector('[data-status-badge]');
+          if (b) { b.className = 'badge status status-' + next; b.setAttribute('data-status-badge', ''); b.textContent = STATUS_LABEL[next]; }
+          toast('Status → ' + STATUS_LABEL[next], 'ok'); loadStats();
         } else if (res.status !== 401) {
-          sel.value = current; // revert the dropdown
+          sel.value = current; toast((res.data && res.data.message) || 'Could not update status.', 'err');
+        }
+      });
+      return;
+    }
+
+    var prevStatus = job.status;
+    var prevHistory = (job.statusHistory || []).slice();
+    // Optimistic: update the store + append a provisional history entry, then
+    // re-render so the card moves tabs / leaves a filtered view and the count
+    // badges update immediately — no full reload.
+    job.status = next;
+    job.statusHistory = prevHistory.concat([{ status: next, changedBy: currentUserName() || 'you', timestamp: new Date().toISOString() }]);
+    state.pending++;
+    render(false);
+    authedFetch('/api/dispatch/' + id + '/status', { method: 'PATCH', json: { status: next } })
+      .then(function (res) {
+        state.pending--;
+        if (res.ok) {
+          reconcileJob(res.data); // swap in the authoritative doc + real history
+          toast('Status → ' + STATUS_LABEL[next], 'ok');
+          loadStats();
+        } else if (res.status !== 401) {
+          job.status = prevStatus; job.statusHistory = prevHistory; // revert
+          render(false);
           toast((res.data && res.data.message) || 'Could not update status.', 'err');
         }
       });
@@ -751,7 +1021,8 @@
         return;
       }
       var items = (res.data && res.data.items) || [];
-      renderJobs(items, 'No jobs found for “' + q + '”.');
+      state.searchResults = items;       // search spans all tabs; render() shows these
+      render(true);                      // tab bar hides while searchActive
       searchMeta.hidden = false;
       searchMeta.innerHTML = 'Showing ' + items.length + ' result' + (items.length === 1 ? '' : 's') +
         ' for <b>' + esc(q) + '</b> · <button type="button" class="link-btn" id="searchMetaClear">show full queue</button>';
@@ -760,12 +1031,17 @@
       markUpdated();
     });
   }
-  function exitSearch() {
+  // Reset the search UI/state without refetching (used when a filter/tab takes over).
+  function clearSearch() {
     searchActive = false;
+    state.searchResults = [];
     if (searchInput) searchInput.value = '';
     if (searchClear) searchClear.hidden = true;
     if (searchMeta) { searchMeta.hidden = true; searchMeta.innerHTML = ''; }
-    loadJobs();
+  }
+  function exitSearch() {
+    clearSearch();
+    loadJobs(true); // pull a fresh working set on an explicit exit
   }
 
   /* ───────────── customer history modal ───────────── */
