@@ -101,7 +101,8 @@ body {
   font-weight: 700;
 }
 input[type=text], input[type=password], input[type=url], input[type=email],
-input[type=tel], input[type=number], input[type=search], input[type=file], textarea {
+input[type=tel], input[type=number], input[type=search], input[type=date],
+input[type=file], textarea {
   font: inherit;
   width: 100%;
   background: var(--bg-2);
@@ -109,6 +110,7 @@ input[type=tel], input[type=number], input[type=search], input[type=file], texta
   color: var(--ink);
   padding: 9px 11px;
   border-radius: 3px;
+  color-scheme: dark;
 }
 input[type=file] { padding: 7px 8px; }
 textarea { resize: vertical; min-height: 84px; line-height: 1.5; }
@@ -934,5 +936,60 @@ input:focus, textarea:focus {
   .people-switch { order: 3; }
   .people-actions { order: 2; }
   .people-form-grid { grid-template-columns: 1fr; }
+}
+
+/* ============================================================================
+   Dashboard / Revenue stat cards + Recent activity + Export
+   ============================================================================ */
+.dash-cards { display: flex; flex-direction: column; gap: 18px; }
+.stat-group-title {
+  font-size: 11px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--muted-2); margin-bottom: 8px;
+}
+.stat-group-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.stat-card {
+  background: var(--panel); border: 1px solid var(--line);
+  border-left: 3px solid var(--line); border-radius: 6px;
+  padding: 14px 16px; display: flex; flex-direction: column; gap: 4px;
+}
+.stat-card-num { font-size: 26px; font-weight: 800; color: var(--ink); line-height: 1.1; letter-spacing: -.01em; }
+.stat-card-label { font-size: 11.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.stat-card.is-revenue { border-left-color: var(--ok); }
+.stat-card.is-revenue .stat-card-num { color: var(--ok); }
+.stat-card.is-warn { border-left-color: #f4c20a; }
+.stat-card.is-warn .stat-card-num { color: #f4c20a; }
+.stat-card.is-prog { border-left-color: var(--accent); }
+.stat-card.is-prog .stat-card-num { color: var(--accent); }
+
+.dash-recent { margin-top: 24px; }
+.dash-recent-title { font-size: 14px; margin: 0 0 12px; color: var(--ink); }
+.recent-list { display: flex; flex-direction: column; gap: 8px; }
+.recent-row {
+  display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 12px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 10px 14px;
+}
+.recent-id { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--accent); }
+.recent-customer { font-weight: 600; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.recent-status { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.recent-status.status-completed { color: var(--ok); }
+.recent-status.status-in-progress { color: var(--accent); }
+.recent-status.status-pending-review { color: #f4c20a; }
+.recent-status.status-cancelled { color: var(--danger); }
+.recent-time { font-family: var(--mono); font-size: 11.5px; color: var(--muted-2); white-space: nowrap; }
+
+/* Revenue period toggle sits in a form-wrap, not the service pane — reset padding */
+#revPeriods { padding: 0; margin-bottom: 16px; }
+
+/* Export */
+.export-range { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; max-width: 420px; margin-bottom: 16px; }
+.export-buttons { display: flex; flex-wrap: wrap; gap: 10px; }
+.export-buttons .btn { flex: 0 0 auto; }
+
+@media (max-width: 560px) {
+  .recent-row { grid-template-columns: auto 1fr; row-gap: 4px; }
+  .recent-status { grid-column: 1; }
+  .recent-time { grid-column: 2; text-align: right; }
+  .export-range { grid-template-columns: 1fr; }
+  .export-buttons .btn { flex: 1 1 100%; }
 }
 

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <meta name="robots" content="noindex,nofollow"/>
 <title>Aston Admin</title>
-<link rel="stylesheet" href="admin.css?v=12"/>
+<link rel="stylesheet" href="admin.css?v=14"/>
 </head>
 <body>
 
@@ -61,7 +61,8 @@
     <!-- Sidebar nav -->
     <nav class="sidebar" aria-label="Admin sections">
       <ul class="nav-list" id="navList">
-        <li><button type="button" class="nav-item is-active" data-view="content">Content Editor</button></li>
+        <li><button type="button" class="nav-item is-active" data-view="dashboard">Dashboard</button></li>
+        <li><button type="button" class="nav-item" data-view="content">Content Editor</button></li>
         <li><button type="button" class="nav-item" data-view="business">Business Info</button></li>
         <li><button type="button" class="nav-item" data-view="reviews">Reviews</button></li>
         <li><button type="button" class="nav-item" data-view="versions">Saved Changes</button></li>
@@ -71,6 +72,8 @@
         <li><button type="button" class="nav-item nav-item-dispatch" data-view="dispatch-board">Dispatch Control</button></li>
         <li><button type="button" class="nav-item" data-view="dispatch-users">Dispatch Personnel</button></li>
         <li><button type="button" class="nav-item" data-view="technicians">Technician Personnel</button></li>
+        <li><button type="button" class="nav-item" data-view="revenue">Revenue</button></li>
+        <li><button type="button" class="nav-item" data-view="export">Export</button></li>
       </ul>
       <div class="sidebar-foot">v1 · client-side preview</div>
     </nav>
@@ -80,6 +83,27 @@
 
     <!-- Main area -->
     <main class="main" id="mainArea">
+
+      <!-- ── Dashboard (default landing) ── -->
+      <section class="view view-form" data-view="dashboard" hidden>
+        <div class="form-wrap form-wrap-wide">
+          <div class="form-head">
+            <div>
+              <h2>Dashboard</h2>
+              <p class="form-sub">Today's volume, revenue and the queues that need attention.</p>
+            </div>
+            <button id="dashRefreshBtn" type="button" class="btn btn-ghost btn-sm">Refresh</button>
+          </div>
+          <div id="dashError" class="people-notice" hidden></div>
+          <div id="dashCards" class="dash-cards">
+            <div class="manager-empty">Loading…</div>
+          </div>
+          <div class="dash-recent">
+            <h3 class="dash-recent-title">Recent Activity</h3>
+            <div id="recentList" class="recent-list"></div>
+          </div>
+        </div>
+      </section>
 
       <!-- ── Content Editor ── -->
       <section class="view view-content" data-view="content">
@@ -330,6 +354,51 @@
         <iframe id="dispatchFrame" class="dispatch-frame" title="Dispatch board" loading="lazy"></iframe>
       </section>
 
+      <!-- ── Revenue ── -->
+      <section class="view view-form" data-view="revenue" hidden>
+        <div class="form-wrap form-wrap-wide">
+          <div class="form-head">
+            <div>
+              <h2>Revenue</h2>
+              <p class="form-sub">Total from completed jobs in the selected period. Set job prices on the dispatch board.</p>
+            </div>
+          </div>
+          <div class="seg" id="revPeriods" role="tablist" aria-label="Revenue period">
+            <button type="button" class="seg-btn is-active" data-period="today">Today</button>
+            <button type="button" class="seg-btn" data-period="week">This Week</button>
+            <button type="button" class="seg-btn" data-period="month">This Month</button>
+            <button type="button" class="seg-btn" data-period="all">All Time</button>
+          </div>
+          <div id="revError" class="people-notice" hidden></div>
+          <div id="revCards" class="dash-cards">
+            <div class="manager-empty">Loading…</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Export (CSV, admin) ── -->
+      <section class="view view-form" data-view="export" hidden>
+        <div class="form-wrap form-wrap-wide">
+          <div class="form-head">
+            <div>
+              <h2>Export</h2>
+              <p class="form-sub">Download a dataset as a CSV file. The optional date range filters by creation date.</p>
+            </div>
+          </div>
+          <div class="export-range">
+            <label class="field"><span class="field-label">From <span class="field-opt">(optional)</span></span><input id="exportFrom" type="date"/></label>
+            <label class="field"><span class="field-label">To <span class="field-opt">(optional)</span></span><input id="exportTo" type="date"/></label>
+          </div>
+          <div id="exportErr" class="people-notice" hidden></div>
+          <div class="export-buttons">
+            <button type="button" class="btn btn-primary" data-export="jobs">Export Jobs</button>
+            <button type="button" class="btn btn-primary" data-export="quotes">Export Quotes</button>
+            <button type="button" class="btn btn-primary" data-export="contacts">Export Contacts</button>
+            <button type="button" class="btn btn-primary" data-export="reviews">Export Reviews</button>
+          </div>
+        </div>
+      </section>
+
       <!-- ── Dispatch Personnel ── -->
       <section class="view view-form" data-view="dispatch-users" hidden>
         <div class="form-wrap form-wrap-wide">
@@ -417,8 +486,8 @@
 
 <script src="config.js?v=1"></script>
 <script src="apex-defaults.js?v=12"></script>
-<script src="admin-store.js?v=14"></script>
-<script src="admin.js?v=15"></script>
+<script src="admin-store.js?v=15"></script>
+<script src="admin.js?v=16"></script>
 </body>
 </html>
 

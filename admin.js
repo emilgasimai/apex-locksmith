@@ -206,7 +206,7 @@
   /* ========================================================================
      4. SECTION ROUTING
      ===================================================================== */
-  let currentView = 'content';
+  let currentView = 'dashboard';
 
   navList.addEventListener('click', function (e) {
     const btn = e.target.closest('.nav-item');
@@ -229,6 +229,8 @@
     if (view === 'dispatch-users') loadDispatchUsers();
     if (view === 'technicians') loadTechnicians();
     if (view === 'dispatch-board') loadDispatchBoard();
+    if (view === 'dashboard') loadDashboard();
+    if (view === 'revenue') loadRevenue(revPeriod);
   }
 
   /* ── Dispatch Control — embedded dispatch board ──
@@ -1833,6 +1835,158 @@
       techForm.reset();
       showToast('Technician added');
       loadTechnicians();
+    });
+  }
+
+  /* ========================================================================
+     11. DASHBOARD / REVENUE / EXPORT
+     ===================================================================== */
+  const DASH_STATUS_LABEL = {
+    'pending-review': 'Pending Review', 'approved': 'Approved', 'assigned': 'Assigned',
+    'in-progress': 'In Progress', 'completed': 'Completed', 'cancelled': 'Cancelled',
+  };
+  function money(n) {
+    if (n == null || isNaN(n)) return '$0.00';
+    return '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function timeAgo(iso) {
+    const t = new Date(iso).getTime();
+    if (!t) return '';
+    const s = Math.floor((Date.now() - t) / 1000);
+    if (s < 60) return 'just now';
+    const m = Math.floor(s / 60); if (m < 60) return m + ' min ago';
+    const h = Math.floor(m / 60); if (h < 24) return h + ' h ago';
+    const d = Math.floor(h / 24); if (d < 7) return d + ' d ago';
+    return new Date(t).toLocaleDateString();
+  }
+  function statCard(value, label, opts) {
+    opts = opts || {};
+    return '<div class="stat-card' + (opts.cls ? ' ' + opts.cls : '') + '">' +
+      '<span class="stat-card-num">' + esc(String(value)) + '</span>' +
+      '<span class="stat-card-label">' + esc(label) + '</span>' +
+    '</div>';
+  }
+  function statGroup(title, cardsHtml) {
+    return '<div class="stat-group"><div class="stat-group-title">' + esc(title) + '</div>' +
+      '<div class="stat-group-cards">' + cardsHtml + '</div></div>';
+  }
+
+  // ── Dashboard ──
+  const dashCards = document.getElementById('dashCards');
+  const recentList = document.getElementById('recentList');
+  const dashError = document.getElementById('dashError');
+  const dashRefreshBtn = document.getElementById('dashRefreshBtn');
+
+  async function loadDashboard() {
+    dashError.hidden = true;
+    dashCards.innerHTML = '<div class="manager-empty">Loading…</div>';
+    recentList.innerHTML = '';
+    const d = await AdminStore.getDashboardSummary();
+    if (!d) {
+      dashCards.innerHTML = '';
+      dashError.hidden = false;
+      dashError.textContent = 'Backend unreachable — dashboard metrics are unavailable right now.';
+      return;
+    }
+    const today = d.today || {}, week = d.week || {}, month = d.month || {};
+    dashCards.innerHTML =
+      statGroup('Today',
+        statCard(today.newJobs != null ? today.newJobs : 0, 'New jobs') +
+        statCard(today.completedJobs != null ? today.completedJobs : 0, 'Completed') +
+        statCard(money(today.revenue), 'Revenue', { cls: 'is-revenue' })
+      ) +
+      statGroup('This Week',
+        statCard(week.jobs != null ? week.jobs : 0, 'Jobs') +
+        statCard(money(week.revenue), 'Revenue', { cls: 'is-revenue' })
+      ) +
+      statGroup('This Month',
+        statCard(month.jobs != null ? month.jobs : 0, 'Jobs') +
+        statCard(money(month.revenue), 'Revenue', { cls: 'is-revenue' })
+      ) +
+      statGroup('Needs Attention',
+        statCard(d.pendingReviewJobs != null ? d.pendingReviewJobs : 0, 'Pending review', { cls: 'is-warn' }) +
+        statCard(d.inProgressJobs != null ? d.inProgressJobs : 0, 'In progress', { cls: 'is-prog' }) +
+        statCard(d.newContacts != null ? d.newContacts : 0, 'Unread contacts') +
+        statCard(d.pendingReviews != null ? d.pendingReviews : 0, 'Pending reviews')
+      );
+    renderRecent(d.recentActivity || []);
+  }
+  function renderRecent(items) {
+    if (!items.length) { recentList.innerHTML = '<div class="manager-empty">No recent jobs.</div>'; return; }
+    recentList.innerHTML = items.map(function (a) {
+      const st = DASH_STATUS_LABEL[a.status] ? a.status : 'pending-review';
+      return '<div class="recent-row">' +
+        '<span class="recent-id">' + (a.jobId ? '#' + esc(a.jobId) : '—') + '</span>' +
+        '<span class="recent-customer">' + esc(a.customer || 'Unknown') + '</span>' +
+        '<span class="recent-status status-' + st + '">' + esc(DASH_STATUS_LABEL[st]) + '</span>' +
+        '<span class="recent-time">' + esc(timeAgo(a.time)) + '</span>' +
+      '</div>';
+    }).join('');
+  }
+  if (dashRefreshBtn) dashRefreshBtn.addEventListener('click', loadDashboard);
+
+  // ── Revenue ──
+  const revCards = document.getElementById('revCards');
+  const revError = document.getElementById('revError');
+  const revPeriods = document.getElementById('revPeriods');
+  let revPeriod = 'today';
+
+  async function loadRevenue(period) {
+    revPeriod = period || 'today';
+    revPeriods.querySelectorAll('.seg-btn').forEach(function (b) {
+      b.classList.toggle('is-active', b.dataset.period === revPeriod);
+    });
+    revError.hidden = true;
+    revCards.innerHTML = '<div class="manager-empty">Loading…</div>';
+    const d = await AdminStore.getRevenue(revPeriod);
+    if (!d) {
+      revCards.innerHTML = '';
+      revError.hidden = false;
+      revError.textContent = 'Backend unreachable — revenue is unavailable right now.';
+      return;
+    }
+    revCards.innerHTML = statGroup('',
+      statCard(money(d.revenue), 'Revenue', { cls: 'is-revenue' }) +
+      statCard(d.jobCount != null ? d.jobCount : 0, 'Completed jobs') +
+      statCard(money(d.averageJobValue), 'Avg job value')
+    );
+  }
+  if (revPeriods) {
+    revPeriods.addEventListener('click', function (e) {
+      const b = e.target.closest('.seg-btn');
+      if (b) loadRevenue(b.dataset.period);
+    });
+  }
+
+  // ── Export ──
+  const exportFrom = document.getElementById('exportFrom');
+  const exportTo = document.getElementById('exportTo');
+  const exportErr = document.getElementById('exportErr');
+  const exportSection = document.querySelector('section[data-view="export"]');
+  if (exportSection) {
+    exportSection.addEventListener('click', async function (e) {
+      const btn = e.target.closest('[data-export]');
+      if (!btn) return;
+      const type = btn.dataset.export;
+      exportErr.hidden = true;
+      const from = exportFrom.value || '';
+      // Make the "to" date inclusive of the whole day.
+      const to = exportTo.value ? exportTo.value + 'T23:59:59' : '';
+      const label = btn.textContent;
+      btn.disabled = true; btn.textContent = 'Exporting…';
+      const r = await AdminStore.exportCsv(type, from, to);
+      btn.disabled = false; btn.textContent = label;
+      if (!r.ok) {
+        exportErr.hidden = false;
+        exportErr.textContent = r.message || 'Export failed — try again.';
+        return;
+      }
+      const url = URL.createObjectURL(r.blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = r.filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      showToast('Exported ' + type + ' (' + r.filename + ')');
     });
   }
 

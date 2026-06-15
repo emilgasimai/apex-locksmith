@@ -22,6 +22,7 @@
   var REFRESH_MS  = 60 * 1000;       // job-queue auto-refresh
   var JOB_LIMIT   = 100;
   var THEME_KEY   = 'aston_dispatch_theme';   // localStorage — persists across sessions
+  var MUTE_KEY    = 'aston_dispatch_muted';   // localStorage — notification-sound preference
 
   var PRIORITY_RANK  = { emergency: 0, high: 1, normal: 2, low: 3 };
   var PRIORITY_LABEL = { emergency: 'Emergency', high: 'High', normal: 'Normal', low: 'Low' };
@@ -41,12 +42,19 @@
   var statToday = $('statToday'), statPending = $('statPending'), statProgress = $('statProgress'), statCompleted = $('statCompleted');
   var filterStatus = $('filterStatus'), filterPriority = $('filterPriority');
   var queue = $('queue'), lastUpdatedEl = $('lastUpdated'), refreshBtn = $('refreshBtn'), toastEl = $('toast');
+  var searchForm = $('searchForm'), searchInput = $('searchInput'), searchClear = $('searchClear'), searchMeta = $('searchMeta');
+  var muteToggle = $('muteToggle');
+  var custModal = $('custModal'), custBody = $('custBody'), custClose = $('custClose'), custTitle = $('custTitle');
 
   var filters = { status: '', priority: '' };
   var lastActivity = Date.now();
   var lastFetchTs = 0;
   var toastTimer = null;
   var technicians = [];   // active technicians for the assign dropdown (Fix 3)
+  var searchActive = false;     // when true, auto-refresh won't clobber search results
+  var knownJobIds = null;       // Set of job ids seen so far (null until first load) — new-job sound
+  var muted = false;            // notification-sound mute preference
+  var audioCtx = null;          // lazily created on first user gesture
 
   /* ───────────── tiny helpers ───────────── */
   function esc(s) {
@@ -57,6 +65,10 @@
   function telHref(phone) {
     var t = (String(phone || '').match(/[+\d]/g) || []).join('');
     return t ? 'tel:' + t : '';
+  }
+  function fmtMoney(n) {
+    if (n == null || isNaN(n)) return '—';
+    return '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
   function timeAgo(iso) {
     var t = new Date(iso).getTime();
@@ -286,11 +298,13 @@
   function cardHtml(job) {
     var prio = PRIORITY_RANK[job.priority] != null ? job.priority : 'normal';
     var status = STATUS_LABEL[job.status] ? job.status : 'pending-review';
-    var tel = telHref(job.phone);
-    var phoneInner = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h4l2 5-2 2a12 12 0 005 5l2-2 5 2v4a2 2 0 01-2 2A18 18 0 013 5a2 2 0 012-2z"/></svg>' + esc(job.phone || '');
-    var phoneHtml = tel
-      ? '<a class="job-phone" href="' + esc(tel) + '">' + phoneInner + '</a>'
-      : '<span class="job-phone" style="border:0;color:var(--muted)">' + esc(job.phone || '') + '</span>';
+    // Phone is a button that opens the customer-history modal (the modal itself
+    // offers a tap-to-call link for the actual dialing).
+    var phoneStr = job.phone || '';
+    var phoneInner = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h4l2 5-2 2a12 12 0 005 5l2-2 5 2v4a2 2 0 01-2 2A18 18 0 013 5a2 2 0 012-2z"/></svg>' + esc(phoneStr);
+    var phoneHtml = phoneStr
+      ? '<button type="button" class="job-phone" data-phone="' + esc(phoneStr) + '" title="View customer history" aria-label="View customer history for ' + esc(phoneStr) + '">' + phoneInner + '</button>'
+      : '<span class="job-phone is-empty">' + esc(phoneStr) + '</span>';
 
     var ai = '';
     if (job.aiSummary) {
@@ -339,7 +353,10 @@
           '<span class="badge prio prio-' + prio + '">' + PRIORITY_LABEL[prio] + '</span>' +
           '<span class="badge status status-' + status + '" data-status-badge>' + STATUS_LABEL[status] + '</span>' +
         '</div>' +
-        '<time class="job-age" data-created="' + esc(job.createdAt) + '">' + timeAgo(job.createdAt) + '</time>' +
+        '<div class="job-top-right">' +
+          (job.jobId ? '<span class="job-id">#' + esc(job.jobId) + '</span>' : '') +
+          '<time class="job-age" data-created="' + esc(job.createdAt) + '">' + timeAgo(job.createdAt) + '</time>' +
+        '</div>' +
       '</div>' +
       '<div class="job-customer">' +
         '<span class="job-name">' + esc(job.customerName || 'Unknown') + '</span>' +
@@ -361,15 +378,21 @@
         '<label class="status-row"><span>Update status</span>' +
           '<select class="status-select" data-current="' + status + '" aria-label="Update status">' + statusOptions(status) + '</select>' +
         '</label>' +
+        '<div class="price-row">' +
+          '<span class="price-label">Price</span>' +
+          '<span class="price-currency" aria-hidden="true">$</span>' +
+          '<input class="price-input" type="number" min="0" step="0.01" inputmode="decimal" value="' + (job.price != null ? esc(job.price) : '') + '" placeholder="0.00" aria-label="Job price"/>' +
+          '<button type="button" class="btn btn-ghost btn-price">Save</button>' +
+        '</div>' +
       '</div>';
   }
 
-  function renderJobs(items) {
+  function renderJobs(items, emptyMsg) {
     if (!items.length) {
-      var none = (filters.status || filters.priority)
+      var none = emptyMsg || ((filters.status || filters.priority)
         ? 'No jobs match these filters.'
-        : 'No dispatch jobs yet.';
-      queue.innerHTML = '<div class="queue-empty">' + none + '</div>';
+        : 'No dispatch jobs yet.');
+      queue.innerHTML = '<div class="queue-empty">' + esc(none) + '</div>';
       return;
     }
     var sorted = sortJobs(items);
@@ -386,6 +409,7 @@
   }
 
   function loadJobs() {
+    if (searchActive) return Promise.resolve(); // don't clobber search results
     var params = new URLSearchParams();
     params.set('limit', String(JOB_LIMIT));
     if (filters.status) params.set('status', filters.status);
@@ -400,9 +424,23 @@
         return;
       }
       var items = (res.data && res.data.items) || [];
+      detectNewJobs(items);
       renderJobs(items);
       markUpdated();
     });
+  }
+
+  // Notification sound: chime when a job ID we've never seen shows up on a
+  // refresh (skips the very first load so the queue filling in is silent).
+  function detectNewJobs(items) {
+    var ids = items.map(function (j) { return j._id || j.id; }).filter(Boolean);
+    if (knownJobIds !== null) {
+      var hasNew = ids.some(function (id) { return !knownJobIds.has(id); });
+      if (hasNew) playChime();
+    } else {
+      knownJobIds = new Set();
+    }
+    ids.forEach(function (id) { knownJobIds.add(id); });
   }
 
   /* ───────────── refresh orchestration ───────────── */
@@ -430,13 +468,49 @@
 
   /* ───────────── per-card actions (event delegation) ───────────── */
   queue.addEventListener('click', function (e) {
-    var btn = e.target.closest && e.target.closest('.btn-assign');
-    if (btn) doAssign(btn);
+    if (!e.target.closest) return;
+    var assignBtn = e.target.closest('.btn-assign');
+    if (assignBtn) { doAssign(assignBtn); return; }
+    var priceBtn = e.target.closest('.btn-price');
+    if (priceBtn) { doSetPrice(priceBtn); return; }
+    var phoneBtn = e.target.closest('.job-phone[data-phone]');
+    if (phoneBtn) { openCustomerHistory(phoneBtn.getAttribute('data-phone')); return; }
   });
   queue.addEventListener('change', function (e) {
     var sel = e.target.closest && e.target.closest('.status-select');
     if (sel) doStatus(sel);
   });
+  // Enter inside a price input saves it.
+  queue.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('price-input')) {
+      e.preventDefault();
+      var card = e.target.closest('.job-card');
+      var btn = card && card.querySelector('.btn-price');
+      if (btn) doSetPrice(btn);
+    }
+  });
+
+  function doSetPrice(btn) {
+    var card = btn.closest('.job-card'); if (!card) return;
+    var id = card.getAttribute('data-id');
+    var input = card.querySelector('.price-input');
+    var raw = (input.value || '').trim();
+    if (raw === '') { toast('Enter a price first.', 'err'); input.focus(); return; }
+    var price = Number(raw);
+    if (isNaN(price) || price < 0) { toast('Enter a valid price.', 'err'); input.focus(); return; }
+    btn.disabled = true; var label = btn.textContent; btn.textContent = '…';
+    authedFetch('/api/dispatch/' + id + '/price', { method: 'PATCH', json: { price: price } })
+      .then(function (res) {
+        btn.disabled = false; btn.textContent = label;
+        if (res.ok) {
+          if (res.data && res.data.price != null) input.value = res.data.price;
+          toast('Price saved · ' + fmtMoney(res.data ? res.data.price : price), 'ok');
+          loadStats(); // revenue counters may shift
+        } else if (res.status !== 401) {
+          toast((res.data && res.data.message) || 'Could not save the price.', 'err');
+        }
+      });
+  }
 
   function doAssign(btn) {
     var card = btn.closest('.job-card'); if (!card) return;
@@ -496,6 +570,174 @@
       });
   }
 
+  /* ───────────── job search (by jobId or phone) ───────────── */
+  if (searchForm) {
+    searchForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      runSearch();
+    });
+  }
+  if (searchClear) searchClear.addEventListener('click', exitSearch);
+
+  function runSearch() {
+    var q = (searchInput.value || '').trim();
+    if (!q) { exitSearch(); return; }
+    var param;
+    if (/^\d{7}$/.test(q)) {
+      param = 'jobId=' + encodeURIComponent(q);
+    } else {
+      var digits = q.replace(/[^\d+]/g, '');
+      if (!digits) { toast('Enter a 7-digit Job ID or a phone number.', 'err'); return; }
+      param = 'phone=' + encodeURIComponent(digits);
+    }
+    searchActive = true;
+    queue.innerHTML = '<div class="queue-loading">Searching…</div>';
+    authedFetch('/api/dispatch/search?' + param).then(function (res) {
+      if (!res.ok) {
+        if (res.status !== 401) {
+          queue.innerHTML = '<div class="queue-empty">' +
+            ((res.data && res.data.message) || 'Search failed — try again.') + '</div>';
+        }
+        return;
+      }
+      var items = (res.data && res.data.items) || [];
+      renderJobs(items, 'No jobs found for “' + q + '”.');
+      searchMeta.hidden = false;
+      searchMeta.innerHTML = 'Showing ' + items.length + ' result' + (items.length === 1 ? '' : 's') +
+        ' for <b>' + esc(q) + '</b> · <button type="button" class="link-btn" id="searchMetaClear">show full queue</button>';
+      var c = $('searchMetaClear'); if (c) c.addEventListener('click', exitSearch);
+      if (searchClear) searchClear.hidden = false;
+      markUpdated();
+    });
+  }
+  function exitSearch() {
+    searchActive = false;
+    if (searchInput) searchInput.value = '';
+    if (searchClear) searchClear.hidden = true;
+    if (searchMeta) { searchMeta.hidden = true; searchMeta.innerHTML = ''; }
+    loadJobs();
+  }
+
+  /* ───────────── customer history modal ───────────── */
+  function openCustomerHistory(phone) {
+    if (!phone || !custModal) return;
+    custModal.hidden = false;
+    void custModal.offsetWidth;            // reflow → fade-in transition
+    custModal.classList.add('is-open');
+    custBody.innerHTML = '<div class="cust-loading">Loading…</div>';
+    custTitle.textContent = 'Customer · ' + phone;
+    authedFetch('/api/dispatch/customer/' + encodeURIComponent(phone)).then(function (res) {
+      if (!res.ok) {
+        if (res.status === 401) { closeCustModal(); return; }
+        custBody.innerHTML = '<div class="cust-empty">' + ((res.data && res.data.message) || 'Could not load customer history.') + '</div>';
+        return;
+      }
+      renderCustomerHistory(res.data || {});
+    });
+  }
+  function renderCustomerHistory(data) {
+    var s = data.summary || {};
+    var jobs = data.jobs || [];
+    var tel = telHref(data.phone || '');
+    var head =
+      '<div class="cust-summary">' +
+        '<div class="cust-stat"><span class="cust-stat-num">' + (s.totalJobs || 0) + '</span><span class="cust-stat-label">Total jobs</span></div>' +
+        '<div class="cust-stat"><span class="cust-stat-num">' + (s.completedJobs || 0) + '</span><span class="cust-stat-label">Completed</span></div>' +
+        '<div class="cust-stat"><span class="cust-stat-num">' + fmtMoney(s.totalRevenue || 0) + '</span><span class="cust-stat-label">Total revenue</span></div>' +
+      '</div>' +
+      '<div class="cust-contact">' +
+        (tel ? '<a class="cust-call" href="' + esc(tel) + '">Call ' + esc(data.phone || '') + '</a>' : '') +
+        '<span class="cust-dates">First: ' + fmtDate(s.firstContact) + ' · Last: ' + fmtDate(s.lastContact) + '</span>' +
+      '</div>';
+    var rows = jobs.length
+      ? jobs.map(function (j) {
+          var st = STATUS_LABEL[j.status] ? j.status : 'pending-review';
+          return '<div class="cust-job">' +
+            '<div class="cust-job-top">' +
+              '<span class="cust-job-id">' + (j.jobId ? '#' + esc(j.jobId) : '—') + '</span>' +
+              '<span class="badge status status-' + st + '">' + STATUS_LABEL[st] + '</span>' +
+              '<span class="cust-job-date">' + fmtDate(j.createdAt) + '</span>' +
+            '</div>' +
+            '<div class="cust-job-svc">' + esc(j.serviceType || '—') +
+              (j.price != null ? '<span class="cust-job-price">' + fmtMoney(j.price) + '</span>' : '') +
+            '</div>' +
+          '</div>';
+        }).join('')
+      : '<div class="cust-empty">No past jobs on record.</div>';
+    custBody.innerHTML = head + '<div class="cust-jobs">' + rows + '</div>';
+  }
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+  function closeCustModal() {
+    if (!custModal) return;
+    custModal.classList.remove('is-open');
+    setTimeout(function () { if (!custModal.classList.contains('is-open')) custModal.hidden = true; }, 170);
+  }
+  if (custClose) custClose.addEventListener('click', closeCustModal);
+  if (custModal) custModal.addEventListener('click', function (e) { if (e.target === custModal) closeCustModal(); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && custModal && !custModal.hidden) closeCustModal();
+  });
+
+  /* ───────────── notification sound + mute ───────────── */
+  function initMute() {
+    try { muted = localStorage.getItem(MUTE_KEY) === '1'; } catch (e) {}
+    reflectMute();
+  }
+  function reflectMute() {
+    if (!muteToggle) return;
+    var on = muteToggle.querySelector('.mute-ico-on');
+    var off = muteToggle.querySelector('.mute-ico-off');
+    if (on) on.style.display = muted ? 'none' : '';
+    if (off) off.style.display = muted ? '' : 'none';
+    muteToggle.setAttribute('aria-label', muted ? 'Unmute new-job sound' : 'Mute new-job sound');
+    muteToggle.setAttribute('title', muted ? 'Unmute new-job sound' : 'Mute new-job sound');
+    muteToggle.classList.toggle('is-muted', muted);
+  }
+  if (muteToggle) {
+    muteToggle.addEventListener('click', function () {
+      muted = !muted;
+      try { localStorage.setItem(MUTE_KEY, muted ? '1' : '0'); } catch (e) {}
+      reflectMute();
+      if (!muted) { unlockAudio(); playChime(); }   // confirm sound on unmute
+    });
+  }
+  // Browsers block audio until a user gesture — unlock on the first interaction.
+  function unlockAudio() {
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    } catch (e) { audioCtx = null; }
+  }
+  ['click', 'keydown', 'touchstart'].forEach(function (ev) {
+    window.addEventListener(ev, unlockAudio, { once: true, passive: true });
+  });
+  // A short, soft two-note chime via Web Audio (no asset file needed).
+  function playChime() {
+    if (muted) return;
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      var t0 = audioCtx.currentTime;
+      [[880.0, 0], [1174.66, 0.12]].forEach(function (pair) {
+        var freq = pair[0], at = pair[1];
+        var osc = audioCtx.createOscillator();
+        var gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.0001, t0 + at);
+        gain.gain.exponentialRampToValueAtTime(0.12, t0 + at + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + at + 0.35);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(t0 + at); osc.stop(t0 + at + 0.4);
+      });
+    } catch (e) { /* audio unavailable — silent */ }
+  }
+
   /* ───────────── toast ───────────── */
   function toast(msg, kind) {
     toastEl.textContent = msg;
@@ -511,6 +753,7 @@
   /* ───────────── boot ───────────── */
   function init() {
     initTheme();
+    initMute();
     if (EMBED) {
       // Embedded in the admin panel: reuse the admin JWT, skip the login UI.
       document.body.classList.add('is-embed');

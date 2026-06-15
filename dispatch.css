@@ -81,7 +81,8 @@ body {
   font-size: 11px; letter-spacing: .09em; text-transform: uppercase;
   color: var(--muted); font-weight: 700;
 }
-input[type=text], input[type=password], select {
+input[type=text], input[type=password], input[type=email], input[type=tel],
+input[type=number], input[type=search], select {
   font: inherit; width: 100%;
   background: var(--bg-2);
   border: 1px solid var(--line);
@@ -279,11 +280,13 @@ input:focus, select:focus {
 .job-name { font-size: 16px; font-weight: 700; color: var(--ink); }
 .job-phone {
   display: inline-flex; align-items: center; gap: 6px;
-  color: var(--accent); text-decoration: none; font-weight: 600; font-size: 14px;
-  border-bottom: 1px dashed rgba(39,224,245,.4);
+  color: var(--accent); text-decoration: none; font: inherit; font-weight: 600; font-size: 14px;
+  background: none; border: 0; border-bottom: 1px dashed rgba(39,224,245,.4);
+  padding: 0; cursor: pointer;
 }
 .job-phone:hover { color: #6fecfb; }
 .job-phone:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.job-phone.is-empty { color: var(--muted); border-bottom: 0; cursor: default; }
 .job-source {
   font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
   color: var(--muted-2); border: 1px solid var(--line-soft); border-radius: 3px; padding: 1px 6px;
@@ -426,3 +429,76 @@ input:focus, select:focus {
 body.is-embed .topbar { display: none; }
 body.is-embed .login-view { display: none !important; }
 body.is-embed .dash-main { max-width: none; }
+
+/* ============================ SEARCH BAR ============================ */
+.search-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.search-form { display: flex; gap: 8px; flex: 1 1 auto; min-width: 0; }
+.search-form input[type=search] { flex: 1 1 auto; min-width: 0; }
+.search-form .btn { flex: 0 0 auto; }
+.search-meta { font-size: 12.5px; color: var(--muted); margin: -4px 0 12px; }
+.search-meta b { color: var(--ink); }
+.link-btn {
+  font: inherit; font-size: 12.5px; background: none; border: 0; padding: 0;
+  color: var(--accent); cursor: pointer; text-decoration: underline;
+}
+.link-btn:hover { color: #6fecfb; }
+/* Mute toggle (notification sound) */
+.mute-toggle { padding: 0; width: 40px; min-height: 40px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; }
+.mute-toggle .mute-ico { width: 18px; height: 18px; color: var(--ink); }
+.mute-toggle.is-muted .mute-ico { color: var(--muted-2); }
+
+/* ============================ JOB ID + PRICE ============================ */
+.job-top-right { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
+.job-id { font-family: var(--mono); font-size: 11.5px; font-weight: 700; color: var(--accent); letter-spacing: .02em; }
+
+.price-row { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; padding-top: 9px; border-top: 1px solid var(--line-soft); }
+.price-label { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted-2); }
+.price-currency { color: var(--muted); font-weight: 600; }
+.price-input { width: 120px; min-width: 0; flex: 0 0 auto; min-height: 38px; }
+.price-row .btn-price { flex: 0 0 auto; min-height: 38px; }
+
+/* ============================ CUSTOMER HISTORY MODAL ============================ */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+  background: rgba(4, 10, 11, .72);
+  -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+  opacity: 0; transition: opacity .16s ease;
+}
+.modal-overlay.is-open { opacity: 1; }
+.modal-overlay[hidden] { display: none; }
+.cust-box {
+  width: 100%; max-width: 480px; max-height: 86vh; overflow: hidden;
+  display: flex; flex-direction: column;
+  background: var(--panel); border: 1px solid var(--line);
+  border-top: 3px solid var(--accent); border-radius: 10px;
+  box-shadow: 0 24px 60px -18px rgba(0,0,0,.8);
+  transform: translateY(8px) scale(.98); transition: transform .18s cubic-bezier(.2,.8,.2,1);
+}
+.modal-overlay.is-open .cust-box { transform: translateY(0) scale(1); }
+.cust-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+.cust-title { margin: 0; font-size: 15px; color: var(--ink); }
+.icon-btn { font: inherit; font-size: 22px; line-height: 1; background: none; border: 0; color: var(--muted); cursor: pointer; padding: 0 4px; }
+.icon-btn:hover { color: var(--ink); }
+.cust-body { padding: 16px 18px; overflow-y: auto; }
+.cust-loading, .cust-empty { color: var(--muted-2); font-size: 13px; padding: 14px 0; text-align: center; }
+.cust-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+.cust-stat { background: var(--panel-2); border: 1px solid var(--line-soft); border-radius: 6px; padding: 11px 10px; text-align: center; }
+.cust-stat-num { display: block; font-size: 19px; font-weight: 800; color: var(--accent); }
+.cust-stat-label { display: block; font-size: 10.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted-2); margin-top: 3px; }
+.cust-contact { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 14px; }
+.cust-call { color: var(--accent); font-weight: 700; font-size: 13.5px; text-decoration: none; border-bottom: 1px dashed rgba(39,224,245,.4); }
+.cust-call:hover { color: #6fecfb; }
+.cust-dates { font-size: 11.5px; color: var(--muted-2); font-family: var(--mono); }
+.cust-jobs { display: flex; flex-direction: column; gap: 8px; }
+.cust-job { background: var(--bg-2); border: 1px solid var(--line-soft); border-radius: 6px; padding: 10px 12px; }
+.cust-job-top { display: flex; align-items: center; gap: 8px; }
+.cust-job-id { font-family: var(--mono); font-size: 11.5px; font-weight: 700; color: var(--accent); }
+.cust-job-date { font-size: 11px; color: var(--muted-2); font-family: var(--mono); margin-left: auto; }
+.cust-job-svc { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 5px; font-size: 13px; color: var(--ink); }
+.cust-job-price { font-weight: 700; color: var(--ok); }
+@media (max-width: 560px) {
+  .search-bar { flex-wrap: wrap; }
+  .search-form { order: 1; flex: 1 1 100%; }
+  .mute-toggle { order: 0; }
+}
