@@ -59,7 +59,7 @@
     jobs: [],            // working set (all statuses), newest-first from server
     searchResults: [],   // results while searchActive
     tab: 'active',       // active | completed | cancelled | calls | notes
-    myJobsOnly: false,   // dispatch-only "My jobs" toggle
+    unassignedOnly: false, // "Unassigned" filter — jobs that still need a technician
     expanded: {},        // { [jobId]: true } open history panels (survive re-render)
     origExpanded: {},    // { [noteId]: true } open "View original" panels (survive re-render)
     pending: 0           // in-flight optimistic mutations (auto-refresh pauses while > 0)
@@ -73,7 +73,7 @@
   var topUser = $('topUser'), logoutBtn = $('logoutBtn'), themeToggle = $('themeToggle');
   var statToday = $('statToday'), statPending = $('statPending'), statProgress = $('statProgress'), statCompleted = $('statCompleted');
   var filterStatus = $('filterStatus'), filterPriority = $('filterPriority'), statusFilterGroup = $('statusFilterGroup'), priorityFilterGroup = $('priorityFilterGroup');
-  var tabBar = $('tabBar'), myJobsToggle = $('myJobsToggle'), newCallBtn = $('newCallBtn');
+  var tabBar = $('tabBar'), unassignedToggle = $('unassignedToggle'), newCallBtn = $('newCallBtn');
   var countActive = $('countActive'), countCompleted = $('countCompleted'), countCancelled = $('countCancelled');
   var countCalls = $('countCalls'), countNotes = $('countNotes');
   var callModal = $('callModal'), callForm = $('callForm'), callClose = $('callClose'), callError = $('callError'), callSubmit = $('callSubmit');
@@ -135,7 +135,10 @@
      editable field is wrapped in a .editable container that carries its raw
      value + metadata; a pencil swaps the static view for an inline editor that
      PATCHes /api/dispatch/:id. jobId is editable by admins only. */
-  var EDIT_MAX = { customerName: 100, address: 300, eta: 100, aiSummary: 1000, jobId: 7 };
+  var EDIT_MAX = { customerName: 100, phone: 30, address: 300, eta: 100, serviceType: 100, description: 2000, aiSummary: 1000, jobId: 7 };
+  // Fields whose card display is too complex to patch in place (e.g. the phone
+  // button) — after a successful edit we rebuild the queue instead of applyValue.
+  var REBUILD_FIELDS = { phone: 1 };
 
   // EMBED means we're inside the admin panel (admin role); standalone uses the
   // dispatch session's stored role.
@@ -148,6 +151,12 @@
   function pencilSvg() {
     return '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
   }
+
+  // Shared inline icons (used by both job cards and the now-actionable note cards).
+  var ICON_PIN = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0118 0z"/><circle cx="12" cy="10" r="2.6"/></svg>';
+  var ICON_CLOCK = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+  var ICON_PERSON = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+  var ICON_PHONE = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h4l2 5-2 2a12 12 0 005 5l2-2 5 2v4a2 2 0 01-2 2A18 18 0 013 5a2 2 0 012-2z"/></svg>';
 
   // Builds an inline editable: optional `lead` markup, the value span, and a
   // pencil (unless opts.canEdit === false). opts: { label, type, placeholder,
@@ -213,7 +222,7 @@
 
   function commitEdit(box) {
     if (!box) return;
-    var card = box.closest('.job-card'); if (!card) return;
+    var card = box.closest('[data-id]'); if (!card) return;   // .job-card OR .note-card
     var id = card.getAttribute('data-id');
     var field = box.getAttribute('data-edit');
     var label = box.getAttribute('data-label') || 'Field';
@@ -221,14 +230,17 @@
     var val = (input.value || '').trim();
     if (field === 'jobId' && val && !/^\d{7}$/.test(val)) { toast('Job ID must be 7 digits.', 'err'); input.focus(); return; }
     if (field === 'customerName' && !val) { toast('Customer name can’t be empty.', 'err'); input.focus(); return; }
+    if (field === 'serviceType' && !val) { toast('Service type can’t be empty.', 'err'); input.focus(); return; }
+    if (field === 'phone' && val && !/^[0-9+()\-.\s]{7,30}$/.test(val)) { toast('Enter a valid phone number.', 'err'); input.focus(); return; }
     var saveBtn = box.querySelector('.ed-save');
     if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '…'; }
     var body = {}; body[field] = val;
     authedFetch('/api/dispatch/' + id, { method: 'PATCH', json: body }).then(function (res) {
       if (res.ok) {
         var saved = (res.data && res.data[field] != null) ? res.data[field] : val;
-        applyValue(box, saved);
         var jb = findJob(id); if (jb) jb[field] = saved; // keep the store in sync for re-renders
+        if (REBUILD_FIELDS[field]) { render(false); } // phone button is rebuilt, not patched in place
+        else { applyValue(box, saved); }
         toast(label + ' updated', 'ok');
       } else if (res.status !== 401) {
         if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save'; }
@@ -307,8 +319,9 @@
     dashView.hidden = false;
     var s = getSession();
     topUser.textContent = (s && s.username) ? s.username : '—';
-    // "My jobs" only makes sense for a dispatch user (admins see everything).
-    if (myJobsToggle) myJobsToggle.hidden = isAdminUser();
+    // The "Unassigned" filter is useful to everyone; syncFilters() hides it on
+    // the tabs where it doesn't apply (Calls / Notes).
+    if (unassignedToggle) unassignedToggle.hidden = false;
     lastActivity = Date.now();
     // Load technicians first so the very first render of the queue already has
     // the assign dropdown populated. Animate the first paint.
@@ -441,83 +454,127 @@
     }).join('');
   }
 
+  // Phone — a button that opens the customer-history modal, wrapped in an
+  // .editable so dispatch can correct a wrong number (Fix 8). The actual dialing
+  // link lives inside the history modal. Value is rebuilt on save (REBUILD_FIELDS).
+  function phoneEditableHtml(phoneStr) {
+    phoneStr = phoneStr || '';
+    var inner = phoneStr
+      ? '<button type="button" class="job-phone" data-phone="' + esc(phoneStr) + '" title="View customer history" aria-label="View customer history for ' + esc(phoneStr) + '">' + ICON_PHONE + esc(phoneStr) + '</button>'
+      : '<span class="job-phone is-empty" data-val>Add phone</span>';
+    return '<span class="editable phone-editable" data-edit="phone" data-type="text" data-label="Phone"' +
+      ' data-value="' + esc(phoneStr) + '" data-placeholder="Add phone">' +
+        inner +
+        '<button type="button" class="ed-pencil" aria-label="Edit phone">' + pencilSvg() + '</button>' +
+      '</span>';
+  }
+
+  // Prominent assignment chip. showUnassigned draws the "needs a tech" tag for
+  // active jobs; otherwise an unassigned terminal job just shows nothing.
+  function assignTagHtml(job, showUnassigned) {
+    if (job.assignedTo) return '<span class="badge assigned-tag" data-assign-tag>' + ICON_PERSON + esc(job.assignedTo) + '</span>';
+    return showUnassigned ? '<span class="badge unassigned-tag" data-assign-tag>Unassigned</span>' : '<span data-assign-tag hidden></span>';
+  }
+
+  // Assign control — a technician dropdown when any exist, else the legacy
+  // free-text input + hint. Selects the current tech by id, falling back to a
+  // name match so free-text / legacy assignments still show as selected (Fix 7).
+  function assignControlHtml(job) {
+    if (technicians.length) {
+      var jobTechId = job.technicianId ? String(job.technicianId) : '';
+      var assignedName = (job.assignedTo || '').trim().toLowerCase();
+      var opts = '<option value="">Select technician…</option>';
+      technicians.forEach(function (t) {
+        var tid = String(t._id || t.id);
+        var nm = ((t.firstName || '') + ' ' + (t.lastName || '')).trim();
+        var on = jobTechId ? (tid === jobTechId) : (!!assignedName && nm.toLowerCase() === assignedName);
+        opts += '<option value="' + esc(tid) + '"' + (on ? ' selected' : '') + '>' + esc(nm) + '</option>';
+      });
+      return { control: '<select class="tech-select" aria-label="Assign technician">' + opts + '</select>', note: '' };
+    }
+    return {
+      control: '<input class="tech-input" type="text" maxlength="100" placeholder="Technician name" value="' + esc(job.assignedTo || '') + '" aria-label="Technician name"/>',
+      note: '<p class="tech-empty-note">No technicians added yet — add them in the admin panel.</p>'
+    };
+  }
+
+  // Assign / status / price controls shared by job cards AND (now-actionable)
+  // note cards. The Clear button only shows when there's a price to clear (Fix 4).
+  function jobControlsHtml(job, status) {
+    var a = assignControlHtml(job);
+    var clearBtn = job.price != null
+      ? '<button type="button" class="btn btn-ghost btn-price-clear">Clear</button>'
+      : '';
+    return '<div class="job-controls">' +
+        '<div class="assign-row">' + a.control +
+          '<button type="button" class="btn btn-assign">Assign</button>' +
+        '</div>' +
+        a.note +
+        '<label class="status-row"><span>Update status</span>' +
+          '<select class="status-select" data-current="' + status + '" aria-label="Update status">' + statusOptions(status) + '</select>' +
+        '</label>' +
+        '<div class="price-row">' +
+          '<span class="price-label">Price</span>' +
+          '<span class="price-currency" aria-hidden="true">$</span>' +
+          '<input class="price-input" type="number" min="0" step="0.01" inputmode="decimal" value="' + (job.price != null ? esc(job.price) : '') + '" placeholder="0.00" aria-label="Job price"/>' +
+          '<button type="button" class="btn btn-ghost btn-price">Save</button>' +
+          clearBtn +
+        '</div>' +
+      '</div>';
+  }
+
+  // A textarea editable-block with a corner pencil — AI summary, Details, note text.
+  function editableBlockHtml(opts) {
+    var empty = !(opts.value && String(opts.value).trim());
+    return '<div class="' + opts.cls + ' editable editable-block" data-edit="' + opts.field + '" data-type="textarea" data-label="' + esc(opts.label) + '"' +
+      ' data-value="' + esc(opts.value || '') + '" data-placeholder="' + esc(opts.placeholder) + '">' +
+      (opts.labelHtml || '') +
+      '<button type="button" class="ed-pencil ed-pencil-corner" aria-label="Edit ' + esc(opts.label) + '">' + pencilSvg() + '</button>' +
+      '<p class="ed-val' + (opts.valClass ? ' ' + opts.valClass : '') + (empty ? ' is-empty' : '') + '" data-val>' + esc(empty ? opts.placeholder : opts.value) + '</p>' +
+    '</div>';
+  }
+
   function cardHtml(job) {
     var id = String(job._id || job.id || '');
     var prio = PRIORITY_RANK[job.priority] != null ? job.priority : 'normal';
     var status = STATUS_LABEL[job.status] ? job.status : 'pending-review';
     var isActive = TAB_STATUSES.active.indexOf(status) !== -1;
-    // Phone is a button that opens the customer-history modal (the modal itself
-    // offers a tap-to-call link for the actual dialing).
-    var phoneStr = job.phone || '';
-    var phoneInner = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h4l2 5-2 2a12 12 0 005 5l2-2 5 2v4a2 2 0 01-2 2A18 18 0 013 5a2 2 0 012-2z"/></svg>' + esc(phoneStr);
-    var phoneHtml = phoneStr
-      ? '<button type="button" class="job-phone" data-phone="' + esc(phoneStr) + '" title="View customer history" aria-label="View customer history for ' + esc(phoneStr) + '">' + phoneInner + '</button>'
-      : '<span class="job-phone is-empty">' + esc(phoneStr) + '</span>';
+    var phoneHtml = phoneEditableHtml(job.phone || '');
 
-    // AI summary — always rendered (editable), so dispatch can add one when the
-    // AI failed or fix a wrong one. Pencil sits in the corner of the box.
+    // AI summary — always editable so dispatch can add/fix one when the AI failed.
     var aiPrio = job.aiSuggestedPriority
       ? '<span class="ai-prio"> · suggests ' + esc(PRIORITY_LABEL[job.aiSuggestedPriority] || job.aiSuggestedPriority) + '</span>'
       : '';
-    var aiEmpty = !(job.aiSummary && String(job.aiSummary).trim());
-    var aiPh = 'No AI summary yet — click to add one.';
-    var ai =
-      '<div class="job-ai editable editable-block" data-edit="aiSummary" data-type="textarea" data-label="AI summary"' +
-        ' data-value="' + esc(job.aiSummary || '') + '" data-placeholder="' + esc(aiPh) + '">' +
-        '<span class="job-ai-label">AI Summary' + aiPrio + '</span>' +
-        '<button type="button" class="ed-pencil ed-pencil-corner" aria-label="Edit AI summary">' + pencilSvg() + '</button>' +
-        '<p class="ed-val' + (aiEmpty ? ' is-empty' : '') + '" data-val>' + esc(aiEmpty ? aiPh : job.aiSummary) + '</p>' +
-      '</div>';
-
-    // Full notes — show description plus any serviceDetails/notes the source
-    // carried, deduped, each on its own line below the service type.
-    var detailParts = [];
-    [job.description, job.serviceDetails, job.notes].forEach(function (v) {
-      v = (v == null ? '' : String(v)).trim();
-      if (v && detailParts.indexOf(v) === -1) detailParts.push(v);
+    var ai = editableBlockHtml({
+      cls: 'job-ai', field: 'aiSummary', label: 'AI summary', value: job.aiSummary,
+      placeholder: 'No AI summary yet — click to add one.',
+      labelHtml: '<span class="job-ai-label">AI Summary' + aiPrio + '</span>'
     });
-    var desc = detailParts.map(function (p) { return '<p class="job-desc">' + esc(p) + '</p>'; }).join('');
+
+    // Details (description) — now editable (Fix 3).
+    var descBlock = editableBlockHtml({
+      cls: 'job-desc-block', field: 'description', label: 'Details', value: job.description,
+      placeholder: 'Add job details…', valClass: 'job-desc',
+      labelHtml: '<span class="job-desc-label">Details</span>'
+    });
     var sourceTag = job.source ? '<span class="job-source">' + esc(job.source) + '</span>' : '';
 
     // Address (editable) — street address for routing a tech. Postal code stays
     // as a read-only line beneath it.
-    var pinSvg = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0118 0z"/><circle cx="12" cy="10" r="2.6"/></svg>';
-    var clockSvg = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
-    var addrHtml = '<div class="job-line job-loc">' + pinSvg +
+    var addrHtml = '<div class="job-line job-loc">' + ICON_PIN +
       editable('address', job.address || '', { label: 'Address', placeholder: 'Add address' }) + '</div>';
     var postalHtml = job.postalCode
-      ? '<div class="job-postal">' + pinSvg + esc(job.postalCode) + '</div>'
+      ? '<div class="job-postal">' + ICON_PIN + esc(job.postalCode) + '</div>'
       : '';
     // ETA (editable).
-    var etaHtml = '<div class="job-line job-eta">' + clockSvg +
+    var etaHtml = '<div class="job-line job-eta">' + ICON_CLOCK +
       '<span class="job-line-label">ETA</span>' +
       editable('eta', job.eta || '', { label: 'ETA', placeholder: 'Set ETA' }) + '</div>';
 
-    // Assignment visibility — a prominent chip at the top of the card so dispatch
-    // sees who's on it at a glance. Unassigned *active* jobs get a distinct tag so
-    // it's obvious they still need a technician. (data-assign-tag so it can be
-    // refreshed in place after an assign.)
-    var personSvg = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
-    var assignTag = job.assignedTo
-      ? '<span class="badge assigned-tag" data-assign-tag>' + personSvg + esc(job.assignedTo) + '</span>'
-      : (isActive ? '<span class="badge unassigned-tag" data-assign-tag>Unassigned</span>' : '<span data-assign-tag hidden></span>');
+    // Service type — now editable (Fix 3).
+    var svcHtml = editable('serviceType', job.serviceType || '', { label: 'Service type', valClass: 'job-service-type', placeholder: 'Add service type' });
 
-    // Assign control — a technician dropdown when any exist, otherwise the
-    // legacy free-text input plus a hint pointing to the admin panel (Fix 3).
-    var assignControl, techNote = '';
-    if (technicians.length) {
-      var jobTechId = job.technicianId ? String(job.technicianId) : '';
-      var opts = '<option value="">Select technician…</option>';
-      technicians.forEach(function (t) {
-        var tid = String(t._id || t.id);
-        var nm = ((t.firstName || '') + ' ' + (t.lastName || '')).trim();
-        opts += '<option value="' + esc(tid) + '"' + (tid === jobTechId ? ' selected' : '') + '>' + esc(nm) + '</option>';
-      });
-      assignControl = '<select class="tech-select" aria-label="Assign technician">' + opts + '</select>';
-    } else {
-      assignControl = '<input class="tech-input" type="text" maxlength="100" placeholder="Technician name" value="' + esc(job.assignedTo || '') + '" aria-label="Technician name"/>';
-      techNote = '<p class="tech-empty-note">No technicians added yet — add them in the admin panel.</p>';
-    }
+    var assignTag = assignTagHtml(job, isActive);
 
     // Job ID — editable by admins only (display-only for dispatch). The "#" is
     // drawn via CSS so it isn't part of the editable value.
@@ -554,27 +611,9 @@
       addrHtml +
       postalHtml +
       etaHtml +
-      '<div class="job-service">' +
-        '<span class="job-service-type">' + esc(job.serviceType || '—') + '</span>' +
-        desc +
-      '</div>' +
+      '<div class="job-service">' + svcHtml + descBlock + '</div>' +
       ai +
-      '<div class="job-controls">' +
-        '<div class="assign-row">' +
-          assignControl +
-          '<button type="button" class="btn btn-assign">Assign</button>' +
-        '</div>' +
-        techNote +
-        '<label class="status-row"><span>Update status</span>' +
-          '<select class="status-select" data-current="' + status + '" aria-label="Update status">' + statusOptions(status) + '</select>' +
-        '</label>' +
-        '<div class="price-row">' +
-          '<span class="price-label">Price</span>' +
-          '<span class="price-currency" aria-hidden="true">$</span>' +
-          '<input class="price-input" type="number" min="0" step="0.01" inputmode="decimal" value="' + (job.price != null ? esc(job.price) : '') + '" placeholder="0.00" aria-label="Job price"/>' +
-          '<button type="button" class="btn btn-ghost btn-price">Save</button>' +
-        '</div>' +
-      '</div>' +
+      jobControlsHtml(job, status) +
       historyBlock;
   }
 
@@ -632,11 +671,10 @@
   }
 
   function currentUserName() { var s = getSession(); return (s && s.username) ? s.username : ''; }
-  // "My jobs": strictly jobs whose assignedTo equals the logged-in user's name.
-  function jobIsMine(job) {
-    var me = currentUserName();
-    return !!(me && job.assignedTo && job.assignedTo === me);
-  }
+  // "Unassigned": jobs that still need a technician — a dispatcher's real work
+  // queue. (Dispatch users assign techs, they don't own jobs, so the old "My jobs"
+  // assignedTo===username match never matched. Repurposed to something useful.)
+  function jobIsUnassigned(job) { return !((job.assignedTo || '').trim()); }
 
   // Tab membership. The status tabs (active/completed/cancelled) are status-based
   // and EXCLUDE notes (which live in their own calm inbox). Calls + Notes are
@@ -657,7 +695,7 @@
     if (filters.priority && state.tab !== 'notes') {
       list = list.filter(function (j) { return (j.priority || 'normal') === filters.priority; });
     }
-    if (state.myJobsOnly && !isAdminUser() && state.tab !== 'notes') list = list.filter(jobIsMine);
+    if (state.unassignedOnly && state.tab !== 'notes' && state.tab !== 'calls') list = list.filter(jobIsUnassigned);
     return list;
   }
 
@@ -699,15 +737,16 @@
     var showPriority = state.tab !== 'notes';
     if (priorityFilterGroup) priorityFilterGroup.hidden = !showPriority;
     if (!showPriority && filters.priority) { filters.priority = ''; if (filterPriority) filterPriority.value = ''; }
-    if (myJobsToggle) myJobsToggle.hidden = isAdminUser() || state.tab === 'notes';
+    if (unassignedToggle) unassignedToggle.hidden = state.tab === 'notes' || state.tab === 'calls';
     if (newCallBtn) newCallBtn.hidden = state.tab !== 'calls';
   }
 
   function emptyMessage() {
     if (searchActive) return 'No jobs found.';
-    if (state.tab === 'calls') return (filters.priority || state.myJobsOnly) ? 'No calls match these filters.' : 'No calls logged yet — use “+ New Call” to add one.';
+    if (state.tab === 'calls') return filters.priority ? 'No calls match these filters.' : 'No calls logged yet — use “+ New Call” to add one.';
     if (state.tab === 'notes') return 'No customer notes yet.';
-    if (filters.status || filters.priority || state.myJobsOnly) return 'No jobs match these filters.';
+    if (state.unassignedOnly) return 'No unassigned jobs — every job here has a technician.';
+    if (filters.status || filters.priority) return 'No jobs match these filters.';
     if (state.tab === 'completed') return 'No completed jobs in the current window.';
     if (state.tab === 'cancelled') return 'No cancelled jobs in the current window.';
     return 'No active jobs right now.';
@@ -782,12 +821,20 @@
     '</section>';
   }
 
+  // Note cards are fully actionable (Fix 2): service type + summary are editable,
+  // and the same assign / status / price controls as a job card sit at the bottom.
+  // The calm/muted note styling is kept; the note stays in this inbox regardless
+  // of status (it's source-based), so a customer message can be worked end-to-end.
   function noteCardHtml(job) {
     var id = String(job._id || job.id || '');
+    var status = STATUS_LABEL[job.status] ? job.status : 'pending-review';
     var when = '<time class="note-age" data-created="' + esc(job.createdAt) + '">' + timeAgo(job.createdAt) + '</time>';
-    var svc = job.serviceType ? '<span class="note-svc">' + esc(job.serviceType) + '</span>' : '';
-    var aiEmpty = !(job.aiSummary && String(job.aiSummary).trim());
-    var summary = '<p class="note-summary' + (aiEmpty ? ' is-empty' : '') + '">' + esc(aiEmpty ? 'No summary yet.' : job.aiSummary) + '</p>';
+    var svc = editable('serviceType', job.serviceType || '', { label: 'Service type', valClass: 'note-svc', placeholder: 'Add service type' });
+    var assignTag = job.assignedTo ? '<span class="badge assigned-tag" data-assign-tag>' + ICON_PERSON + esc(job.assignedTo) + '</span>' : '';
+    var summary = editableBlockHtml({
+      cls: 'note-summary-edit', field: 'aiSummary', label: 'Summary', value: job.aiSummary,
+      placeholder: 'No summary yet — click to add one.', valClass: 'note-summary'
+    });
 
     var orig = job.originalMessage && String(job.originalMessage).trim();
     var open = !!state.origExpanded[id];
@@ -804,9 +851,11 @@
         }).join('') + '</div>'
       : '';
 
+    var actions = '<div class="note-actions">' + jobControlsHtml(job, status) + '</div>';
+
     return '<article class="note-card" data-id="' + esc(id) + '">' +
-      '<div class="note-card-top">' + svc + when + '</div>' +
-      summary + origBlock + photoBlock +
+      '<div class="note-card-top">' + svc + assignTag + when + '</div>' +
+      summary + origBlock + photoBlock + actions +
     '</article>';
   }
 
@@ -895,12 +944,12 @@
     });
   }
 
-  // "My jobs" toggle (dispatch only).
-  if (myJobsToggle) {
-    myJobsToggle.addEventListener('click', function () {
-      state.myJobsOnly = !state.myJobsOnly;
-      myJobsToggle.classList.toggle('is-on', state.myJobsOnly);
-      myJobsToggle.setAttribute('aria-pressed', state.myJobsOnly ? 'true' : 'false');
+  // "Unassigned" toggle — filters to jobs that still need a technician.
+  if (unassignedToggle) {
+    unassignedToggle.addEventListener('click', function () {
+      state.unassignedOnly = !state.unassignedOnly;
+      unassignedToggle.classList.toggle('is-on', state.unassignedOnly);
+      unassignedToggle.setAttribute('aria-pressed', state.unassignedOnly ? 'true' : 'false');
       render(true);
     });
   }
@@ -977,6 +1026,15 @@
     if (thumb) { openLightbox(thumb.getAttribute('data-full')); return; }
     var assignBtn = e.target.closest('.btn-assign');
     if (assignBtn) { doAssign(assignBtn); return; }
+    var clearBtn = e.target.closest('.btn-price-clear');
+    if (clearBtn) {
+      var clearCard = clearBtn.closest('[data-id]');
+      var clearInput = clearCard && clearCard.querySelector('.price-input');
+      var clearSave = clearCard && clearCard.querySelector('.btn-price');
+      if (clearInput) clearInput.value = '';     // empty input → doSetPrice sends null
+      if (clearSave) doSetPrice(clearSave);
+      return;
+    }
     var priceBtn = e.target.closest('.btn-price');
     if (priceBtn) { doSetPrice(priceBtn); return; }
     var phoneBtn = e.target.closest('.job-phone[data-phone]');
@@ -990,7 +1048,7 @@
   queue.addEventListener('keydown', function (e) {
     if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('price-input')) {
       e.preventDefault();
-      var card = e.target.closest('.job-card');
+      var card = e.target.closest('[data-id]');
       var btn = card && card.querySelector('.btn-price');
       if (btn) doSetPrice(btn);
       return;
@@ -1053,30 +1111,43 @@
   if (imgModal) imgModal.addEventListener('click', closeLightbox);
 
   function doSetPrice(btn) {
-    var card = btn.closest('.job-card'); if (!card) return;
+    var card = btn.closest('[data-id]'); if (!card) return;
     var id = card.getAttribute('data-id');
     var input = card.querySelector('.price-input');
     var raw = (input.value || '').trim();
-    if (raw === '') { toast('Enter a price first.', 'err'); input.focus(); return; }
-    var price = Number(raw);
-    if (isNaN(price) || price < 0) { toast('Enter a valid price.', 'err'); input.focus(); return; }
+    var clearing = raw === '';                       // empty input clears the price (Fix 4)
+    var price = clearing ? null : Number(raw);
+    if (!clearing && (isNaN(price) || price < 0)) { toast('Enter a valid price.', 'err'); input.focus(); return; }
     btn.disabled = true; var label = btn.textContent; btn.textContent = '…';
     authedFetch('/api/dispatch/' + id + '/price', { method: 'PATCH', json: { price: price } })
       .then(function (res) {
         btn.disabled = false; btn.textContent = label;
         if (res.ok) {
-          if (res.data && res.data.price != null) input.value = res.data.price;
-          var jb = findJob(id); if (jb) jb.price = (res.data && res.data.price != null) ? res.data.price : price;
-          toast('Price saved · ' + fmtMoney(res.data ? res.data.price : price), 'ok');
+          var newPrice = (res.data && res.data.price != null) ? res.data.price : null;
+          input.value = newPrice != null ? newPrice : '';
+          var jb = findJob(id); if (jb) jb.price = newPrice;
+          syncPriceClearBtn(card, newPrice != null);    // add/remove the Clear button in place
+          toast(clearing ? 'Price cleared' : 'Price saved · ' + fmtMoney(newPrice != null ? newPrice : price), 'ok');
           loadStats(); // revenue counters may shift
         } else if (res.status !== 401) {
           toast((res.data && res.data.message) || 'Could not save the price.', 'err');
         }
       });
   }
+  // Keep the Clear button's presence in sync with whether a price is set, without
+  // a full re-render (which would drop focus / collapse other open editors).
+  function syncPriceClearBtn(card, hasPrice) {
+    var row = card.querySelector('.price-row'); if (!row) return;
+    var existing = row.querySelector('.btn-price-clear');
+    if (hasPrice && !existing) {
+      row.insertAdjacentHTML('beforeend', '<button type="button" class="btn btn-ghost btn-price-clear">Clear</button>');
+    } else if (!hasPrice && existing) {
+      existing.remove();
+    }
+  }
 
   function doAssign(btn) {
-    var card = btn.closest('.job-card'); if (!card) return;
+    var card = btn.closest('[data-id]'); if (!card) return;
     var id = card.getAttribute('data-id');
     var sel = card.querySelector('.tech-select');
     var input = card.querySelector('.tech-input');
@@ -1123,11 +1194,18 @@
   }
 
   function doStatus(sel) {
-    var card = sel.closest('.job-card'); if (!card) return;
+    var card = sel.closest('[data-id]'); if (!card) return;
     var id = card.getAttribute('data-id');
     var next = sel.value;
     var current = sel.getAttribute('data-current');
     if (next === current) return;
+
+    // Guard against a misclick reopening a finished job (Fix 5). `current` mirrors
+    // the job's status, so this fires whenever the job is currently terminal.
+    if (TERMINAL[current]) {
+      var ok = window.confirm('This job is ' + STATUS_LABEL[current] + '. Reopen it as “' + STATUS_LABEL[next] + '”?');
+      if (!ok) { sel.value = current; return; }   // revert the dropdown, do nothing
+    }
 
     var job = findJob(id);
     if (!job) {

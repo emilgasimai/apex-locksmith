@@ -235,10 +235,10 @@ input:focus, select:focus {
 }
 .tab.is-active .count { background: rgba(4,24,28,.22); color: var(--accent-ink); }
 
-/* "My jobs" toggle — ghost button that lights up when on */
-.my-jobs-toggle { min-height: 42px; }
-.my-jobs-toggle.is-on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-.my-jobs-toggle.is-on:hover { background: #54e9f9; border-color: #54e9f9; }
+/* "Unassigned" filter toggle — ghost button that lights up when on */
+.unassigned-toggle { min-height: 42px; }
+.unassigned-toggle.is-on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.unassigned-toggle.is-on:hover { background: #54e9f9; border-color: #54e9f9; }
 
 /* Filter bar */
 .filter-bar {
@@ -347,6 +347,12 @@ input:focus, select:focus {
 .job-ai-label::before { content: "✦"; }
 .job-ai p { margin: 0; font-size: 13px; color: #c8e7e6; }
 .job-ai .ai-prio { color: var(--muted); font-style: italic; }
+
+/* Editable Details (description) — a subtle neutral box so it reads as editable
+   without competing with the cyan AI summary. Corner pencil from .editable-block. */
+.job-desc-block { background: var(--panel-2); border: 1px solid var(--line-soft); border-radius: 7px; padding: 9px 11px; margin-top: 8px; }
+.job-desc-label { display: block; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted-2); margin-bottom: 4px; padding-right: 34px; }
+.job-desc-block .job-desc { margin: 0; padding-right: 30px; }
 
 /* Controls — two equal, shrinkable columns so a wide control (long technician
    name, status label) can never push the card past the viewport edge. */
@@ -459,7 +465,7 @@ textarea.ed-input { resize: vertical; min-height: 72px; line-height: 1.5; }
   .stat-num { font-size: 22px; }
   .tab-bar { gap: 6px; }
   .tab { flex: 0 1 auto; justify-content: center; padding: 8px 11px; font-size: 12px; }
-  .my-jobs-toggle, .new-call-btn { flex: 1 1 100%; }
+  .unassigned-toggle, .new-call-btn { flex: 1 1 100%; }
   .filter-bar { gap: 8px; }
   .filter-group { flex: 1 1 calc(50% - 4px); }
   .filter-bar select { min-width: 0; max-width: none; width: 100%; }
@@ -639,6 +645,13 @@ body.is-embed .dash-main { max-width: none; }
 .note-age { margin-left: auto; font-size: 11px; color: var(--muted-2); font-family: var(--mono); white-space: nowrap; }
 .note-summary { margin: 0; font-size: 13.5px; color: var(--ink); line-height: 1.55; }
 .note-summary.is-empty { color: var(--muted-2); font-style: italic; }
+/* Editable summary on a note card — keep it calm (no box), just leave room for
+   the corner pencil so the text doesn't run under it. */
+.note-summary-edit { padding-right: 4px; }
+.note-summary-edit .note-summary { padding-right: 30px; }
+/* The full job controls, tucked under a note so it can be worked in place (Fix 2). */
+.note-actions { margin-top: 11px; padding-top: 11px; border-top: 1px dashed var(--line-soft); }
+.note-actions .job-controls { border-top: 0; padding-top: 0; }
 
 .note-orig-toggle {
   margin-top: 9px; font: inherit; font-size: 12px; font-weight: 700; letter-spacing: .03em;
