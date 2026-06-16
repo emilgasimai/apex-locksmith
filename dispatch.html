@@ -8,7 +8,7 @@
 <title>Aston Dispatch</title>
 <!-- Apply the saved theme before first paint to avoid a flash of the wrong theme. -->
 <script>try{var t=localStorage.getItem('aston_dispatch_theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}</script>
-<link rel="stylesheet" href="dispatch.css?v=8"/>
+<link rel="stylesheet" href="dispatch.css?v=9"/>
 </head>
 <body>
 
@@ -82,11 +82,13 @@
       <div class="stat is-done">  <div class="stat-num" id="statCompleted">—</div><div class="stat-label">Completed Today</div></div>
     </section>
 
-    <!-- Status tabs -->
-    <section class="tab-bar" id="tabBar" role="tablist" aria-label="Job status views">
+    <!-- Status / source tabs -->
+    <section class="tab-bar" id="tabBar" role="tablist" aria-label="Job views">
       <button type="button" class="tab is-active" data-tab="active" role="tab" aria-selected="true">Active <span class="count" id="countActive">0</span></button>
       <button type="button" class="tab" data-tab="completed" role="tab" aria-selected="false">Completed <span class="count" id="countCompleted">0</span></button>
       <button type="button" class="tab" data-tab="cancelled" role="tab" aria-selected="false">Cancelled <span class="count" id="countCancelled">0</span></button>
+      <button type="button" class="tab" data-tab="calls" role="tab" aria-selected="false">Calls <span class="count" id="countCalls">0</span></button>
+      <button type="button" class="tab" data-tab="notes" role="tab" aria-selected="false">Customer Notes <span class="count" id="countNotes">0</span></button>
     </section>
 
     <!-- Filters -->
@@ -101,7 +103,7 @@
           <option value="in-progress">In Progress</option>
         </select>
       </div>
-      <div class="filter-group">
+      <div class="filter-group" id="priorityFilterGroup">
         <span class="field-label">Priority</span>
         <select id="filterPriority" aria-label="Filter by priority">
           <option value="">All priorities</option>
@@ -112,6 +114,7 @@
         </select>
       </div>
       <button type="button" id="myJobsToggle" class="btn btn-ghost my-jobs-toggle" hidden aria-pressed="false">My jobs</button>
+      <button type="button" id="newCallBtn" class="btn btn-primary new-call-btn" hidden>+ New Call</button>
       <div class="filter-spacer"></div>
       <div class="refresh-meta">
         <span class="live"><span class="pulse" aria-hidden="true"></span>Auto-refresh 25s</span>
@@ -141,7 +144,55 @@
   </div>
 </div>
 
+<!-- New Call modal -->
+<div id="callModal" class="modal-overlay" hidden>
+  <div class="modal-box call-box" role="dialog" aria-modal="true" aria-labelledby="callTitle">
+    <div class="cust-head">
+      <h3 id="callTitle" class="cust-title">Log a phone call</h3>
+      <button id="callClose" type="button" class="icon-btn" aria-label="Close">&times;</button>
+    </div>
+    <form id="callForm" class="call-form" novalidate>
+      <div id="callError" class="login-error" role="alert" hidden></div>
+      <label class="field">
+        <span class="field-label">Customer name</span>
+        <input id="callName" type="text" maxlength="100" autocomplete="off" required/>
+      </label>
+      <label class="field">
+        <span class="field-label">Phone</span>
+        <input id="callPhone" type="tel" inputmode="tel" maxlength="30" autocomplete="off" required/>
+      </label>
+      <label class="field">
+        <span class="field-label">Service type</span>
+        <input id="callService" type="text" maxlength="100" autocomplete="off" placeholder="e.g. Lockout — residential" required/>
+      </label>
+      <label class="field">
+        <span class="field-label">Priority</span>
+        <select id="callPriority">
+          <option value="">Normal (default)</option>
+          <option value="emergency">Emergency</option>
+          <option value="high">High</option>
+          <option value="normal">Normal</option>
+          <option value="low">Low</option>
+        </select>
+      </label>
+      <label class="field">
+        <span class="field-label">Details</span>
+        <textarea id="callDesc" rows="3" maxlength="2000" placeholder="What did the caller need?"></textarea>
+      </label>
+      <div class="call-actions">
+        <button type="button" id="callCancel" class="btn btn-ghost">Cancel</button>
+        <button type="submit" id="callSubmit" class="btn btn-primary">Log call</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Photo lightbox -->
+<div id="imgModal" class="img-overlay" hidden>
+  <img id="imgModalImg" class="img-full" alt="Attached photo enlarged"/>
+</div>
+
 <script src="config.js?v=1" defer></script>
-<script src="js/dispatch.js?v=9" defer></script>
+<script src="js/dispatch.js?v=10" defer></script>
 </body>
 </html>

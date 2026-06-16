@@ -41,6 +41,7 @@
     completed: ['completed'],
     cancelled: ['cancelled']
   };
+  var TABS = ['active', 'completed', 'cancelled', 'calls', 'notes']; // calls/notes are source-based
   // statusHistory entries are status transitions; map each to a past-tense verb
   // for the per-card history panel ("Assigned by dispatch1 · 2h ago").
   var STATUS_VERB = {
@@ -57,9 +58,10 @@
   var state = {
     jobs: [],            // working set (all statuses), newest-first from server
     searchResults: [],   // results while searchActive
-    tab: 'active',       // active | completed | cancelled
+    tab: 'active',       // active | completed | cancelled | calls | notes
     myJobsOnly: false,   // dispatch-only "My jobs" toggle
     expanded: {},        // { [jobId]: true } open history panels (survive re-render)
+    origExpanded: {},    // { [noteId]: true } open "View original" panels (survive re-render)
     pending: 0           // in-flight optimistic mutations (auto-refresh pauses while > 0)
   };
 
@@ -70,9 +72,12 @@
   var loginBtn = $('loginBtn'), loginError = $('loginError'), loginNotice = $('loginNotice');
   var topUser = $('topUser'), logoutBtn = $('logoutBtn'), themeToggle = $('themeToggle');
   var statToday = $('statToday'), statPending = $('statPending'), statProgress = $('statProgress'), statCompleted = $('statCompleted');
-  var filterStatus = $('filterStatus'), filterPriority = $('filterPriority'), statusFilterGroup = $('statusFilterGroup');
-  var tabBar = $('tabBar'), myJobsToggle = $('myJobsToggle');
+  var filterStatus = $('filterStatus'), filterPriority = $('filterPriority'), statusFilterGroup = $('statusFilterGroup'), priorityFilterGroup = $('priorityFilterGroup');
+  var tabBar = $('tabBar'), myJobsToggle = $('myJobsToggle'), newCallBtn = $('newCallBtn');
   var countActive = $('countActive'), countCompleted = $('countCompleted'), countCancelled = $('countCancelled');
+  var countCalls = $('countCalls'), countNotes = $('countNotes');
+  var callModal = $('callModal'), callForm = $('callForm'), callClose = $('callClose'), callError = $('callError'), callSubmit = $('callSubmit');
+  var imgModal = $('imgModal'), imgModalImg = $('imgModalImg');
   var queue = $('queue'), lastUpdatedEl = $('lastUpdated'), refreshBtn = $('refreshBtn'), toastEl = $('toast');
   var searchForm = $('searchForm'), searchInput = $('searchInput'), searchClear = $('searchClear'), searchMeta = $('searchMeta');
   var muteToggle = $('muteToggle');
@@ -633,7 +638,15 @@
     return !!(me && job.assignedTo && job.assignedTo === me);
   }
 
-  function jobInTab(job, tab) { return TAB_STATUSES[tab].indexOf(job.status) !== -1; }
+  // Tab membership. The status tabs (active/completed/cancelled) are status-based
+  // and EXCLUDE notes (which live in their own calm inbox). Calls + Notes are
+  // source-based and span all statuses. A call also shows in its status tab.
+  function jobInTab(job, tab) {
+    if (tab === 'calls') return job.source === 'call';
+    if (tab === 'notes') return job.source === 'note';
+    return job.source !== 'note' && TAB_STATUSES[tab] && TAB_STATUSES[tab].indexOf(job.status) !== -1;
+  }
+  function isSourceTab(tab) { return tab === 'calls' || tab === 'notes'; }
 
   // The store filtered down to what the current tab + dropdowns + toggle should show.
   function visibleJobs() {
@@ -641,17 +654,19 @@
     if (state.tab === 'active' && filters.status) {
       list = list.filter(function (j) { return j.status === filters.status; });
     }
-    if (filters.priority) {
+    if (filters.priority && state.tab !== 'notes') {
       list = list.filter(function (j) { return (j.priority || 'normal') === filters.priority; });
     }
-    if (state.myJobsOnly && !isAdminUser()) list = list.filter(jobIsMine);
+    if (state.myJobsOnly && !isAdminUser() && state.tab !== 'notes') list = list.filter(jobIsMine);
     return list;
   }
 
   function tabCounts() {
-    var c = { active: 0, completed: 0, cancelled: 0 };
+    var c = { active: 0, completed: 0, cancelled: 0, calls: 0, notes: 0 };
     state.jobs.forEach(function (j) {
-      if (jobInTab(j, 'active')) c.active++;
+      if (j.source === 'note') { c.notes++; return; }   // notes only count in their tab
+      if (j.source === 'call') c.calls++;               // calls count here AND in their status tab
+      if (TAB_STATUSES.active.indexOf(j.status) !== -1) c.active++;
       else if (j.status === 'completed') c.completed++;
       else if (j.status === 'cancelled') c.cancelled++;
     });
@@ -663,6 +678,8 @@
     if (countActive) countActive.textContent = c.active;
     if (countCompleted) countCompleted.textContent = c.completed;
     if (countCancelled) countCancelled.textContent = c.cancelled;
+    if (countCalls) countCalls.textContent = c.calls;
+    if (countNotes) countNotes.textContent = c.notes;
   }
   function syncTabButtons() {
     if (!tabBar) return;
@@ -673,20 +690,41 @@
       tabs[i].setAttribute('aria-selected', on ? 'true' : 'false');
     }
   }
-  // The status dropdown only applies to the Active tab (Completed/Cancelled have a
-  // single status, so the filter would be pointless/confusing there).
-  function syncStatusFilter() {
+  // Status dropdown applies only to Active; Priority + "My jobs" apply everywhere
+  // except the (calm, unfilterable) Notes inbox. "+ New Call" shows only on Calls.
+  function syncFilters() {
     var onActive = state.tab === 'active';
     if (statusFilterGroup) statusFilterGroup.hidden = !onActive;
     if (!onActive && filters.status) { filters.status = ''; if (filterStatus) filterStatus.value = ''; }
+    var showPriority = state.tab !== 'notes';
+    if (priorityFilterGroup) priorityFilterGroup.hidden = !showPriority;
+    if (!showPriority && filters.priority) { filters.priority = ''; if (filterPriority) filterPriority.value = ''; }
+    if (myJobsToggle) myJobsToggle.hidden = isAdminUser() || state.tab === 'notes';
+    if (newCallBtn) newCallBtn.hidden = state.tab !== 'calls';
   }
 
   function emptyMessage() {
     if (searchActive) return 'No jobs found.';
+    if (state.tab === 'calls') return (filters.priority || state.myJobsOnly) ? 'No calls match these filters.' : 'No calls logged yet — use “+ New Call” to add one.';
+    if (state.tab === 'notes') return 'No customer notes yet.';
     if (filters.status || filters.priority || state.myJobsOnly) return 'No jobs match these filters.';
     if (state.tab === 'completed') return 'No completed jobs in the current window.';
     if (state.tab === 'cancelled') return 'No cancelled jobs in the current window.';
     return 'No active jobs right now.';
+  }
+
+  // Phone normalizer for grouping notes by customer (digits only, drop a leading 1).
+  function normPhone(p) { var d = (String(p || '').match(/\d/g) || []).join(''); if (d.length === 11 && d[0] === '1') d = d.slice(1); return d; }
+
+  function paintQueue(html, animate) {
+    queue.classList.toggle('animate-in', !!animate);
+    queue.innerHTML = html;
+    if (animate) setTimeout(function () { queue.classList.remove('animate-in'); }, 340);
+    updateAges();
+  }
+  function jobCardOuter(job) {
+    var cls = 'job-card prio-' + (PRIORITY_RANK[job.priority] != null ? job.priority : 'normal');
+    return '<article class="' + cls + '" data-id="' + esc(String(job._id || job.id || '')) + '">' + cardHtml(job) + '</article>';
   }
 
   // Single render path. `animate` plays the entrance animation (first load, tab
@@ -694,28 +732,82 @@
   // queue doesn't flash every 25s or on every click.
   function render(animate) {
     if (tabBar) tabBar.hidden = searchActive;
-    if (!searchActive) { updateTabCounts(); syncTabButtons(); syncStatusFilter(); }
+    if (!searchActive) { updateTabCounts(); syncTabButtons(); syncFilters(); }
+
+    if (!searchActive && state.tab === 'notes') { renderNotes(animate); return; }
 
     var list = searchActive ? state.searchResults : visibleJobs();
-    if (!list.length) {
-      queue.classList.remove('animate-in');
-      queue.innerHTML = '<div class="queue-empty">' + esc(emptyMessage()) + '</div>';
-      return;
-    }
-    var sorted = searchActive ? sortJobs(list) : sortForTab(list, state.tab);
-    var frag = document.createDocumentFragment();
-    sorted.forEach(function (job) {
-      var card = document.createElement('article');
-      card.className = 'job-card prio-' + (PRIORITY_RANK[job.priority] != null ? job.priority : 'normal');
-      card.setAttribute('data-id', job._id || job.id || '');
-      card.innerHTML = cardHtml(job);
-      frag.appendChild(card);
+    if (!list.length) { paintQueue('<div class="queue-empty">' + esc(emptyMessage()) + '</div>', false); return; }
+    var sorted = (searchActive || state.tab === 'calls') ? sortJobs(list) : sortForTab(list, state.tab);
+    paintQueue(sorted.map(jobCardOuter).join(''), animate);
+  }
+
+  /* ───────────── Customer Notes view (source === 'note') ─────────────
+     Calm, muted inbox. Notes are grouped by phone so one customer's messages
+     stay together. Each card shows the AI summary, an optional "View original"
+     reveal of the raw message, and any attached photos (thumbnails → lightbox).
+     Photos auto-expire server-side; when gone we just show the text, no error. */
+  function renderNotes(animate) {
+    var notes = state.jobs.filter(function (j) { return j.source === 'note'; });
+    if (!notes.length) { paintQueue('<div class="queue-empty">' + esc(emptyMessage()) + '</div>', false); return; }
+    var groups = {};
+    notes.forEach(function (j) {
+      var key = normPhone(j.phone) || ('id:' + (j._id || j.id));
+      if (!groups[key]) groups[key] = { phone: j.phone, name: j.customerName, items: [] };
+      groups[key].items.push(j);
+      if (!groups[key].name && j.customerName) groups[key].name = j.customerName;
     });
-    queue.classList.toggle('animate-in', !!animate);
-    queue.innerHTML = '';
-    queue.appendChild(frag);
-    if (animate) setTimeout(function () { queue.classList.remove('animate-in'); }, 340);
-    updateAges();
+    var arr = Object.keys(groups).map(function (k) { return groups[k]; });
+    arr.forEach(function (g) {
+      g.items.sort(function (a, b) { return new Date(b.createdAt) - new Date(a.createdAt); });
+      g.latest = new Date(g.items[0].createdAt).getTime();
+    });
+    arr.sort(function (a, b) { return b.latest - a.latest; });
+    paintQueue(arr.map(noteGroupHtml).join(''), animate);
+  }
+
+  function noteGroupHtml(g) {
+    var phoneStr = g.phone || '';
+    var phoneSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h4l2 5-2 2a12 12 0 005 5l2-2 5 2v4a2 2 0 01-2 2A18 18 0 013 5a2 2 0 012-2z"/></svg>';
+    var phoneHtml = phoneStr
+      ? '<button type="button" class="job-phone note-phone" data-phone="' + esc(phoneStr) + '" title="View customer history" aria-label="View customer history for ' + esc(phoneStr) + '">' + phoneSvg + esc(phoneStr) + '</button>'
+      : '';
+    return '<section class="note-group">' +
+      '<header class="note-group-head">' +
+        '<span class="note-group-name">' + esc(g.name || 'Unknown') + '</span>' +
+        phoneHtml +
+        '<span class="note-group-count">' + g.items.length + ' note' + (g.items.length === 1 ? '' : 's') + '</span>' +
+      '</header>' +
+      g.items.map(noteCardHtml).join('') +
+    '</section>';
+  }
+
+  function noteCardHtml(job) {
+    var id = String(job._id || job.id || '');
+    var when = '<time class="note-age" data-created="' + esc(job.createdAt) + '">' + timeAgo(job.createdAt) + '</time>';
+    var svc = job.serviceType ? '<span class="note-svc">' + esc(job.serviceType) + '</span>' : '';
+    var aiEmpty = !(job.aiSummary && String(job.aiSummary).trim());
+    var summary = '<p class="note-summary' + (aiEmpty ? ' is-empty' : '') + '">' + esc(aiEmpty ? 'No summary yet.' : job.aiSummary) + '</p>';
+
+    var orig = job.originalMessage && String(job.originalMessage).trim();
+    var open = !!state.origExpanded[id];
+    var origBlock = orig
+      ? '<button type="button" class="note-orig-toggle" data-orig-toggle aria-expanded="' + (open ? 'true' : 'false') + '">' +
+          '<span class="hist-caret" aria-hidden="true">' + (open ? '▾' : '▸') + '</span> View original</button>' +
+        '<div class="note-orig" data-orig' + (open ? '' : ' hidden') + '><p>' + esc(job.originalMessage) + '</p></div>'
+      : '';
+
+    var photos = (job.photoUrls || []).filter(Boolean);
+    var photoBlock = photos.length
+      ? '<div class="note-photos">' + photos.map(function (u) {
+          return '<button type="button" class="note-thumb" data-full="' + esc(u) + '" aria-label="Enlarge photo"><img src="' + esc(u) + '" alt="Attached photo" loading="lazy"/></button>';
+        }).join('') + '</div>'
+      : '';
+
+    return '<article class="note-card" data-id="' + esc(id) + '">' +
+      '<div class="note-card-top">' + svc + when + '</div>' +
+      summary + origBlock + photoBlock +
+    '</article>';
   }
 
   function loadJobs(animate) {
@@ -794,7 +886,7 @@
       var btn = e.target.closest && e.target.closest('[data-tab]');
       if (!btn) return;
       var tab = btn.getAttribute('data-tab');
-      if (!TAB_STATUSES[tab]) return;
+      if (TABS.indexOf(tab) === -1) return;
       if (searchActive) clearSearch();
       if (tab === state.tab) return;
       state.tab = tab;
@@ -813,6 +905,61 @@
     });
   }
 
+  /* ───────────── New Call (manual call logging) ─────────────
+     A dispatcher logs a phone call by hand until Twilio is wired up. POST creates
+     a source:'call' job that lands in the Calls tab (and the Active tab). */
+  function openCallModal() {
+    if (!callModal) return;
+    if (callForm) callForm.reset();
+    if (callError) { callError.hidden = true; callError.textContent = ''; }
+    callModal.hidden = false;
+    void callModal.offsetWidth;
+    callModal.classList.add('is-open');
+    setTimeout(function () { var f = $('callName'); if (f) f.focus(); }, 60);
+  }
+  function closeCallModal() {
+    if (!callModal) return;
+    callModal.classList.remove('is-open');
+    setTimeout(function () { if (!callModal.classList.contains('is-open')) callModal.hidden = true; }, 170);
+  }
+  if (newCallBtn) newCallBtn.addEventListener('click', openCallModal);
+  if (callClose) callClose.addEventListener('click', closeCallModal);
+  var callCancel = $('callCancel'); if (callCancel) callCancel.addEventListener('click', closeCallModal);
+  if (callModal) callModal.addEventListener('click', function (e) { if (e.target === callModal) closeCallModal(); });
+  if (callForm) {
+    callForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var name = ($('callName').value || '').trim();
+      var phone = ($('callPhone').value || '').trim();
+      var service = ($('callService').value || '').trim();
+      var desc = ($('callDesc').value || '').trim();
+      var prio = ($('callPriority').value || '').trim();
+      function showErr(m) { if (callError) { callError.textContent = m; callError.hidden = false; } }
+      if (!name) return showErr('Enter the customer’s name.');
+      if (!/^[0-9+()\-.\s]{7,30}$/.test(phone)) return showErr('Enter a valid phone number.');
+      if (!service) return showErr('Enter the service type.');
+      var body = { customerName: name, phone: phone, serviceType: service };
+      if (desc) body.description = desc;
+      if (prio) body.priority = prio;
+      if (callError) callError.hidden = true;
+      var lbl = callSubmit ? callSubmit.textContent : '';
+      if (callSubmit) { callSubmit.disabled = true; callSubmit.textContent = 'Logging…'; }
+      authedFetch('/api/dispatch/manual-call', { method: 'POST', json: body }).then(function (res) {
+        if (callSubmit) { callSubmit.disabled = false; callSubmit.textContent = lbl; }
+        if (res.ok && res.data) {
+          state.jobs.unshift(res.data);                          // add to the store (newest first)
+          if (knownJobIds) knownJobIds.add(res.data._id || res.data.id); // don't chime for our own entry
+          state.tab = 'calls';
+          render(true);
+          closeCallModal();
+          toast('Call logged · #' + (res.data.jobId || ''), 'ok');
+        } else if (res.status !== 401) {
+          showErr((res.data && res.data.message) || 'Could not log the call — try again.');
+        }
+      });
+    });
+  }
+
   /* ───────────── per-card actions (event delegation) ───────────── */
   queue.addEventListener('click', function (e) {
     if (!e.target.closest) return;
@@ -824,6 +971,10 @@
     if (edCancel) { restoreView(edCancel.closest('.editable')); return; }
     var histBtn = e.target.closest('[data-history-toggle]');
     if (histBtn) { toggleHistory(histBtn); return; }
+    var origToggle = e.target.closest('[data-orig-toggle]');
+    if (origToggle) { toggleOriginal(origToggle); return; }
+    var thumb = e.target.closest('.note-thumb');
+    if (thumb) { openLightbox(thumb.getAttribute('data-full')); return; }
     var assignBtn = e.target.closest('.btn-assign');
     if (assignBtn) { doAssign(assignBtn); return; }
     var priceBtn = e.target.closest('.btn-price');
@@ -870,6 +1021,36 @@
     if (caret) caret.textContent = next ? '▾' : '▸';
     if (next) state.expanded[id] = true; else delete state.expanded[id];
   }
+
+  // "View original" on a note card — same expand/collapse pattern, tracked so it
+  // survives the 25s auto-refresh re-render.
+  function toggleOriginal(btn) {
+    var card = btn.closest('.note-card'); if (!card) return;
+    var id = card.getAttribute('data-id');
+    var panel = card.querySelector('[data-orig]');
+    var open = btn.getAttribute('aria-expanded') === 'true';
+    var next = !open;
+    btn.setAttribute('aria-expanded', next ? 'true' : 'false');
+    if (panel) panel.hidden = !next;
+    var caret = btn.querySelector('.hist-caret');
+    if (caret) caret.textContent = next ? '▾' : '▸';
+    if (next) state.origExpanded[id] = true; else delete state.origExpanded[id];
+  }
+
+  /* ───────────── photo lightbox (note thumbnails) ───────────── */
+  function openLightbox(url) {
+    if (!url || !imgModal || !imgModalImg) return;
+    imgModalImg.src = url;
+    imgModal.hidden = false;
+    void imgModal.offsetWidth;
+    imgModal.classList.add('is-open');
+  }
+  function closeLightbox() {
+    if (!imgModal) return;
+    imgModal.classList.remove('is-open');
+    setTimeout(function () { if (!imgModal.classList.contains('is-open')) { imgModal.hidden = true; if (imgModalImg) imgModalImg.src = ''; } }, 170);
+  }
+  if (imgModal) imgModal.addEventListener('click', closeLightbox);
 
   function doSetPrice(btn) {
     var card = btn.closest('.job-card'); if (!card) return;
@@ -1106,7 +1287,10 @@
   if (custClose) custClose.addEventListener('click', closeCustModal);
   if (custModal) custModal.addEventListener('click', function (e) { if (e.target === custModal) closeCustModal(); });
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && custModal && !custModal.hidden) closeCustModal();
+    if (e.key !== 'Escape') return;
+    if (imgModal && !imgModal.hidden) { closeLightbox(); return; }
+    if (callModal && !callModal.hidden) { closeCallModal(); return; }
+    if (custModal && !custModal.hidden) closeCustModal();
   });
 
   /* ───────────── notification sound + mute ───────────── */
