@@ -422,6 +422,36 @@ const AdminStore = (function () {
       return res.ok && res.data ? res.data : null;
     },
 
+    /* ── Dashboard charts (each returns its payload, or null if unreachable) ── */
+
+    // GET /api/dashboard/timeseries → { metric, period, from, to, labels:[], values:[] }.
+    // metric: 'jobs' | 'revenue'. period: 'week' | 'month'. from/to: YYYY-MM-DD (override period).
+    async getTimeseries(metric, period, from, to) {
+      const p = new URLSearchParams({ metric: metric || 'jobs' });
+      if (from && to) { p.set('from', from); p.set('to', to); }
+      else if (period) { p.set('period', period); }
+      const res = await api('/api/dashboard/timeseries?' + p.toString());
+      return res.ok && res.data ? res.data : null;
+    },
+
+    // GET /api/dashboard/status-breakdown → { status: count, … }, or null.
+    async getStatusBreakdown() {
+      const res = await api('/api/dashboard/status-breakdown');
+      return res.ok && res.data ? res.data : null;
+    },
+
+    // GET /api/dashboard/source-breakdown → { source: count, … }, or null.
+    async getSourceBreakdown() {
+      const res = await api('/api/dashboard/source-breakdown');
+      return res.ok && res.data ? res.data : null;
+    },
+
+    // GET /api/dashboard/technician-workload → [{ technicianId, name, openJobs }], or null.
+    async getTechnicianWorkload() {
+      const res = await api('/api/dashboard/technician-workload');
+      return res.ok && Array.isArray(res.data) ? res.data : null;
+    },
+
     // GET /api/dispatch/export?type=&from=&to= → CSV download. Returns
     // { ok, blob, filename } on success so the caller can trigger the download.
     // Uses a raw fetch (not apiFetch) because the body is CSV, not JSON.

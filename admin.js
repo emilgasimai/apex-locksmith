@@ -127,6 +127,7 @@
       topbarUser.textContent = (s && (s.displayName || s.username)) || 'admin';
     });
     startSessionWatch();
+    startDispatchBadge();
     setActiveView(currentView || 'content');
     initEditor();
   }
@@ -179,6 +180,7 @@
     document.removeEventListener('visibilitychange', onVisibility);
     window.removeEventListener('focus', checkSessionExpiry);
     if (sessionTimer) { clearInterval(sessionTimer); sessionTimer = null; }
+    if (dispatchBadgeTimer) { clearInterval(dispatchBadgeTimer); dispatchBadgeTimer = null; }
   }
 
   logoutBtn.addEventListener('click', function () { doLogout(); });
@@ -228,7 +230,7 @@
     if (view === 'versions') loadVersions();
     if (view === 'dispatch-users') loadDispatchUsers();
     if (view === 'technicians') loadTechnicians();
-    if (view === 'dispatch-board') loadDispatchBoard();
+    if (view === 'dispatch-board') { loadDispatchBoard(); clearDispatchBadge(); }
     if (view === 'dashboard') loadDashboard();
     if (view === 'revenue') loadRevenue(revPeriod);
   }
@@ -242,6 +244,46 @@
     if (dispatchFrameLoaded) return;
     const f = document.getElementById('dispatchFrame');
     if (f) { f.src = '/dispatch.html?embed=1'; dispatchFrameLoaded = true; }
+  }
+
+  /* ── Dispatch "new jobs" notification badge (sidebar) ──
+     A small blue count next to "Dispatch Control" showing how many jobs were
+     created since the admin last opened the board. The baseline timestamp lives
+     in localStorage so it survives reloads; opening the board clears it. */
+  const DISPATCH_SEEN_KEY = 'aston_admin_dispatch_seen';
+  let dispatchBadgeTimer = null;
+
+  function getDispatchSeen() {
+    try { return parseInt(localStorage.getItem(DISPATCH_SEEN_KEY), 10) || 0; } catch (e) { return 0; }
+  }
+  function setDispatchSeen(ts) {
+    try { localStorage.setItem(DISPATCH_SEEN_KEY, String(ts)); } catch (e) {}
+  }
+  function paintDispatchBadge(count) {
+    const badge = document.getElementById('dispatchBadge');
+    if (!badge) return;
+    if (count > 0) { badge.textContent = count > 99 ? '99+' : String(count); badge.hidden = false; }
+    else { badge.hidden = true; }
+  }
+  async function pollDispatchBadge() {
+    // While the admin is actually on the board there's nothing "new" to flag.
+    if (currentView === 'dispatch-board') { paintDispatchBadge(0); return; }
+    let seen = getDispatchSeen();
+    if (!seen) { seen = Date.now(); setDispatchSeen(seen); } // first run: baseline = now, so history isn't all "new"
+    try {
+      const s = await AdminStore.getSession();
+      const res = await window.apiFetch('/api/dispatch?limit=50', { token: s && s.token });
+      if (!res.ok || !res.data) return;
+      const items = res.data.items || [];
+      const count = items.filter(function (j) { return new Date(j.createdAt).getTime() > seen; }).length;
+      paintDispatchBadge(count);
+    } catch (e) { /* offline — leave the badge as it was */ }
+  }
+  function clearDispatchBadge() { setDispatchSeen(Date.now()); paintDispatchBadge(0); }
+  function startDispatchBadge() {
+    pollDispatchBadge();
+    if (dispatchBadgeTimer) clearInterval(dispatchBadgeTimer);
+    dispatchBadgeTimer = setInterval(pollDispatchBadge, 30000);
   }
 
   /* ========================================================================
@@ -1871,46 +1913,325 @@
       '<div class="stat-group-cards">' + cardsHtml + '</div></div>';
   }
 
-  // ── Dashboard ──
-  const dashCards = document.getElementById('dashCards');
-  const recentList = document.getElementById('recentList');
-  const dashError = document.getElementById('dashError');
+  // ── Dashboard (analytics) ──
+  const dashSummary    = document.getElementById('dashSummary');
+  const dashAttention  = document.getElementById('dashAttention');
+  const techWorkload   = document.getElementById('techWorkload');
+  const sourceList     = document.getElementById('sourceList');
+  const statusLegend   = document.getElementById('statusLegend');
+  const recentList     = document.getElementById('recentList');
+  const dashError      = document.getElementById('dashError');
   const dashRefreshBtn = document.getElementById('dashRefreshBtn');
+  const dashPeriod     = document.getElementById('dashPeriod');
+  const dashRange      = document.getElementById('dashRange');
+  const dashFrom       = document.getElementById('dashFrom');
+  const dashTo         = document.getElementById('dashTo');
+  const dashRangeApply = document.getElementById('dashRangeApply');
+
+  let chartPeriod = 'month';            // 'week' | 'month' | 'custom'
+  let chartRange  = { from: null, to: null };
+  const charts = { jobs: null, revenue: null, status: null }; // live Chart.js instances
+  const hasChart = function () { return typeof window.Chart !== 'undefined'; };
+
+  // Theme-harmonized palette (dark + cyan). Urgency in muted warm tones.
+  const C = {
+    accent: '#27e0f5', accentSoft: 'rgba(39,224,245,.20)',
+    ok: '#5cd97a', ink: '#ededed', muted: '#9a9a9a', grid: 'rgba(255,255,255,.06)',
+    tip: '#1d1d1f', tipLine: '#3a3a3e', panel: '#242427',
+  };
+  const STATUS_COLORS = {
+    'pending-review': '#f4c20a', 'approved': '#7ee2e8', 'assigned': '#60a0ff',
+    'in-progress': '#ff9f1c', 'completed': '#5cd97a', 'cancelled': '#ff5d5d',
+  };
+  const SOURCE_LABEL = { quote: 'Quote', contact: 'Contact', call: 'Call', note: 'Note', manual: 'Manual' };
+
+  if (hasChart()) {
+    Chart.defaults.color = C.muted;
+    Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+    Chart.defaults.font.size = 11;
+  }
+
+  function isoDate(d) {
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  // 'YYYY-MM-DD' → 'Jun 17'
+  function fmtDayLabel(s) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s || ''));
+    if (!m) return String(s || '');
+    return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]))
+      .toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
 
   async function loadDashboard() {
     dashError.hidden = true;
-    dashCards.innerHTML = '<div class="manager-empty">Loading…</div>';
-    recentList.innerHTML = '';
     const d = await AdminStore.getDashboardSummary();
     if (!d) {
-      dashCards.innerHTML = '';
       dashError.hidden = false;
       dashError.textContent = 'Backend unreachable — dashboard metrics are unavailable right now.';
+      dashSummary.innerHTML = '<div class="manager-empty">No data</div>';
+      dashAttention.innerHTML = '';
+      techWorkload.innerHTML = '';
+      sourceList.innerHTML = '<li class="manager-empty">No data</li>';
+      recentList.innerHTML = '';
       return;
     }
-    const today = d.today || {}, week = d.week || {}, month = d.month || {};
-    dashCards.innerHTML =
-      statGroup('Today',
-        statCard(today.newJobs != null ? today.newJobs : 0, 'New jobs') +
-        statCard(today.completedJobs != null ? today.completedJobs : 0, 'Completed') +
-        statCard(money(today.revenue), 'Revenue', { cls: 'is-revenue' })
-      ) +
-      statGroup('This Week',
-        statCard(week.jobs != null ? week.jobs : 0, 'Jobs') +
-        statCard(money(week.revenue), 'Revenue', { cls: 'is-revenue' })
-      ) +
-      statGroup('This Month',
-        statCard(month.jobs != null ? month.jobs : 0, 'Jobs') +
-        statCard(money(month.revenue), 'Revenue', { cls: 'is-revenue' })
-      ) +
-      statGroup('Needs Attention',
-        statCard(d.pendingReviewJobs != null ? d.pendingReviewJobs : 0, 'Pending review', { cls: 'is-warn' }) +
-        statCard(d.inProgressJobs != null ? d.inProgressJobs : 0, 'In progress', { cls: 'is-prog' }) +
-        statCard(d.newContacts != null ? d.newContacts : 0, 'Unread contacts') +
-        statCard(d.pendingReviews != null ? d.pendingReviews : 0, 'Pending reviews')
-      );
+    renderSummary(d);
+    renderAttention(d);
     renderRecent(d.recentActivity || []);
+    // Independent sections — fire in parallel; each degrades to "No data" on its own.
+    loadCharts();
+    loadStatusBreakdown();
+    loadSourceBreakdown();
+    loadTechWorkload();
   }
+
+  // 1 — Today summary cards (big number + day-over-day trend arrow).
+  function renderSummary(d) {
+    const t = d.today || {};
+    dashSummary.innerHTML =
+      sumCard(t.newJobs != null ? t.newJobs : 0, 'New jobs today', 'is-accent', 'jobs') +
+      sumCard(t.completedJobs != null ? t.completedJobs : 0, 'Completed today', 'is-ok', '') +
+      sumCard(money(t.revenue), 'Revenue today', 'is-ok', 'revenue');
+  }
+  function sumCard(num, label, cls, trendKey) {
+    return '<div class="sum-card ' + cls + '">' +
+      '<div class="sum-card-top">' +
+        '<span class="sum-num">' + esc(String(num)) + '</span>' +
+        '<span class="sum-trend" data-trend="' + esc(trendKey || '') + '"></span>' +
+      '</div>' +
+      '<span class="sum-label">' + esc(label) + '</span>' +
+    '</div>';
+  }
+  function setTrend(key, ts) {
+    const el = dashSummary.querySelector('[data-trend="' + key + '"]');
+    if (!el) return;
+    const v = ts && Array.isArray(ts.values) ? ts.values : null;
+    if (!v || v.length < 2) { el.innerHTML = ''; return; }
+    const curr = v[v.length - 1], prev = v[v.length - 2];
+    if (curr > prev) el.innerHTML = '<span class="trend up" title="vs. previous day">▲</span>';
+    else if (curr < prev) el.innerHTML = '<span class="trend down" title="vs. previous day">▼</span>';
+    else el.innerHTML = '<span class="trend flat" title="vs. previous day">–</span>';
+  }
+
+  // 4 — Needs attention cards.
+  function renderAttention(d) {
+    dashAttention.innerHTML =
+      attnCard(d.pendingReviewJobs, 'Pending review', 'warn') +
+      attnCard(d.inProgressJobs, 'In progress', 'prog') +
+      attnCard(d.newContacts, 'Unread contacts', 'accent') +
+      attnCard(d.pendingReviews, 'Pending reviews', 'muted');
+  }
+  function attnCard(n, label, tone) {
+    return '<div class="attn-card attn-' + tone + '">' +
+      '<span class="attn-num">' + esc(String(n != null ? n : 0)) + '</span>' +
+      '<span class="attn-label">' + esc(label) + '</span>' +
+    '</div>';
+  }
+
+  // 2 — Trend charts (jobs bar + revenue line). Re-fetch + redraw on period change.
+  async function loadCharts() {
+    const jobsEmpty = document.getElementById('jobsEmpty');
+    const revEmpty  = document.getElementById('revenueEmpty');
+    const period = chartPeriod === 'custom' ? null : chartPeriod;
+    const from = chartPeriod === 'custom' ? chartRange.from : null;
+    const to   = chartPeriod === 'custom' ? chartRange.to : null;
+    const [jobsTs, revTs] = await Promise.all([
+      AdminStore.getTimeseries('jobs', period, from, to),
+      AdminStore.getTimeseries('revenue', period, from, to),
+    ]);
+    drawBar('jobs', 'jobsChart', jobsEmpty, jobsTs);
+    drawLine('revenue', 'revenueChart', revEmpty, revTs);
+    setTrend('jobs', jobsTs);
+    setTrend('revenue', revTs);
+  }
+
+  function destroyChart(key) { if (charts[key]) { try { charts[key].destroy(); } catch (e) {} charts[key] = null; } }
+  function showEmpty(el, msg) { if (el) { el.hidden = false; el.textContent = msg || 'No data'; } }
+  function hideEmpty(el) { if (el) el.hidden = true; }
+  function isBlank(ts) {
+    return !ts || !Array.isArray(ts.values) || !ts.values.length ||
+      ts.values.every(function (x) { return !x; });
+  }
+
+  function chartAxes(isRevenue) {
+    return {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { intersect: false, mode: 'index' },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: C.tip, borderColor: C.tipLine, borderWidth: 1,
+          titleColor: C.ink, bodyColor: C.ink, padding: 10, displayColors: false,
+          callbacks: isRevenue ? { label: function (c) { return money(c.parsed.y); } } : {},
+        },
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: C.muted, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } },
+        y: {
+          beginAtZero: true, grid: { color: C.grid, drawBorder: false },
+          ticks: { color: C.muted, precision: 0, callback: isRevenue ? function (v) { return '$' + v; } : undefined },
+        },
+      },
+    };
+  }
+
+  function drawBar(key, canvasId, emptyEl, ts) {
+    destroyChart(key);
+    if (!hasChart()) { showEmpty(emptyEl, 'Charts unavailable'); return; }
+    if (isBlank(ts)) { showEmpty(emptyEl); return; }
+    hideEmpty(emptyEl);
+    charts[key] = new Chart(document.getElementById(canvasId), {
+      type: 'bar',
+      data: { labels: ts.labels.map(fmtDayLabel), datasets: [{
+        data: ts.values, backgroundColor: C.accentSoft, hoverBackgroundColor: C.accent,
+        borderColor: C.accent, borderWidth: 1, borderRadius: 3, maxBarThickness: 28,
+      }] },
+      options: chartAxes(false),
+    });
+  }
+
+  function drawLine(key, canvasId, emptyEl, ts) {
+    destroyChart(key);
+    if (!hasChart()) { showEmpty(emptyEl, 'Charts unavailable'); return; }
+    if (isBlank(ts)) { showEmpty(emptyEl); return; }
+    hideEmpty(emptyEl);
+    const cv = document.getElementById(canvasId);
+    let fill = 'rgba(92,217,122,.14)';
+    try {
+      const g = cv.getContext('2d').createLinearGradient(0, 0, 0, cv.clientHeight || 220);
+      g.addColorStop(0, 'rgba(92,217,122,.30)'); g.addColorStop(1, 'rgba(92,217,122,0)');
+      fill = g;
+    } catch (e) {}
+    charts[key] = new Chart(cv, {
+      type: 'line',
+      data: { labels: ts.labels.map(fmtDayLabel), datasets: [{
+        data: ts.values, borderColor: C.ok, backgroundColor: fill, fill: true,
+        tension: .35, borderWidth: 2, pointRadius: 0, pointHoverRadius: 4,
+        pointBackgroundColor: C.ok, pointHoverBackgroundColor: C.ok,
+      }] },
+      options: chartAxes(true),
+    });
+  }
+
+  // 3a — Status donut + legend.
+  async function loadStatusBreakdown() {
+    const emptyEl = document.getElementById('statusEmpty');
+    const data = await AdminStore.getStatusBreakdown();
+    destroyChart('status');
+    statusLegend.innerHTML = '';
+    if (!data) { showEmpty(emptyEl); return; }
+    const entries = Object.keys(STATUS_COLORS)
+      .map(function (k) { return { label: DASH_STATUS_LABEL[k] || k, val: data[k] || 0, color: STATUS_COLORS[k] }; })
+      .filter(function (e) { return e.val > 0; });
+    const total = entries.reduce(function (a, e) { return a + e.val; }, 0);
+    if (!total) { showEmpty(emptyEl); return; }
+
+    if (hasChart()) {
+      hideEmpty(emptyEl);
+      charts.status = new Chart(document.getElementById('statusChart'), {
+        type: 'doughnut',
+        data: { labels: entries.map(function (e) { return e.label; }), datasets: [{
+          data: entries.map(function (e) { return e.val; }),
+          backgroundColor: entries.map(function (e) { return e.color; }),
+          borderColor: C.panel, borderWidth: 2, hoverOffset: 5,
+        }] },
+        options: {
+          responsive: true, maintainAspectRatio: false, cutout: '64%',
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: C.tip, borderColor: C.tipLine, borderWidth: 1,
+              titleColor: C.ink, bodyColor: C.ink, padding: 10,
+              callbacks: { label: function (c) {
+                return c.label + ': ' + c.parsed + ' (' + Math.round(c.parsed / total * 100) + '%)';
+              } },
+            },
+          },
+        },
+      });
+    } else {
+      showEmpty(emptyEl, 'Charts unavailable'); // legend still renders below
+    }
+
+    statusLegend.innerHTML = entries.map(function (e) {
+      return '<li class="legend-item">' +
+        '<span class="legend-dot" style="background:' + e.color + '"></span>' +
+        '<span class="legend-label">' + esc(e.label) + '</span>' +
+        '<span class="legend-val">' + e.val + ' · ' + Math.round(e.val / total * 100) + '%</span>' +
+      '</li>';
+    }).join('');
+  }
+
+  // 3b — Source breakdown (stat list with proportional bars).
+  async function loadSourceBreakdown() {
+    const data = await AdminStore.getSourceBreakdown();
+    if (!data) { sourceList.innerHTML = '<li class="manager-empty">No data</li>'; return; }
+    const entries = Object.keys(SOURCE_LABEL).map(function (k) { return { label: SOURCE_LABEL[k], val: data[k] || 0 }; });
+    const max = entries.reduce(function (a, e) { return Math.max(a, e.val); }, 0);
+    const total = entries.reduce(function (a, e) { return a + e.val; }, 0);
+    if (!total) { sourceList.innerHTML = '<li class="manager-empty">No data</li>'; return; }
+    sourceList.innerHTML = entries.map(function (e) {
+      const w = max ? Math.round(e.val / max * 100) : 0;
+      return '<li class="source-row">' +
+        '<span class="source-label">' + esc(e.label) + '</span>' +
+        '<span class="source-bar"><span class="source-bar-fill" style="width:' + w + '%"></span></span>' +
+        '<span class="source-val">' + e.val + '</span>' +
+      '</li>';
+    }).join('');
+  }
+
+  // 5 — Technician workload (open jobs per active tech).
+  async function loadTechWorkload() {
+    const data = await AdminStore.getTechnicianWorkload();
+    if (!data) { techWorkload.innerHTML = '<div class="manager-empty">No data</div>'; return; }
+    if (!data.length) { techWorkload.innerHTML = '<div class="manager-empty">No active technicians.</div>'; return; }
+    const max = data.reduce(function (a, t) { return Math.max(a, t.openJobs || 0); }, 0);
+    techWorkload.innerHTML = data.map(function (t) {
+      const n = t.openJobs || 0;
+      const w = max ? Math.round(n / max * 100) : 0;
+      const tone = n >= 4 ? ' is-busy' : (n === 0 ? ' is-idle' : '');
+      return '<div class="tech-row' + tone + '">' +
+        '<span class="tech-name">' + esc(t.name || 'Unknown') + '</span>' +
+        '<span class="tech-bar"><span class="tech-bar-fill" style="width:' + w + '%"></span></span>' +
+        '<span class="tech-count">' + n + '</span>' +
+      '</div>';
+    }).join('');
+  }
+
+  // Period toggle: Week / Month / Custom (custom waits for Apply).
+  if (dashPeriod) {
+    dashPeriod.addEventListener('click', function (e) {
+      const btn = e.target.closest('.seg-btn');
+      if (!btn) return;
+      chartPeriod = btn.dataset.period;
+      dashPeriod.querySelectorAll('.seg-btn').forEach(function (b) { b.classList.toggle('is-active', b === btn); });
+      if (chartPeriod === 'custom') {
+        dashRange.hidden = false;
+        if (!dashFrom.value || !dashTo.value) {
+          const now = new Date();
+          dashFrom.value = isoDate(new Date(now.getFullYear(), now.getMonth(), 1));
+          dashTo.value = isoDate(now);
+        }
+        return; // don't fetch until Apply
+      }
+      dashRange.hidden = true;
+      loadCharts();
+    });
+  }
+  if (dashRangeApply) {
+    dashRangeApply.addEventListener('click', function () {
+      if (!dashFrom.value || !dashTo.value) return;
+      if (dashFrom.value > dashTo.value) {
+        dashError.hidden = false;
+        dashError.textContent = 'Custom range: "From" must be on or before "To".';
+        return;
+      }
+      dashError.hidden = true;
+      chartRange = { from: dashFrom.value, to: dashTo.value };
+      loadCharts();
+    });
+  }
+
   function renderRecent(items) {
     if (!items.length) { recentList.innerHTML = '<div class="manager-empty">No recent jobs.</div>'; return; }
     recentList.innerHTML = items.map(function (a) {

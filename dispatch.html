@@ -8,7 +8,7 @@
 <title>Aston Dispatch</title>
 <!-- Apply the saved theme before first paint to avoid a flash of the wrong theme. -->
 <script>try{var t=localStorage.getItem('aston_dispatch_theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}</script>
-<link rel="stylesheet" href="dispatch.css?v=10"/>
+<link rel="stylesheet" href="dispatch.css?v=13"/>
 </head>
 <body>
 
@@ -62,8 +62,8 @@
     <!-- Search -->
     <section class="search-bar" aria-label="Find a job">
       <form id="searchForm" class="search-form" role="search">
-        <input id="searchInput" type="search" inputmode="numeric" autocomplete="off"
-               placeholder="Search Job ID (7 digits) or phone number…" aria-label="Search by job ID or phone"/>
+        <input id="searchInput" type="search" autocomplete="off"
+               placeholder="Search Job ID, phone, or customer name…" aria-label="Search by job ID, phone, or customer name"/>
         <button type="submit" id="searchBtn" class="btn btn-primary">Search</button>
         <button type="button" id="searchClear" class="btn btn-ghost" hidden>Clear</button>
       </form>
@@ -73,6 +73,11 @@
       </button>
     </section>
     <div id="searchMeta" class="search-meta" hidden></div>
+    <!-- Subtle hint: the new-job chime is blocked until the browser unlocks audio. -->
+    <div id="audioHint" class="audio-hint" hidden>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+      Click anywhere to enable the new-job sound.
+    </div>
 
     <!-- Stats -->
     <section class="stats-bar" id="statsBar" aria-label="Today's dispatch stats">
@@ -89,11 +94,20 @@
       <button type="button" class="tab" data-tab="cancelled" role="tab" aria-selected="false">Cancelled <span class="count" id="countCancelled">0</span></button>
       <button type="button" class="tab" data-tab="calls" role="tab" aria-selected="false">Calls <span class="count" id="countCalls">0</span></button>
       <button type="button" class="tab" data-tab="notes" role="tab" aria-selected="false">Customer Notes <span class="count" id="countNotes">0</span></button>
+      <button type="button" class="tab tab-archive" data-tab="archive" role="tab" aria-selected="false" hidden>Archive <span class="count" id="countArchive">0</span></button>
     </section>
 
     <!-- Filters -->
     <section class="filter-bar" aria-label="Filters">
-      <div class="filter-group" id="statusFilterGroup">
+      <!-- Active-tab sub-filter pills (replace the old status dropdown). -->
+      <div class="active-filter-pills" id="activeFilterPills" role="group" aria-label="Filter active jobs">
+        <button type="button" class="af-pill is-active" data-af="all" aria-pressed="true">All</button>
+        <button type="button" class="af-pill" data-af="assigned" aria-pressed="false">Assigned</button>
+        <button type="button" class="af-pill" data-af="unassigned" aria-pressed="false">Unassigned</button>
+        <button type="button" class="af-pill" data-af="in-progress" aria-pressed="false">In Progress</button>
+        <button type="button" class="af-pill" data-af="pending-review" aria-pressed="false">Pending Review</button>
+      </div>
+      <div class="filter-group" id="statusFilterGroup" hidden>
         <span class="field-label">Status</span>
         <select id="filterStatus" aria-label="Filter by status">
           <option value="">All active</option>
@@ -102,6 +116,14 @@
           <option value="assigned">Assigned</option>
           <option value="in-progress">In Progress</option>
         </select>
+      </div>
+      <!-- Date range for Completed / Cancelled tabs. -->
+      <div class="filter-group date-range-group" id="dateRangeGroup" hidden>
+        <span class="field-label">From</span>
+        <input id="dateFrom" type="date" aria-label="From date"/>
+        <span class="field-label">To</span>
+        <input id="dateTo" type="date" aria-label="To date"/>
+        <button type="button" id="dateClear" class="btn btn-ghost btn-date-clear">Clear</button>
       </div>
       <div class="filter-group" id="priorityFilterGroup">
         <span class="field-label">Priority</span>
@@ -166,6 +188,10 @@
         <input id="callService" type="text" maxlength="100" autocomplete="off" placeholder="e.g. Lockout — residential" required/>
       </label>
       <label class="field">
+        <span class="field-label">Address <span class="field-opt">(optional)</span></span>
+        <input id="callAddress" type="text" maxlength="300" autocomplete="off" placeholder="Street address for the tech"/>
+      </label>
+      <label class="field">
         <span class="field-label">Priority</span>
         <select id="callPriority">
           <option value="">Normal (default)</option>
@@ -193,6 +219,6 @@
 </div>
 
 <script src="config.js?v=1" defer></script>
-<script src="js/dispatch.js?v=11" defer></script>
+<script src="js/dispatch.js?v=12" defer></script>
 </body>
 </html>

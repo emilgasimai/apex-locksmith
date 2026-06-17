@@ -41,7 +41,7 @@
     completed: ['completed'],
     cancelled: ['cancelled']
   };
-  var TABS = ['active', 'completed', 'cancelled', 'calls', 'notes']; // calls/notes are source-based
+  var TABS = ['active', 'completed', 'cancelled', 'calls', 'notes', 'archive']; // calls/notes source-based; archive is admin-only soft-deleted
   // statusHistory entries are status transitions; map each to a past-tense verb
   // for the per-card history panel ("Assigned by dispatch1 · 2h ago").
   var STATUS_VERB = {
@@ -57,11 +57,18 @@
      is active. */
   var state = {
     jobs: [],            // working set (all statuses), newest-first from server
+    archiveJobs: [],     // soft-deleted jobs (admin only, loaded on demand)
+    archiveTotal: 0,
     searchResults: [],   // results while searchActive
-    tab: 'active',       // active | completed | cancelled | calls | notes
-    unassignedOnly: false, // "Unassigned" filter — jobs that still need a technician
+    tab: 'active',       // active | completed | cancelled | calls | notes | archive
+    unassignedOnly: false, // legacy; superseded by activeFilter on active tab
+    activeFilter: 'all', // all|assigned|unassigned|pending-review|in-progress (active tab)
+    dateFrom: '',        // date range filter for completed/cancelled tabs
+    dateTo: '',
+    total: 0,            // total jobs in working set from last fetch (for pagination indicator)
     expanded: {},        // { [jobId]: true } open history panels (survive re-render)
     origExpanded: {},    // { [noteId]: true } open "View original" panels (survive re-render)
+    notesExpanded: {},   // { [jobId]: true } open internal notes panels
     pending: 0           // in-flight optimistic mutations (auto-refresh pauses while > 0)
   };
 
@@ -157,6 +164,43 @@
   var ICON_CLOCK = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
   var ICON_PERSON = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
   var ICON_PHONE = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h4l2 5-2 2a12 12 0 005 5l2-2 5 2v4a2 2 0 01-2 2A18 18 0 013 5a2 2 0 012-2z"/></svg>';
+  var ICON_HIST = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+
+  // Badge icons (11×11, currentColor — work in both dark and light themes).
+  // Paths sourced from admin_icons/ folder.
+  var BI_EMERGENCY = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 10V13"/><path d="M12 16V15.99"/><path d="M10.25 5.15L3.65 17.03C2.91 18.36 3.87 20 5.4 20H18.6c1.53 0 2.49-1.64 1.75-2.97L13.75 5.15c-.76-1.37-2.74-1.37-3.5 0Z"/></svg>';
+  var BI_HIGH = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M12 5l-6 6M12 5l6 6"/></svg>';
+  var BI_CLOCK = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v5l-1.5 2.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>';
+  var BI_USERCHECK = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 19.3L15.8 21 20 17M4 21c0-3.87 3.13-7 7-7 1.49 0 2.87.46 4 1.25M15 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z"/></svg>';
+  var BI_WRENCH = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>';
+  var BI_CHECK = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.6L8.92 17.5 20 6.5"/></svg>';
+  var BI_X = '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14.95 6.46L11.41 10l3.54 3.54-1.41 1.41L10 11.42l-3.53 3.53-1.42-1.42L8.58 10 5.05 6.47l1.42-1.42L10 8.58l3.54-3.53z"/></svg>';
+  var BI_PHONE = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h4l2 5-2 2a12 12 0 005 5l2-2 5 2v4a2 2 0 01-2 2A18 18 0 013 5a2 2 0 012-2z"/></svg>';
+  var BI_MESSAGE = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v3m0 3h.01M21 12c0 4.97-4.03 9-9 9 0 0-6.96 0-6.96 0 0 0 1.56-3.74.94-5C3.34 14.8 3 13.44 3 12a9 9 0 0 1 18 0Z"/></svg>';
+  var BI_PENCIL = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+  var BI_TRASH = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>';
+  var BI_RESTORE = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 4v6h6M3.51 15a9 9 0 1 0 .49-4.95"/></svg>';
+  var BI_NOTE = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>';
+
+  // Source → icon map
+  var SOURCE_ICON = { call: BI_PHONE, note: BI_MESSAGE, manual: BI_PENCIL };
+  var SOURCE_LABEL = { call: 'CALL', note: 'NOTE', manual: 'MANUAL' };
+  // Status → badge icon map
+  var STATUS_BADGE_ICON = {
+    'pending-review': BI_CLOCK,
+    'approved': BI_CHECK,
+    'assigned': BI_USERCHECK,
+    'in-progress': BI_WRENCH,
+    'completed': BI_CHECK,
+    'cancelled': BI_X
+  };
+  // Priority → badge icon map
+  var PRIO_BADGE_ICON = {
+    emergency: BI_EMERGENCY,
+    high: BI_HIGH,
+    normal: '',
+    low: ''
+  };
 
   // Builds an inline editable: optional `lead` markup, the value span, and a
   // pencil (unless opts.canEdit === false). opts: { label, type, placeholder,
@@ -322,6 +366,10 @@
     // The "Unassigned" filter is useful to everyone; syncFilters() hides it on
     // the tabs where it doesn't apply (Calls / Notes).
     if (unassignedToggle) unassignedToggle.hidden = false;
+    // Archive (soft-deleted jobs) is admin-only — reveal the tab for admins.
+    var archiveTab = tabBar && tabBar.querySelector('[data-tab="archive"]');
+    if (archiveTab) archiveTab.hidden = !isAdminUser();
+    if (typeof reflectAudioLock === 'function') reflectAudioLock();
     lastActivity = Date.now();
     // Load technicians first so the very first render of the queue already has
     // the assign dropdown populated. Animate the first paint.
@@ -454,14 +502,18 @@
     }).join('');
   }
 
-  // Phone — a button that opens the customer-history modal, wrapped in an
-  // .editable so dispatch can correct a wrong number (Fix 8). The actual dialing
-  // link lives inside the history modal. Value is rebuilt on save (REBUILD_FIELDS).
+  // Phone — direct tel: link for one-tap dialing + a small history icon button.
+  // Wrapped in .editable so dispatch can correct a wrong number (Fix 8).
+  // Value is rebuilt on save (REBUILD_FIELDS).
   function phoneEditableHtml(phoneStr) {
     phoneStr = phoneStr || '';
+    var tel = telHref(phoneStr);
     var inner = phoneStr
-      ? '<button type="button" class="job-phone" data-phone="' + esc(phoneStr) + '" title="View customer history" aria-label="View customer history for ' + esc(phoneStr) + '">' + ICON_PHONE + esc(phoneStr) + '</button>'
-      : '<span class="job-phone is-empty" data-val>Add phone</span>';
+      ? (tel
+          ? '<a class="job-phone-link" href="' + esc(tel) + '" aria-label="Call ' + esc(phoneStr) + '">' + ICON_PHONE + esc(phoneStr) + '</a>'
+          : '<span class="job-phone-link">' + ICON_PHONE + esc(phoneStr) + '</span>') +
+        '<button type="button" class="job-phone-hist" data-phone="' + esc(phoneStr) + '" title="Customer history" aria-label="View customer history">' + ICON_HIST + '</button>'
+      : '<span class="job-phone-link is-empty" data-val>Add phone</span>';
     return '<span class="editable phone-editable" data-edit="phone" data-type="text" data-label="Phone"' +
       ' data-value="' + esc(phoneStr) + '" data-placeholder="Add phone">' +
         inner +
@@ -488,7 +540,8 @@
         var tid = String(t._id || t.id);
         var nm = ((t.firstName || '') + ' ' + (t.lastName || '')).trim();
         var on = jobTechId ? (tid === jobTechId) : (!!assignedName && nm.toLowerCase() === assignedName);
-        opts += '<option value="' + esc(tid) + '"' + (on ? ' selected' : '') + '>' + esc(nm) + '</option>';
+        var label = nm + (t.openJobCount > 0 ? ' (' + t.openJobCount + ' open)' : '');
+        opts += '<option value="' + esc(tid) + '"' + (on ? ' selected' : '') + '>' + esc(label) + '</option>';
       });
       return { control: '<select class="tech-select" aria-label="Assign technician">' + opts + '</select>', note: '' };
     }
@@ -498,16 +551,21 @@
     };
   }
 
-  // Assign / status / price controls shared by job cards AND (now-actionable)
-  // note cards. The Clear button only shows when there's a price to clear (Fix 4).
+  // Assign / status / price controls shared by job cards AND note cards.
+  // Clear button only shows when there's a price to clear.
+  // Unassign button only shows when a job is currently assigned.
   function jobControlsHtml(job, status) {
     var a = assignControlHtml(job);
     var clearBtn = job.price != null
       ? '<button type="button" class="btn btn-ghost btn-price-clear">Clear</button>'
       : '';
+    var unassignBtn = job.assignedTo
+      ? '<button type="button" class="btn btn-ghost btn-unassign" title="Remove technician assignment">Unassign</button>'
+      : '';
     return '<div class="job-controls">' +
         '<div class="assign-row">' + a.control +
           '<button type="button" class="btn btn-assign">Assign</button>' +
+          unassignBtn +
         '</div>' +
         a.note +
         '<label class="status-row"><span>Update status</span>' +
@@ -534,6 +592,33 @@
     '</div>';
   }
 
+  // Internal dispatcher notes — staff-only comments on a job card.
+  // The note list + "Add note" form below the controls. Expandable like history.
+  function notesBlockHtml(job) {
+    var id = String(job._id || job.id || '');
+    var notes = job.internalNotes || [];
+    var open = !!state.notesExpanded[id];
+    var notesHtml = notes.length
+      ? notes.slice().reverse().map(function (n) {
+          return '<div class="int-note-row">' +
+            '<span class="int-note-author">' + esc(n.author) + '</span>' +
+            '<span class="int-note-time">' + timeAgo(n.timestamp) + '</span>' +
+            '<p class="int-note-text">' + esc(n.text) + '</p>' +
+          '</div>';
+        }).join('')
+      : '<div class="int-note-empty">No internal notes yet.</div>';
+    return '<button type="button" class="job-history-toggle job-notes-toggle" data-notes-toggle aria-expanded="' + (open ? 'true' : 'false') + '">' +
+      '<span class="hist-caret" aria-hidden="true">' + (open ? '▾' : '▸') + '</span>' + BI_NOTE + 'Notes (' + notes.length + ')' +
+    '</button>' +
+    '<div class="job-notes-panel" data-notes-panel' + (open ? '' : ' hidden') + '>' +
+      notesHtml +
+      '<div class="int-note-form">' +
+        '<textarea class="int-note-input" rows="2" maxlength="2000" placeholder="Add an internal note…" aria-label="Add internal note"></textarea>' +
+        '<button type="button" class="btn btn-primary btn-add-note">Add note</button>' +
+      '</div>' +
+    '</div>';
+  }
+
   function cardHtml(job) {
     var id = String(job._id || job.id || '');
     var prio = PRIORITY_RANK[job.priority] != null ? job.priority : 'normal';
@@ -542,14 +627,7 @@
     var phoneHtml = phoneEditableHtml(job.phone || '');
 
     // AI summary — always editable so dispatch can add/fix one when the AI failed.
-    var aiPrio = job.aiSuggestedPriority
-      ? '<span class="ai-prio"> · suggests ' + esc(PRIORITY_LABEL[job.aiSuggestedPriority] || job.aiSuggestedPriority) + '</span>'
-      : '';
-    var ai = editableBlockHtml({
-      cls: 'job-ai', field: 'aiSummary', label: 'AI summary', value: job.aiSummary,
-      placeholder: 'No AI summary yet — click to add one.',
-      labelHtml: '<span class="job-ai-label">AI Summary' + aiPrio + '</span>'
-    });
+    // (Rendered inline below with the new icon-based label instead of CSS ::before)
 
     // Details (description) — now editable (Fix 3).
     var descBlock = editableBlockHtml({
@@ -557,7 +635,10 @@
       placeholder: 'Add job details…', valClass: 'job-desc',
       labelHtml: '<span class="job-desc-label">Details</span>'
     });
-    var sourceTag = job.source ? '<span class="job-source">' + esc(job.source) + '</span>' : '';
+    var src = job.source || '';
+    var srcIcon = SOURCE_ICON[src] || '';
+    var srcLabel = SOURCE_LABEL[src] || src.toUpperCase();
+    var sourceTag = src ? '<span class="job-source">' + srcIcon + srcLabel + '</span>' : '';
 
     // Address (editable) — street address for routing a tech. Postal code stays
     // as a read-only line beneath it.
@@ -592,15 +673,26 @@
       '</button>' +
       '<div class="job-history" data-history' + (expanded ? '' : ' hidden') + '>' + historyHtml(job) + '</div>';
 
+    var notesBlock = notesBlockHtml(job);
+
+    // Delete button — admin only, soft-delete moves job to archive
+    var deleteBtn = isAdminUser()
+      ? '<button type="button" class="btn btn-ghost btn-job-delete" title="Archive this job">' + BI_TRASH + '</button>'
+      : '';
+
+    // AI summary label icon instead of the old ::before "✦" text
+    var aiLabelIcon = '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.09 6.26L20 10l-5.91 1.74L12 18l-2.09-5.26L4 11l5.91-1.74z"/></svg>';
+
     return '' +
       '<div class="job-top">' +
         '<div class="job-badges">' +
-          '<span class="badge prio prio-' + prio + '">' + PRIORITY_LABEL[prio] + '</span>' +
-          '<span class="badge status status-' + status + '" data-status-badge>' + STATUS_LABEL[status] + '</span>' +
+          '<span class="badge prio prio-' + prio + '">' + (PRIO_BADGE_ICON[prio] || '') + PRIORITY_LABEL[prio] + '</span>' +
+          '<span class="badge status status-' + status + '" data-status-badge>' + (STATUS_BADGE_ICON[status] || '') + STATUS_LABEL[status] + '</span>' +
           assignTag +
         '</div>' +
         '<div class="job-top-right">' +
           jobIdHtml +
+          deleteBtn +
           '<time class="job-age" data-created="' + esc(job.createdAt) + '">' + timeAgo(job.createdAt) + '</time>' +
         '</div>' +
       '</div>' +
@@ -612,8 +704,13 @@
       postalHtml +
       etaHtml +
       '<div class="job-service">' + svcHtml + descBlock + '</div>' +
-      ai +
+      '<div class="job-ai editable-block" data-edit="aiSummary" data-type="textarea" data-label="AI summary" data-value="' + esc(job.aiSummary || '') + '" data-placeholder="No AI summary yet — click to add one.">' +
+        '<span class="job-ai-label">' + aiLabelIcon + 'AI Summary' + (job.aiSuggestedPriority ? '<span class="ai-prio"> · suggests ' + esc(PRIORITY_LABEL[job.aiSuggestedPriority] || job.aiSuggestedPriority) + '</span>' : '') + '</span>' +
+        '<button type="button" class="ed-pencil ed-pencil-corner" aria-label="Edit AI summary">' + pencilSvg() + '</button>' +
+        '<p class="ed-val' + (!(job.aiSummary && job.aiSummary.trim()) ? ' is-empty' : '') + '" data-val>' + esc(!(job.aiSummary && job.aiSummary.trim()) ? 'No AI summary yet — click to add one.' : job.aiSummary) + '</p>' +
+      '</div>' +
       jobControlsHtml(job, status) +
+      notesBlock +
       historyBlock;
   }
 
@@ -689,21 +786,39 @@
   // The store filtered down to what the current tab + dropdowns + toggle should show.
   function visibleJobs() {
     var list = state.jobs.filter(function (j) { return jobInTab(j, state.tab); });
-    if (state.tab === 'active' && filters.status) {
-      list = list.filter(function (j) { return j.status === filters.status; });
+
+    // Active tab: unified sub-filter pill (replaces old status dropdown + unassigned toggle)
+    if (state.tab === 'active') {
+      var af = state.activeFilter;
+      if (af === 'assigned')        list = list.filter(function (j) { return !jobIsUnassigned(j); });
+      else if (af === 'unassigned') list = list.filter(function (j) { return jobIsUnassigned(j); });
+      else if (af === 'pending-review' || af === 'in-progress') {
+        list = list.filter(function (j) { return j.status === af; });
+      }
     }
+
     if (filters.priority && state.tab !== 'notes') {
       list = list.filter(function (j) { return (j.priority || 'normal') === filters.priority; });
     }
-    if (state.unassignedOnly && state.tab !== 'notes' && state.tab !== 'calls') list = list.filter(jobIsUnassigned);
+
+    // Date range filter for completed/cancelled tabs
+    if ((state.tab === 'completed' || state.tab === 'cancelled') && (state.dateFrom || state.dateTo)) {
+      var from = state.dateFrom ? new Date(state.dateFrom).getTime() : 0;
+      var to = state.dateTo ? new Date(state.dateTo).getTime() + 86400000 : Infinity;
+      list = list.filter(function (j) {
+        var t = new Date(j.updatedAt || j.createdAt || 0).getTime();
+        return t >= from && t <= to;
+      });
+    }
+
     return list;
   }
 
   function tabCounts() {
     var c = { active: 0, completed: 0, cancelled: 0, calls: 0, notes: 0 };
     state.jobs.forEach(function (j) {
-      if (j.source === 'note') { c.notes++; return; }   // notes only count in their tab
-      if (j.source === 'call') c.calls++;               // calls count here AND in their status tab
+      if (j.source === 'note') { c.notes++; return; }
+      if (j.source === 'call') c.calls++;
       if (TAB_STATUSES.active.indexOf(j.status) !== -1) c.active++;
       else if (j.status === 'completed') c.completed++;
       else if (j.status === 'cancelled') c.cancelled++;
@@ -718,6 +833,8 @@
     if (countCancelled) countCancelled.textContent = c.cancelled;
     if (countCalls) countCalls.textContent = c.calls;
     if (countNotes) countNotes.textContent = c.notes;
+    var countArchive = $('countArchive');
+    if (countArchive) countArchive.textContent = state.archiveTotal || 0;
   }
   function syncTabButtons() {
     if (!tabBar) return;
@@ -728,25 +845,48 @@
       tabs[i].setAttribute('aria-selected', on ? 'true' : 'false');
     }
   }
-  // Status dropdown applies only to Active; Priority + "My jobs" apply everywhere
-  // except the (calm, unfilterable) Notes inbox. "+ New Call" shows only on Calls.
+  // Status dropdown → hide on active tab (replaced by pills). Priority filter hides
+  // on notes + archive. Date range shows on completed/cancelled. New Call on calls.
   function syncFilters() {
     var onActive = state.tab === 'active';
-    if (statusFilterGroup) statusFilterGroup.hidden = !onActive;
-    if (!onActive && filters.status) { filters.status = ''; if (filterStatus) filterStatus.value = ''; }
-    var showPriority = state.tab !== 'notes';
+    var onArchive = state.tab === 'archive';
+    // Status dropdown hidden on active tab (pills take over) and archive
+    if (statusFilterGroup) statusFilterGroup.hidden = true; // always hidden now — pills replace it
+    // Active sub-filter pills
+    var pillGroup = $('activeFilterPills');
+    if (pillGroup) pillGroup.hidden = !onActive;
+    // Sync active pill states
+    if (pillGroup) {
+      var pills = pillGroup.querySelectorAll('[data-af]');
+      for (var pi = 0; pi < pills.length; pi++) {
+        var p = pills[pi];
+        var on = p.getAttribute('data-af') === state.activeFilter;
+        p.classList.toggle('is-active', on);
+        p.setAttribute('aria-pressed', on ? 'true' : 'false');
+      }
+    }
+    // Priority filter — hide on notes + archive
+    var showPriority = state.tab !== 'notes' && !onArchive;
     if (priorityFilterGroup) priorityFilterGroup.hidden = !showPriority;
     if (!showPriority && filters.priority) { filters.priority = ''; if (filterPriority) filterPriority.value = ''; }
-    if (unassignedToggle) unassignedToggle.hidden = state.tab === 'notes' || state.tab === 'calls';
+    // Unassigned toggle — legacy, now hidden (pills handle it on active)
+    if (unassignedToggle) unassignedToggle.hidden = true;
+    // New Call button
     if (newCallBtn) newCallBtn.hidden = state.tab !== 'calls';
+    // Date range filter — show on completed/cancelled
+    var dateGroup = $('dateRangeGroup');
+    if (dateGroup) dateGroup.hidden = (state.tab !== 'completed' && state.tab !== 'cancelled');
+    // Stats/search bar hidden in archive
+    var statsBar = $('statsBar');
+    if (statsBar) statsBar.hidden = onArchive;
   }
 
   function emptyMessage() {
     if (searchActive) return 'No jobs found.';
     if (state.tab === 'calls') return filters.priority ? 'No calls match these filters.' : 'No calls logged yet — use “+ New Call” to add one.';
     if (state.tab === 'notes') return 'No customer notes yet.';
-    if (state.unassignedOnly) return 'No unassigned jobs — every job here has a technician.';
-    if (filters.status || filters.priority) return 'No jobs match these filters.';
+    if (state.tab === 'archive') return 'Archive is empty — no jobs have been soft-deleted.';
+    if (state.activeFilter !== 'all' || filters.priority) return 'No jobs match these filters.';
     if (state.tab === 'completed') return 'No completed jobs in the current window.';
     if (state.tab === 'cancelled') return 'No cancelled jobs in the current window.';
     return 'No active jobs right now.';
@@ -762,8 +902,34 @@
     updateAges();
   }
   function jobCardOuter(job) {
-    var cls = 'job-card prio-' + (PRIORITY_RANK[job.priority] != null ? job.priority : 'normal');
+    var prio = PRIORITY_RANK[job.priority] != null ? job.priority : 'normal';
+    var cls = 'job-card prio-' + prio;
     return '<article class="' + cls + '" data-id="' + esc(String(job._id || job.id || '')) + '">' + cardHtml(job) + '</article>';
+  }
+  function archiveCardHtml(job) {
+    var id = String(job._id || job.id || '');
+    var status = STATUS_LABEL[job.status] ? job.status : 'pending-review';
+    var deletedWhen = job.deletedAt ? timeAgo(job.deletedAt) : '';
+    return '<article class="job-card archive-card" data-id="' + esc(id) + '">' +
+      '<div class="job-top">' +
+        '<div class="job-badges">' +
+          '<span class="badge status status-' + status + '">' + (STATUS_BADGE_ICON[status] || '') + STATUS_LABEL[status] + '</span>' +
+          (job.jobId ? '<span class="badge" style="font-family:var(--mono)">#' + esc(job.jobId) + '</span>' : '') +
+        '</div>' +
+        '<div class="job-top-right">' +
+          '<span class="archive-meta">Archived ' + esc(deletedWhen) + ' by <b>' + esc(job.deletedBy || '?') + '</b></span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="job-customer">' +
+        '<span class="job-name">' + esc(job.customerName || 'Unknown') + '</span>' +
+        (job.phone ? '<span class="job-phone-link">' + ICON_PHONE + esc(job.phone) + '</span>' : '') +
+        (job.source ? '<span class="job-source">' + (SOURCE_ICON[job.source] || '') + (SOURCE_LABEL[job.source] || job.source.toUpperCase()) + '</span>' : '') +
+      '</div>' +
+      '<div class="job-service"><span class="job-service-type">' + esc(job.serviceType || '') + '</span></div>' +
+      '<div class="archive-actions">' +
+        '<button type="button" class="btn btn-primary btn-restore">' + BI_RESTORE + 'Restore job</button>' +
+      '</div>' +
+    '</article>';
   }
 
   // Single render path. `animate` plays the entrance animation (first load, tab
@@ -774,11 +940,33 @@
     if (!searchActive) { updateTabCounts(); syncTabButtons(); syncFilters(); }
 
     if (!searchActive && state.tab === 'notes') { renderNotes(animate); return; }
+    if (!searchActive && state.tab === 'archive') { renderArchive(animate); return; }
 
     var list = searchActive ? state.searchResults : visibleJobs();
     if (!list.length) { paintQueue('<div class="queue-empty">' + esc(emptyMessage()) + '</div>', false); return; }
     var sorted = (searchActive || state.tab === 'calls') ? sortJobs(list) : sortForTab(list, state.tab);
-    paintQueue(sorted.map(jobCardOuter).join(''), animate);
+
+    // Pagination indicator — shown when the working set was capped at JOB_LIMIT
+    var pagHtml = '';
+    if (!searchActive && state.total > state.jobs.length) {
+      pagHtml = '<div class="pagination-info">Showing ' + state.jobs.length + ' of ' + state.total + ' jobs · ' +
+        '<button type="button" class="link-btn" id="loadMoreBtn">Load more</button></div>';
+    }
+
+    paintQueue(sorted.map(jobCardOuter).join('') + pagHtml, animate);
+    var lmb = $('loadMoreBtn'); if (lmb) lmb.addEventListener('click', loadMore);
+  }
+
+  function renderArchive(animate) {
+    if (!state.archiveJobs.length) {
+      paintQueue('<div class="queue-empty">' + esc(emptyMessage()) + '</div>', false);
+      return;
+    }
+    var html = state.archiveJobs.map(archiveCardHtml).join('');
+    if (state.archiveTotal > state.archiveJobs.length) {
+      html += '<div class="pagination-info">Showing ' + state.archiveJobs.length + ' of ' + state.archiveTotal + ' archived jobs</div>';
+    }
+    paintQueue(html, animate);
   }
 
   /* ───────────── Customer Notes view (source === 'note') ─────────────
@@ -860,9 +1048,7 @@
   }
 
   function loadJobs(animate) {
-    if (searchActive) return Promise.resolve(); // don't clobber search results
-    // Filtering is client-side now: fetch the full working set once, derive every
-    // tab/filter view from the store so a mutation can move cards live.
+    if (searchActive) return Promise.resolve();
     var params = new URLSearchParams();
     params.set('limit', String(JOB_LIMIT));
     return authedFetch('/api/dispatch?' + params.toString()).then(function (res) {
@@ -877,8 +1063,33 @@
       var items = (res.data && res.data.items) || [];
       detectNewJobs(items);
       state.jobs = items;
+      state.total = (res.data && res.data.total) || items.length;
       render(!!animate);
       markUpdated();
+    });
+  }
+
+  // Load more jobs (append to working set, incrementing the offset).
+  function loadMore() {
+    var params = new URLSearchParams();
+    params.set('limit', String(JOB_LIMIT));
+    params.set('page', String(Math.floor(state.jobs.length / JOB_LIMIT) + 1));
+    authedFetch('/api/dispatch?' + params.toString()).then(function (res) {
+      if (!res.ok) return;
+      var items = (res.data && res.data.items) || [];
+      state.jobs = state.jobs.concat(items);
+      state.total = (res.data && res.data.total) || state.total;
+      render(false);
+    });
+  }
+
+  function loadArchive() {
+    return authedFetch('/api/dispatch/deleted').then(function (res) {
+      if (!res.ok) return;
+      state.archiveJobs = (res.data && res.data.items) || [];
+      state.archiveTotal = (res.data && res.data.total) || state.archiveJobs.length;
+      renderArchive(true);
+      updateTabCounts();
     });
   }
 
@@ -940,9 +1151,46 @@
       if (tab === state.tab) return;
       state.tab = tab;
       filters.status = ''; if (filterStatus) filterStatus.value = ''; // status filter is per-active-tab
+      if (tab === 'archive') {
+        // Archive is fetched on demand (admin only); show a loading state, then paint.
+        queue.innerHTML = '<div class="queue-loading">Loading archive…</div>';
+        syncTabButtons(); syncFilters();
+        loadArchive();
+        return;
+      }
       render(true);
     });
   }
+
+  // Active sub-filter pills (All / Assigned / Unassigned / Pending Review / In Progress).
+  var activeFilterPills = $('activeFilterPills');
+  if (activeFilterPills) {
+    activeFilterPills.addEventListener('click', function (e) {
+      var btn = e.target.closest && e.target.closest('[data-af]');
+      if (!btn) return;
+      var af = btn.getAttribute('data-af');
+      if (af === state.activeFilter) return;
+      if (searchActive) clearSearch();
+      state.activeFilter = af;
+      render(true);
+    });
+  }
+
+  // Date-range filter (Completed / Cancelled tabs) — re-derives the view client-side.
+  var dateFromInput = $('dateFrom'), dateToInput = $('dateTo'), dateClearBtn = $('dateClear');
+  function applyDateRange() {
+    state.dateFrom = dateFromInput ? dateFromInput.value : '';
+    state.dateTo = dateToInput ? dateToInput.value : '';
+    render(true);
+  }
+  if (dateFromInput) dateFromInput.addEventListener('change', applyDateRange);
+  if (dateToInput) dateToInput.addEventListener('change', applyDateRange);
+  if (dateClearBtn) dateClearBtn.addEventListener('click', function () {
+    if (dateFromInput) dateFromInput.value = '';
+    if (dateToInput) dateToInput.value = '';
+    state.dateFrom = ''; state.dateTo = '';
+    render(true);
+  });
 
   // "Unassigned" toggle — filters to jobs that still need a technician.
   if (unassignedToggle) {
@@ -981,6 +1229,8 @@
       var name = ($('callName').value || '').trim();
       var phone = ($('callPhone').value || '').trim();
       var service = ($('callService').value || '').trim();
+      var addrEl = $('callAddress');
+      var address = addrEl ? (addrEl.value || '').trim() : '';
       var desc = ($('callDesc').value || '').trim();
       var prio = ($('callPriority').value || '').trim();
       function showErr(m) { if (callError) { callError.textContent = m; callError.hidden = false; } }
@@ -988,6 +1238,7 @@
       if (!/^[0-9+()\-.\s]{7,30}$/.test(phone)) return showErr('Enter a valid phone number.');
       if (!service) return showErr('Enter the service type.');
       var body = { customerName: name, phone: phone, serviceType: service };
+      if (address) body.address = address;
       if (desc) body.description = desc;
       if (prio) body.priority = prio;
       if (callError) callError.hidden = true;
@@ -1037,6 +1288,19 @@
     }
     var priceBtn = e.target.closest('.btn-price');
     if (priceBtn) { doSetPrice(priceBtn); return; }
+    var unassignBtn = e.target.closest('.btn-unassign');
+    if (unassignBtn) { doUnassign(unassignBtn); return; }
+    var noteToggle = e.target.closest('[data-notes-toggle]');
+    if (noteToggle) { toggleNotes(noteToggle); return; }
+    var addNoteBtn = e.target.closest('.btn-add-note');
+    if (addNoteBtn) { doAddNote(addNoteBtn); return; }
+    var delBtn = e.target.closest('.btn-job-delete');
+    if (delBtn) { doDelete(delBtn); return; }
+    var restoreBtn = e.target.closest('.btn-restore');
+    if (restoreBtn) { doRestore(restoreBtn); return; }
+    // History modal: small clock button on a job card, and the phone chip on note groups.
+    var histPhone = e.target.closest('.job-phone-hist[data-phone]');
+    if (histPhone) { openCustomerHistory(histPhone.getAttribute('data-phone')); return; }
     var phoneBtn = e.target.closest('.job-phone[data-phone]');
     if (phoneBtn) { openCustomerHistory(phoneBtn.getAttribute('data-phone')); return; }
   });
@@ -1249,7 +1513,118 @@
       });
   }
 
-  /* ───────────── job search (by jobId or phone) ───────────── */
+  // Return an assigned job to the unassigned pool (clears tech + free-text name).
+  function doUnassign(btn) {
+    var card = btn.closest('[data-id]'); if (!card) return;
+    var id = card.getAttribute('data-id');
+    var job = findJob(id);
+    var prevAssigned = job ? job.assignedTo : '';
+    var prevTechId = job ? job.technicianId : null;
+    if (job) { job.assignedTo = ''; job.technicianId = null; render(false); } // optimistic
+    btn.disabled = true;
+    state.pending++;
+    authedFetch('/api/dispatch/' + id + '/assign', { method: 'PATCH', json: { assignedTo: '' } })
+      .then(function (res) {
+        state.pending--;
+        if (res.ok) {
+          reconcileJob(res.data);
+          toast('Returned to unassigned', 'ok');
+        } else if (res.status !== 401) {
+          if (job) { job.assignedTo = prevAssigned; job.technicianId = prevTechId; render(false); }
+          else { btn.disabled = false; }
+          toast((res.data && res.data.message) || 'Could not unassign — try again.', 'err');
+        } else { btn.disabled = false; }
+      });
+  }
+
+  // Expand/collapse a card's internal-notes panel. Tracked in state.notesExpanded
+  // so it survives re-renders (auto-refresh, optimistic updates).
+  function toggleNotes(btn) {
+    var card = btn.closest('[data-id]'); if (!card) return;
+    var id = card.getAttribute('data-id');
+    var panel = card.querySelector('[data-notes-panel]');
+    var open = btn.getAttribute('aria-expanded') === 'true';
+    var next = !open;
+    btn.setAttribute('aria-expanded', next ? 'true' : 'false');
+    if (panel) panel.hidden = !next;
+    var caret = btn.querySelector('.hist-caret');
+    if (caret) caret.textContent = next ? '▾' : '▸';
+    if (next) state.notesExpanded[id] = true; else delete state.notesExpanded[id];
+  }
+
+  // Append a dispatcher internal note. Keeps the panel open and re-renders so the
+  // new note shows immediately with the authoritative server copy.
+  function doAddNote(btn) {
+    var card = btn.closest('[data-id]'); if (!card) return;
+    var id = card.getAttribute('data-id');
+    var input = card.querySelector('.int-note-input');
+    var text = input ? (input.value || '').trim() : '';
+    if (!text) { toast('Write a note first.', 'err'); if (input) input.focus(); return; }
+    btn.disabled = true; var label = btn.textContent; btn.textContent = '…';
+    state.notesExpanded[id] = true; // keep the panel open across the re-render
+    state.pending++;
+    authedFetch('/api/dispatch/' + id + '/notes', { method: 'POST', json: { text: text } })
+      .then(function (res) {
+        state.pending--;
+        btn.disabled = false; btn.textContent = label;
+        if (res.ok) {
+          reconcileJob(res.data);
+          toast('Note added', 'ok');
+        } else if (res.status !== 401) {
+          toast((res.data && res.data.message) || 'Could not add the note.', 'err');
+        }
+      });
+  }
+
+  // Soft-delete (archive) a job — admin only. Confirm, then move it to the archive.
+  function doDelete(btn) {
+    var card = btn.closest('[data-id]'); if (!card) return;
+    var id = card.getAttribute('data-id');
+    var job = findJob(id);
+    var name = job ? (job.customerName || 'this job') : 'this job';
+    if (!window.confirm('Archive ' + name + '? It will be moved to the Archive tab and hidden from the queue. You can restore it later.')) return;
+    btn.disabled = true;
+    state.pending++;
+    authedFetch('/api/dispatch/' + id + '/soft-delete', { method: 'PATCH' })
+      .then(function (res) {
+        state.pending--;
+        if (res.ok) {
+          // Drop it from the working set + bump the archive count, then re-render.
+          state.jobs = state.jobs.filter(function (j) { return String(j._id || j.id) !== id; });
+          if (state.total > 0) state.total--;
+          state.archiveTotal++;
+          render(false);
+          toast('Job archived', 'ok');
+          loadStats();
+        } else if (res.status !== 401) {
+          btn.disabled = false;
+          toast((res.data && res.data.message) || 'Could not archive the job.', 'err');
+        } else { btn.disabled = false; }
+      });
+  }
+
+  // Restore a job from the archive back into the live queue — admin only.
+  function doRestore(btn) {
+    var card = btn.closest('[data-id]'); if (!card) return;
+    var id = card.getAttribute('data-id');
+    btn.disabled = true;
+    authedFetch('/api/dispatch/' + id + '/restore', { method: 'PATCH' })
+      .then(function (res) {
+        if (res.ok) {
+          state.archiveJobs = state.archiveJobs.filter(function (j) { return String(j._id || j.id) !== id; });
+          if (state.archiveTotal > 0) state.archiveTotal--;
+          renderArchive(false);
+          updateTabCounts();
+          toast('Job restored to the queue', 'ok');
+          loadStats();
+        } else if (res.status !== 401) {
+          btn.disabled = false;
+          toast((res.data && res.data.message) || 'Could not restore the job.', 'err');
+        } else { btn.disabled = false; }
+      });
+  }
+
+  /* ───────────── job search (by jobId, phone, or name) ───────────── */
   if (searchForm) {
     searchForm.addEventListener('submit', function (e) {
       e.preventDefault();
@@ -1266,8 +1641,16 @@
       param = 'jobId=' + encodeURIComponent(q);
     } else {
       var digits = q.replace(/[^\d+]/g, '');
-      if (!digits) { toast('Enter a 7-digit Job ID or a phone number.', 'err'); return; }
-      param = 'phone=' + encodeURIComponent(digits);
+      // A query with real digits (3+) is treated as a phone lookup; anything else
+      // (letters / a short token) is a customer-name search.
+      if (digits.replace(/\D/g, '').length >= 3) {
+        param = 'phone=' + encodeURIComponent(digits);
+      } else if (/[a-z]/i.test(q)) {
+        param = 'name=' + encodeURIComponent(q);
+      } else {
+        toast('Search by Job ID, phone number, or customer name.', 'err');
+        return;
+      }
     }
     searchActive = true;
     queue.innerHTML = '<div class="queue-loading">Searching…</div>';
@@ -1385,6 +1768,7 @@
     muteToggle.setAttribute('aria-label', muted ? 'Unmute new-job sound' : 'Mute new-job sound');
     muteToggle.setAttribute('title', muted ? 'Unmute new-job sound' : 'Mute new-job sound');
     muteToggle.classList.toggle('is-muted', muted);
+    if (typeof reflectAudioLock === 'function') reflectAudioLock();
   }
   if (muteToggle) {
     muteToggle.addEventListener('click', function () {
@@ -1394,12 +1778,23 @@
       if (!muted) { unlockAudio(); playChime(); }   // confirm sound on unmute
     });
   }
+  // Subtle hint: the new-job chime can't play until the browser unlocks audio on
+  // a user gesture. Show it only when sound is wanted (not muted) and still locked.
+  var audioHint = $('audioHint');
+  function audioLocked() { return !audioCtx || audioCtx.state !== 'running'; }
+  function reflectAudioLock() {
+    if (!audioHint) return;
+    audioHint.hidden = muted || !audioLocked();
+  }
   // Browsers block audio until a user gesture — unlock on the first interaction.
   function unlockAudio() {
     try {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume().then(reflectAudioLock, function () {});
+      }
     } catch (e) { audioCtx = null; }
+    reflectAudioLock();
   }
   ['click', 'keydown', 'touchstart'].forEach(function (ev) {
     window.addEventListener(ev, unlockAudio, { once: true, passive: true });

@@ -850,8 +850,16 @@ input:focus, textarea:focus {
 }
 /* "Dispatch Control" — opens the dispatch board embedded in the panel; teal so
    it reads as a hand-off to a different surface, not just another admin section. */
-.nav-item-dispatch { color: var(--accent); font-weight: 700; }
+.nav-item-dispatch { color: var(--accent); font-weight: 700; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .nav-item-dispatch:hover { background: rgba(39, 224, 245, .1); }
+/* "New jobs since you last looked" count — a small blue pill, hidden at zero. */
+.nav-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 0 5px;
+  font-size: 11px; font-weight: 800; line-height: 1;
+  color: #fff; background: #2f7df6; border-radius: 999px;
+  box-shadow: 0 0 0 1px rgba(47,125,246,.4), 0 2px 8px -2px rgba(47,125,246,.7);
+}
 
 /* Embedded dispatch board — the iframe fills the whole main content area. */
 .view-embed { padding: 0; }
@@ -991,5 +999,116 @@ input:focus, textarea:focus {
   .recent-time { grid-column: 2; text-align: right; }
   .export-range { grid-template-columns: 1fr; }
   .export-buttons .btn { flex: 1 1 100%; }
+}
+
+/* ============================================================================
+   Analytics dashboard (charts + indicators) — dark + cyan, no light theme
+   ============================================================================ */
+.dash-wrap { max-width: 1120px; margin: 0 auto; }
+.dash-block { margin-top: 26px; }
+.dash-block-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.dash-h3 { font-size: 13px; font-weight: 700; letter-spacing: .04em; color: var(--ink); margin: 0 0 12px; }
+.dash-block-head .dash-h3 { margin: 0; }
+
+/* 1 — Today summary */
+.dash-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.sum-card {
+  position: relative; background: linear-gradient(180deg, var(--panel) 0%, var(--bg-2) 100%);
+  border: 1px solid var(--line); border-radius: 9px; padding: 16px 18px; overflow: hidden;
+}
+.sum-card::before {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 2px; opacity: .8;
+  background: linear-gradient(90deg, var(--accent), transparent 70%);
+}
+.sum-card.is-ok::before { background: linear-gradient(90deg, var(--ok), transparent 70%); }
+.sum-card-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.sum-num { font-size: 30px; font-weight: 800; line-height: 1; letter-spacing: -.02em; color: var(--ink); }
+.sum-card.is-ok .sum-num { color: var(--ok); }
+.sum-card.is-accent .sum-num { color: var(--accent); }
+.sum-label { display: block; margin-top: 8px; font-size: 11.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.sum-trend .trend { font-size: 13px; font-weight: 700; line-height: 1; }
+.trend.up { color: var(--ok); }
+.trend.down { color: var(--danger); }
+.trend.flat { color: var(--muted-2); }
+
+/* 2 — Trend charts */
+.dash-period.seg { padding: 0; margin: 0; }
+.dash-range { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 10px 14px; margin-bottom: 14px; }
+.dash-range .field-inline { margin: 0; width: 165px; }
+.dash-range .field-inline .field-label { font-size: 10.5px; }
+.dash-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.dash-breakdown { display: grid; grid-template-columns: 5fr 4fr; gap: 14px; }
+.chart-card {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  padding: 16px 16px 14px; display: flex; flex-direction: column;
+}
+.chart-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.chart-title { font-size: 12.5px; font-weight: 700; letter-spacing: .03em; color: var(--ink); }
+.chart-canvas-wrap { position: relative; height: 230px; }
+.chart-canvas-wrap canvas { max-width: 100%; }
+.chart-empty {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 12.5px; color: var(--muted-2); background: rgba(36,36,39,.4); border-radius: 6px;
+}
+
+/* 3a — Status donut + legend */
+.donut-wrap { display: grid; grid-template-columns: 180px 1fr; gap: 16px; align-items: center; }
+.donut-canvas-wrap { position: relative; height: 180px; }
+.donut-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.legend-item { display: grid; grid-template-columns: 12px 1fr auto; align-items: center; gap: 9px; font-size: 12.5px; }
+.legend-dot { width: 11px; height: 11px; border-radius: 3px; }
+.legend-label { color: var(--ink); }
+.legend-val { font-family: var(--mono); font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+
+/* 3b — Source breakdown list */
+.source-list { list-style: none; margin: 2px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.source-row { display: grid; grid-template-columns: 64px 1fr 28px; align-items: center; gap: 10px; }
+.source-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.source-bar { height: 8px; background: var(--bg-2); border-radius: 999px; overflow: hidden; }
+.source-bar-fill { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #1aa6b5, var(--accent)); }
+.source-val { font-family: var(--mono); font-size: 12.5px; font-weight: 700; color: var(--ink); text-align: right; }
+
+/* 4 — Needs attention */
+.dash-attention { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.attn-card {
+  position: relative; background: var(--panel); border: 1px solid var(--line);
+  border-radius: 9px; padding: 14px 16px; display: flex; flex-direction: column; gap: 5px;
+}
+.attn-card::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; border-radius: 0 3px 3px 0; }
+.attn-warn::before   { background: #f4c20a; }
+.attn-prog::before   { background: var(--accent); }
+.attn-accent::before { background: #60a0ff; }
+.attn-muted::before  { background: var(--muted-2); }
+.attn-num { font-size: 24px; font-weight: 800; line-height: 1; color: var(--ink); }
+.attn-warn .attn-num   { color: #f4c20a; }
+.attn-prog .attn-num   { color: var(--accent); }
+.attn-accent .attn-num { color: #7fb4ff; }
+.attn-label { font-size: 11px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+
+/* 5 — Technician workload */
+.tech-workload { display: flex; flex-direction: column; gap: 9px; }
+.tech-row {
+  display: grid; grid-template-columns: minmax(120px, 1.4fr) 3fr auto; align-items: center; gap: 12px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 7px; padding: 10px 14px;
+}
+.tech-name { font-size: 13px; font-weight: 600; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tech-bar { height: 8px; background: var(--bg-2); border-radius: 999px; overflow: hidden; }
+.tech-bar-fill { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #1aa6b5, var(--accent)); }
+.tech-row.is-busy .tech-bar-fill { background: linear-gradient(90deg, #c77a16, #ff9f1c); }
+.tech-row.is-idle .tech-bar-fill { background: var(--line); }
+.tech-count { font-family: var(--mono); font-size: 14px; font-weight: 800; color: var(--accent); min-width: 18px; text-align: right; }
+.tech-row.is-busy .tech-count { color: #ff9f1c; }
+.tech-row.is-idle .tech-count { color: var(--muted-2); }
+
+@media (max-width: 880px) {
+  .dash-charts { grid-template-columns: 1fr; }
+  .dash-breakdown { grid-template-columns: 1fr; }
+  .dash-attention { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 560px) {
+  .dash-summary { grid-template-columns: 1fr; }
+  .donut-wrap { grid-template-columns: 1fr; }
+  .donut-canvas-wrap { height: 200px; }
+  .dash-block-head { flex-direction: column; align-items: flex-start; gap: 10px; }
 }
 
