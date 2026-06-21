@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <meta name="robots" content="noindex,nofollow"/>
 <title>Aston Admin</title>
-<link rel="stylesheet" href="admin.css?v=16"/>
+<link rel="stylesheet" href="admin.css?v=17"/>
 </head>
 <body>
 
@@ -106,8 +106,9 @@
             <div class="dash-block-head">
               <h3 class="dash-h3">Trends</h3>
               <div class="dash-period seg" id="dashPeriod" role="tablist" aria-label="Chart period">
-                <button type="button" class="seg-btn is-active" data-period="month">Month</button>
+                <button type="button" class="seg-btn" data-period="day">Daily</button>
                 <button type="button" class="seg-btn" data-period="week">Week</button>
+                <button type="button" class="seg-btn is-active" data-period="month">Month</button>
                 <button type="button" class="seg-btn" data-period="custom">Custom</button>
               </div>
             </div>
@@ -526,6 +527,8 @@
                 <label class="field"><span class="field-label">Phone</span><input id="tcPhone" type="tel" autocomplete="off" required/></label>
                 <label class="field"><span class="field-label">Email <span class="field-opt">(optional)</span></span><input id="tcEmail" type="email" autocomplete="off"/></label>
                 <label class="field people-form-wide"><span class="field-label">Notes <span class="field-opt">(optional)</span></span><input id="tcNotes" type="text" autocomplete="off"/></label>
+                <label class="field"><span class="field-label">Username <span class="field-opt">(portal login)</span></span><input id="tcUsername" type="text" autocomplete="off" spellcheck="false"/></label>
+                <label class="field"><span class="field-label">Password</span><input id="tcPassword" type="password" autocomplete="new-password" required/></label>
               </div>
               <div class="people-form-foot">
                 <span class="people-form-err" id="tcErr" hidden></span>
@@ -559,8 +562,8 @@
 <script src="apex-defaults.js?v=12"></script>
 <!-- Chart.js (admin analytics dashboard). Loaded before admin.js so window.Chart is ready; all chart code degrades gracefully if this fails to load. -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="admin-store.js?v=16"></script>
-<script src="admin.js?v=18"></script>
+<script src="admin-store.js?v=18"></script>
+<script src="admin.js?v=20"></script>
 </body>
 </html>
 

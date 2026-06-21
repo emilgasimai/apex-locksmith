@@ -425,7 +425,8 @@ const AdminStore = (function () {
     /* ── Dashboard charts (each returns its payload, or null if unreachable) ── */
 
     // GET /api/dashboard/timeseries → { metric, period, from, to, labels:[], values:[] }.
-    // metric: 'jobs' | 'revenue'. period: 'week' | 'month'. from/to: YYYY-MM-DD (override period).
+    // metric: 'jobs' | 'revenue'. period: 'day' (hourly, today) | 'week' | 'month'.
+    // from/to: YYYY-MM-DD (override period, daily buckets).
     async getTimeseries(metric, period, from, to) {
       const p = new URLSearchParams({ metric: metric || 'jobs' });
       if (from && to) { p.set('from', from); p.set('to', to); }

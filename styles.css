@@ -82,6 +82,7 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
 .svc-carousel{position:relative;}
 .svc-track{
   display:flex;gap:16px;overflow-x:auto;overscroll-behavior-x:contain;scroll-behavior:smooth;
+  padding-top:8px;padding-bottom:48px;margin-bottom:-48px;
   cursor:grab;
   user-select:none;-webkit-user-select:none;-ms-user-select:none;
   /* pan-x for horizontal carousel scroll, pan-y so a mostly-vertical
@@ -96,14 +97,16 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
 .svc-track.dragging .svc-card,.svc-track.dragging .svc-card *{cursor:grabbing;}
 .svc-slide{flex:0 0 auto;width:min(300px,82vw);}
 @media(min-width:1024px){ .svc-track{gap:20px;} .svc-slide{width:340px;} }
-.svc-card{position:relative;display:block;height:430px;text-decoration:none;color:#EDEDED;
-  background:#242427;border:2px solid #EDEDED;overflow:hidden;
+/* What We Do — soft neumorphic (chilly-dragon-inspired): rounded corners +
+   dual-direction soft shadow (light top-left, dark bottom-right). Two shadow
+   layers only, transform/box-shadow transitions → cheap to paint across 8 cards. */
+.svc-card{position:relative;display:block;height:470px;text-decoration:none;color:#EDEDED;
+  background:#242427;border:1px solid rgba(237,237,237,.16);overflow:hidden;
+  border-radius:24px !important;
+  box-shadow:-8px -8px 18px rgba(255,255,255,.022), 10px 12px 26px -6px rgba(0,0,0,.6);
   transition:transform .2s cubic-bezier(.2,.7,.3,1.4),border-color .2s ease,box-shadow .25s ease;}
-.svc-card:hover{border-color:#27E0F5;transform:translateY(-4px);box-shadow:0 16px 32px -16px rgba(39,224,245,.65);}
-/* Reinforced top-border stripe — sits above photo/chips so it's always visible */
-.svc-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:transparent;z-index:100;transition:background-color .2s ease;pointer-events:none;}
-.svc-card:not(.svc-cta):hover::before{background:#27E0F5;}
-.svc-card.svc-cta:hover::before{background:#EDEDED;}
+.svc-card:hover{border-color:#27E0F5;transform:translateY(-4px);
+  box-shadow:-6px -6px 16px rgba(255,255,255,.03), 0 18px 36px -12px rgba(39,224,245,.5), 14px 16px 30px -6px rgba(0,0,0,.62);}
 .svc-card:focus-visible{outline:2px solid #27E0F5;outline-offset:3px;}
 .svc-photo{position:absolute;inset:0;background-image:repeating-linear-gradient(45deg,#2a2a28 0 8px,#1f1f1d 8px 16px);transition:transform .45s cubic-bezier(.2,.7,.3,1);}
 .svc-card:hover .svc-photo{transform:scale(1.07);}
@@ -111,11 +114,18 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
 /* Cards with real photos: cover/center on the photo layer + diagonal overlay */
 .svc-card.has-photo .svc-photo{background-size:cover;background-position:center;}
 .svc-card.has-photo .svc-overlay{background:linear-gradient(to top left,rgba(0,0,0,0.85) 0%,rgba(0,0,0,0.0) 100%);}
-/* Chips sit inset from the card edges (not flush) so the card's 2px border
-   line is visible all the way around — including across the top during the
-   cyan hover state. */
-.svc-num{position:absolute;top:8px;left:8px;z-index:2;padding:6px 11px;background:#EDEDED;color:#1A1A1A;font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;letter-spacing:.16em;}
-.svc-tag{position:absolute;top:8px;right:8px;z-index:2;padding:6px 11px;background:rgba(15,15,16,.8);color:#27E0F5;font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:700;letter-spacing:.13em;}
+/* Corner chips — dark glassy pills with a cyan edge so they read as part of the
+   soft neumorphic card rather than stickers laid on top. Inset 12px so they sit
+   inside the card's 24px rounded corners. */
+.svc-num{position:absolute;top:12px;left:12px;z-index:2;padding:5px 11px;
+  background:rgba(15,15,16,.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  color:#27E0F5;border:1px solid rgba(39,224,245,.45);border-radius:10px !important;
+  font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;letter-spacing:.16em;
+  box-shadow:0 2px 8px rgba(0,0,0,.35);}
+.svc-tag{position:absolute;top:12px;right:12px;z-index:2;padding:5px 11px;
+  background:rgba(15,15,16,.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  color:#27E0F5;border:1px solid rgba(39,224,245,.25);border-radius:10px !important;
+  font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:700;letter-spacing:.13em;}
 .svc-body{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:22px 24px;}
 .svc-desc{font-size:13.5px;line-height:1.5;color:#cdcdcd;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .svc-foot{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid rgba(237,237,237,.2);}
@@ -303,12 +313,19 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
     text-shadow:0 1px 1px rgba(0,0,0,.4);
   }
 }
-/* Phones: dial the neon glow WAY down — it reads far too hot on a small screen. */
+/* Phones: match the desktop treatment exactly — solid cyan ASTON + off-white
+   LOCKSMITH (NOT the hollow cyan neon outline, which read far too hot on a small
+   screen and didn't match desktop). */
 @media (max-width:767px){
-  .neon-logo-main{ -webkit-text-stroke-width:1px;
-    text-shadow:0 0 2px rgba(39,224,245,.8),0 0 5px rgba(39,224,245,.32); }
-  .neon-logo-sub{ -webkit-text-stroke-width:.6px;
-    text-shadow:0 0 2px rgba(39,224,245,.75),0 0 4px rgba(39,224,245,.28); }
+  .neon-logo-main,.neon-logo-sub{ -webkit-text-stroke:0; }
+  .neon-logo-main{
+    color:#27E0F5;
+    text-shadow:0 0 5px rgba(39,224,245,.22), 0 0 2px rgba(39,224,245,.3);
+  }
+  .neon-logo-sub{
+    color:#EDEDED;
+    text-shadow:0 1px 1px rgba(0,0,0,.4);
+  }
 }
 
 /* Elegant cyan divider beside the header wordmark. A thin line with faded ends
@@ -328,9 +345,9 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
   #header.scrolled .logo-divider{ height:36px; }
 }
 
-/* Brand wordmark echo below "Get a quote" in the Reach-us grid. Hidden on
-   mobile/tablet (single-column, no empty space); shown only once the 2-column
-   layout opens up at lg, where it fills the gap beside the form. */
+/* Brand wordmark echo below the WhatsApp/SMS buttons in the Reach-us grid.
+   Hidden on mobile/tablet (single-column, no empty space); shown only once the
+   2-column layout opens up at lg, where it fills the gap beside the form. */
 .reach-logo-wrap{ display:none; }
 @media (min-width:1024px){
   /* Make the left column a flex column so the wordmark absorbs the leftover
@@ -475,6 +492,7 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
   .onroad-dot{top:0px;right:-18px;width:9px;height:9px;}
 }
 .why-card{padding:28px 20px 26px;background:#242427;border:2px solid #2a2a2e;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;
+  border-radius:18px !important;
   box-shadow:0 2px 4px rgba(0,0,0,.4),0 12px 28px -8px rgba(0,0,0,.65),0 32px 56px -18px rgba(0,0,0,.5);
   transition:border-color .25s ease, transform .25s ease, box-shadow .25s ease;}
 .why-card:hover{border-color:#27E0F5;transform:translateY(-2px);box-shadow:0 3px 6px rgba(0,0,0,.5),0 18px 38px -8px rgba(0,0,0,.75),0 40px 64px -18px rgba(0,0,0,.6);}
@@ -528,20 +546,37 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
 /* Section divider */
 .section-divider{border-top:3px solid #EDEDED;}
 
-/* Reviews / Why Aston / Three Steps — pure black layered shadow */
+/* Centered section headings (NO.0X labels removed). Headings center via inline
+   justify-content/text-align. Where a heading has a right-side control (carousel
+   arrows, "Leave a review"), pin it to the right on desktop so the title stays
+   truly centered; on mobile the control flows below and centers with the title. */
+@media (min-width:768px){
+  .sec-head--ctrl{position:relative;}
+  .sec-head--ctrl .sec-head-ctrl{position:absolute;right:0;bottom:12px;margin:0;}
+}
+
+/* Three Steps — moody-owl-inspired: static light-corner glow, glowing dot, soft depth.
+   Pure CSS (no JS / no mouse-tracking). Light source sits top-right. */
 .step-card{
+  position:relative;
+  overflow:hidden;
+  background:
+    radial-gradient(150px 120px at 100% 0%, rgba(39,224,245,.16), rgba(39,224,245,0) 70%),
+    linear-gradient(180deg,#27272b 0%, #1e1e21 100%);
+  border:2px solid #34343a;
   box-shadow:
     0 2px 4px rgba(0,0,0,.4),
-    0 12px 28px -8px rgba(0,0,0,.65),
-    0 32px 56px -18px rgba(0,0,0,.5);
-  transition:transform .25s cubic-bezier(.2,.7,.3,1.15), box-shadow .25s ease;
+    0 16px 32px -12px rgba(0,0,0,.7),
+    inset 0 1px 0 rgba(255,255,255,.04);
+  transition:transform .25s cubic-bezier(.2,.7,.3,1.15), box-shadow .25s ease, border-color .25s ease;
 }
 .step-card:hover{
   transform:translateY(-2px);
+  border-color:#27E0F5;
   box-shadow:
     0 3px 6px rgba(0,0,0,.5),
-    0 18px 38px -8px rgba(0,0,0,.75),
-    0 40px 64px -18px rgba(0,0,0,.6);
+    0 22px 42px -12px rgba(0,0,0,.78),
+    inset 0 1px 0 rgba(255,255,255,.06);
 }
 .review-card{
   box-shadow:
@@ -578,7 +613,7 @@ input.invalid,textarea.invalid{border-color:#ff5d3b;background:rgba(255,93,59,.0
 .form-success{display:none;margin-top:14px;padding:14px 18px;border:2px solid #5cd97a;background:rgba(92,217,122,.10);align-items:center;gap:12px;}
 .form-success.show{display:flex;}
 
-/* ── Site modals (Get a Quote / Leave a Review) — brutalist, matches forms ── */
+/* ── Site modals (Leave a Review) — brutalist, matches forms ── */
 .site-modal{
   position:fixed;inset:0;z-index:6000;
   display:flex;align-items:center;justify-content:center;
@@ -624,7 +659,7 @@ input.invalid,textarea.invalid{border-color:#ff5d3b;background:rgba(255,93,59,.0
 .rev-thanks[hidden]{display:none !important;}   /* author display beats the hidden attr otherwise */
 
 /* Static-position variant of .form-error used inside modals (no absolute) */
-#quoteFail,#reviewFail{margin-top:2px;}
+#reviewFail{margin-top:2px;}
 
 /* Progress bar */
 .eta-bar{height:14px;background:#1A1A1A;position:relative;border:1px solid #3a3a3e;}

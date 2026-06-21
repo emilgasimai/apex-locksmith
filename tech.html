@@ -1,0 +1,946 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="robots" content="noindex,nofollow"/>
+<meta name="theme-color" content="#0f0f10"/>
+<title>Aston Tech Portal</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f0f10;
+  --surface:#1a1a1d;
+  --surface2:#222226;
+  --border:rgba(255,255,255,.1);
+  --cyan:#27E0F5;
+  --cyan-dim:rgba(39,224,245,.15);
+  --ink:#ededed;
+  --muted:#888;
+  --ok:#22c55e;
+  --warn:#eab308;
+  --busy:#f97316;
+  --meet:#a855f7;
+  --off:#6b7280;
+  --danger:#ef4444;
+  --radius:12px;
+}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:16px;line-height:1.5}
+a{color:inherit;text-decoration:none}
+
+/* ── Layout ── */
+.view{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 16px}
+.portal-view{min-height:100%;display:flex;flex-direction:column;padding:0;align-items:stretch}
+.portal-view[hidden]{display:none}
+[hidden]{display:none!important}
+
+/* ── Login card ── */
+.login-card{
+  width:100%;max-width:360px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:32px 28px;
+  box-shadow:0 20px 60px -20px rgba(0,0,0,.7);
+}
+.login-brand{text-align:center;margin-bottom:28px}
+.login-mark{display:block;font-size:22px;font-weight:800;letter-spacing:.12em;color:var(--ink)}
+.login-sub{display:block;font-size:11px;font-weight:600;letter-spacing:.18em;color:var(--cyan);margin-top:4px;text-transform:uppercase}
+.login-err{color:var(--danger);font-size:13px;margin-bottom:12px;text-align:center}
+
+/* ── Fields ── */
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.field-label{font-size:12px;font-weight:600;letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
+.field input{
+  background:var(--bg);border:1px solid var(--border);border-radius:8px;
+  color:var(--ink);font:inherit;font-size:15px;padding:11px 14px;
+  transition:border-color .15s ease,box-shadow .15s ease;
+}
+.field input:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 2px rgba(39,224,245,.18)}
+
+/* ── Buttons ── */
+.btn{
+  display:block;width:100%;padding:14px;border:none;border-radius:8px;
+  font:inherit;font-size:15px;font-weight:700;cursor:pointer;
+  transition:opacity .15s ease,transform .1s ease;
+}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--cyan);color:#0f0f10}
+.btn-primary:hover{opacity:.92}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--ink)}
+.btn-ghost:hover{border-color:var(--cyan);color:var(--cyan)}
+.btn-danger{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.35);color:var(--danger)}
+.btn-danger:hover{background:rgba(239,68,68,.25)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+/* ── Portal header ── */
+.portal-header{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  padding:14px 16px;background:var(--surface);border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:10;
+}
+.portal-header-left{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0}
+.portal-title{font-size:13px;font-weight:800;letter-spacing:.08em;color:var(--cyan);white-space:nowrap}
+.portal-user{font-size:14px;font-weight:600;color:var(--ink)}
+.logout-btn{
+  flex-shrink:0;white-space:nowrap;
+  background:transparent;border:1px solid var(--border);border-radius:6px;
+  color:var(--ink);font:inherit;font-size:13px;font-weight:600;padding:6px 14px;cursor:pointer;
+  transition:border-color .15s ease,color .15s ease;
+}
+.logout-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+
+/* ── Portal body ── */
+.portal-body{flex:1;padding:16px;max-width:520px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+
+/* ── Sections ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
+.card-title{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:14px}
+
+/* ── Status selector ── */
+.status-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.status-btn{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  background:var(--surface2);border:2px solid transparent;border-radius:10px;
+  padding:12px 4px;cursor:pointer;font:inherit;color:var(--muted);
+  font-size:11px;font-weight:700;letter-spacing:.06em;
+  transition:border-color .15s,color .15s,background .15s,transform .08s ease;
+}
+.status-btn:active{transform:scale(.95)}
+.status-icon{width:18px;height:18px;display:block;color:var(--off)}
+.status-btn:hover{border-color:var(--border);color:var(--ink)}
+.status-btn.is-active{color:var(--ink)}
+.status-btn[data-s="active"]  .status-icon{color:var(--ok)}
+.status-btn[data-s="away"]    .status-icon{color:var(--warn)}
+.status-btn[data-s="busy"]    .status-icon{color:var(--busy)}
+.status-btn[data-s="meet"]    .status-icon{color:var(--meet)}
+.status-btn[data-s="offline"] .status-icon{color:var(--off)}
+.status-btn[data-s="active"].is-active{border-color:var(--ok);background:rgba(34,197,94,.1)}
+.status-btn[data-s="away"].is-active  {border-color:var(--warn);background:rgba(234,179,8,.1)}
+.status-btn[data-s="busy"].is-active  {border-color:var(--busy);background:rgba(249,115,22,.1)}
+.status-btn[data-s="meet"].is-active  {border-color:var(--meet);background:rgba(168,85,247,.1)}
+.status-btn[data-s="offline"].is-active{border-color:var(--off);background:rgba(107,114,128,.1)}
+@keyframes statusPop{0%{transform:scale(1)}45%{transform:scale(1.22)}100%{transform:scale(1)}}
+.status-icon.pop{animation:statusPop .22s ease}
+
+/* ── Job lookup ── */
+.lookup-row{display:flex;gap:10px;margin-bottom:4px}
+.lookup-row input{
+  flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;
+  color:var(--ink);font:inherit;font-size:15px;padding:11px 14px;letter-spacing:.08em;
+  transition:border-color .15s,box-shadow .15s;
+}
+.lookup-row input:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 2px var(--cyan-dim)}
+.lookup-btn{
+  flex-shrink:0;padding:11px 18px;background:var(--cyan);color:#0f0f10;
+  border:none;border-radius:8px;font:inherit;font-weight:700;cursor:pointer;
+  transition:opacity .15s,transform .1s;
+}
+.lookup-btn:hover{opacity:.9}
+.lookup-btn:active{transform:scale(.97)}
+.lookup-hint{font-size:12px;color:var(--muted);margin-bottom:0}
+
+/* ── Job card (mission card) ── */
+.job-card{
+  position:relative;
+  background:linear-gradient(180deg,#202024,#191a1d);
+  border:1px solid var(--border);border-left:3px solid var(--cyan);
+  border-radius:10px;padding:16px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04),
+             0 10px 30px -16px rgba(39,224,245,.45),
+             0 10px 24px -14px rgba(0,0,0,.6);
+}
+.job-id-row{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.job-id-badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:24px;height:24px;border-radius:7px;flex-shrink:0;
+  background:var(--cyan-dim);border:1px solid rgba(39,224,245,.3);color:var(--cyan);
+}
+.job-id-badge svg{width:14px;height:14px}
+.job-id{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--cyan)}
+.job-status-badge{
+  display:inline-block;padding:3px 10px;border-radius:99px;
+  font-size:11px;font-weight:700;letter-spacing:.06em;margin-bottom:12px;
+}
+.job-status-badge.s-approved{background:rgba(39,224,245,.15);color:var(--cyan)}
+.job-status-badge.s-assigned{background:rgba(168,85,247,.15);color:var(--meet)}
+.job-status-badge.s-in-progress{background:rgba(249,115,22,.15);color:var(--busy)}
+.job-status-badge.s-completed{background:rgba(34,197,94,.15);color:var(--ok)}
+.job-status-badge.s-cancelled{background:rgba(239,68,68,.15);color:var(--danger)}
+.job-status-badge.s-pending-review{background:rgba(234,179,8,.15);color:var(--warn)}
+.job-row{display:flex;gap:8px;margin-bottom:7px;font-size:14px}
+.job-label{min-width:80px;flex-shrink:0;color:var(--muted);font-size:12px;font-weight:600;letter-spacing:.04em;padding-top:1px}
+.job-val{color:var(--ink);line-height:1.4}
+.job-val a{color:var(--cyan)}
+.job-assigned-note{font-size:13px;color:var(--warn);margin-bottom:10px;padding:8px 12px;background:rgba(234,179,8,.08);border-radius:6px;border:1px solid rgba(234,179,8,.2)}
+
+/* ── Action buttons ── */
+.action-grid{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.action-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.action-btn{
+  padding:14px;border:none;border-radius:8px;font:inherit;font-size:15px;
+  font-weight:700;cursor:pointer;text-align:center;
+  transition:opacity .15s,transform .1s;
+}
+.action-btn:active:not(:disabled){transform:scale(.97)}
+.action-btn:disabled{opacity:.35;cursor:not-allowed}
+.btn-assign{background:var(--cyan);color:#0f0f10;grid-column:1/-1}
+.btn-assign:hover:not(:disabled){opacity:.9}
+.btn-complete{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.35);color:var(--ok)}
+.btn-complete:hover:not(:disabled){background:rgba(34,197,94,.25)}
+.btn-cancel-trigger{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:var(--danger)}
+.btn-cancel-trigger:hover:not(:disabled){background:rgba(239,68,68,.22)}
+
+/* ── Cancel panel ── */
+.cancel-panel{margin-top:12px;background:var(--bg);border:1px solid rgba(239,68,68,.25);border-radius:10px;padding:14px}
+.cancel-panel-title{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--danger);margin-bottom:12px;text-transform:uppercase}
+.cancel-reasons{display:flex;flex-direction:column;gap:7px}
+.reason-btn{
+  background:var(--surface2);border:1px solid var(--border);border-radius:7px;
+  color:var(--ink);font:inherit;font-size:13px;padding:10px 14px;text-align:left;
+  cursor:pointer;transition:border-color .12s,background .12s;
+}
+.reason-btn:hover{border-color:var(--danger);background:rgba(239,68,68,.07)}
+.reason-btn.selected{border-color:var(--danger);background:rgba(239,68,68,.12);color:var(--danger)}
+.cancel-other-wrap{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.cancel-other-input{
+  background:var(--surface2);border:1px solid var(--border);border-radius:7px;
+  color:var(--ink);font:inherit;font-size:14px;padding:10px 14px;resize:vertical;min-height:72px;
+}
+.cancel-other-input:focus{outline:none;border-color:var(--danger);box-shadow:0 0 0 2px rgba(239,68,68,.15)}
+.cancel-submit{
+  margin-top:8px;padding:13px;background:var(--danger);color:#fff;
+  border:none;border-radius:8px;font:inherit;font-weight:700;cursor:pointer;width:100%;
+  transition:opacity .15s;
+}
+.cancel-submit:hover{opacity:.88}
+.cancel-submit:disabled{opacity:.4;cursor:not-allowed}
+.cancel-back{
+  margin-top:6px;padding:10px;background:none;border:1px solid var(--border);border-radius:8px;
+  color:var(--muted);font:inherit;font-size:13px;cursor:pointer;width:100%;
+  transition:border-color .12s,color .12s;
+}
+.cancel-back:hover{border-color:var(--ink);color:var(--ink)}
+
+/* ── Assign confirm ── */
+@keyframes assignedPop{0%{transform:scale(1)}40%{transform:scale(1.04)}100%{transform:scale(1)}}
+.btn-assign.assigned-pop{
+  background:var(--ok);color:#0f0f10;
+  animation:assignedPop .4s ease;
+  box-shadow:0 0 22px -4px rgba(34,197,94,.6);
+}
+
+/* ── Daily counter badge ── */
+.daily-badge{
+  display:inline-flex;align-items:center;gap:4px;margin-top:6px;
+  background:var(--cyan-dim);border:1px solid rgba(39,224,245,.3);color:var(--cyan);
+  font-size:12px;font-weight:700;letter-spacing:.02em;
+  padding:5px 10px;border-radius:99px;white-space:nowrap;
+  animation:badgePop .3s ease;
+}
+@keyframes badgePop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+
+/* ── Tactile press ── */
+.reason-btn:active,.cancel-back:active{transform:scale(.985)}
+.cancel-submit:active:not(:disabled){transform:scale(.98)}
+
+/* ── Complete celebration overlay ── */
+.complete-fx{
+  position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(15,15,16,.74);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);
+  opacity:0;pointer-events:none;z-index:200;transition:opacity .15s ease;
+}
+.complete-fx.play{opacity:1;pointer-events:auto}
+.complete-fx-check{width:104px;height:104px}
+.complete-fx.play .complete-fx-check{animation:fxGrow .45s cubic-bezier(.2,.7,.3,1.5)}
+.complete-fx-check circle{fill:none;stroke:var(--ok);stroke-width:3;stroke-dasharray:170;stroke-dashoffset:170}
+.complete-fx.play .complete-fx-check circle{animation:fxDraw .5s ease forwards}
+.complete-fx-check path{fill:none;stroke:var(--ok);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:48;stroke-dashoffset:48;filter:drop-shadow(0 0 8px rgba(34,197,94,.75))}
+.complete-fx.play .complete-fx-check path{animation:fxDraw .32s .26s ease forwards}
+@keyframes fxGrow{0%{transform:scale(.3);opacity:0}60%{opacity:1}100%{transform:scale(1);opacity:1}}
+@keyframes fxDraw{to{stroke-dashoffset:0}}
+.complete-fx-label{position:absolute;top:62%;font-size:14px;font-weight:800;letter-spacing:.18em;color:var(--ok);text-transform:uppercase;opacity:0}
+.complete-fx.play .complete-fx-label{animation:fxLabel .4s .4s ease forwards}
+@keyframes fxLabel{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Section tabs ── */
+.portal-tabs{display:flex;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:5px}
+.portal-tab{
+  flex:1;display:flex;align-items:center;justify-content:center;gap:7px;
+  background:transparent;border:none;border-radius:8px;cursor:pointer;
+  color:var(--muted);font:inherit;font-size:14px;font-weight:700;letter-spacing:.02em;
+  padding:11px 8px;transition:background .15s ease,color .15s ease,transform .08s ease;
+}
+.portal-tab:active{transform:scale(.98)}
+.portal-tab.is-active{background:var(--cyan-dim);color:var(--cyan)}
+.tab-count{
+  display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;
+  border-radius:99px;background:var(--off);color:var(--ink);font-size:11px;font-weight:800;line-height:1;
+}
+.portal-tab.is-active .tab-count{background:var(--cyan);color:#0f0f10}
+.portal-panel[hidden]{display:none!important}
+
+/* ── My Jobs list ── */
+.myjobs-list{display:flex;flex-direction:column;gap:10px}
+.myjobs-empty{color:var(--muted);font-size:14px;text-align:center;padding:18px 8px}
+.myjob-card{
+  display:block;width:100%;text-align:left;cursor:pointer;font:inherit;color:var(--ink);
+  background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--cyan);
+  border-radius:10px;padding:13px 14px;
+  transition:border-color .15s ease,transform .08s ease;
+}
+.myjob-card:hover{border-color:rgba(39,224,245,.45)}
+.myjob-card:active{transform:scale(.99)}
+.myjob-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.myjob-id{font-size:12px;font-weight:800;letter-spacing:.06em;color:var(--cyan)}
+.myjob-prio{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:99px}
+.myjob-prio.p-emergency{background:rgba(239,68,68,.16);color:var(--danger)}
+.myjob-prio.p-high{background:rgba(249,115,22,.16);color:var(--busy)}
+.myjob-prio.p-normal{background:rgba(255,255,255,.08);color:var(--muted)}
+.myjob-prio.p-low{background:rgba(255,255,255,.06);color:var(--off)}
+.myjob-card .job-status-badge{margin:0 0 0 auto}
+.myjob-customer{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:4px}
+.myjob-line{display:flex;gap:7px;font-size:13px;color:var(--muted);line-height:1.35;margin-top:2px}
+.myjob-line svg{width:13px;height:13px;flex-shrink:0;margin-top:2px;color:var(--off)}
+
+/* ── Toast ── */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(0);
+  background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+  padding:10px 20px;font-size:14px;font-weight:600;color:var(--ink);
+  box-shadow:0 8px 32px rgba(0,0,0,.5);white-space:nowrap;
+  opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:100;
+}
+.toast.ok{border-color:var(--ok);color:var(--ok)}
+.toast.err{border-color:var(--danger);color:var(--danger)}
+.toast.show{opacity:1}
+
+@media(max-width:380px){
+  .status-grid{grid-template-columns:repeat(3,1fr)}
+  .status-btn[data-s="meet"]{grid-column:1/2}
+  .status-btn[data-s="offline"]{grid-column:2/3}
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== LOGIN VIEW ==================== -->
+<div id="loginView" class="view">
+  <div class="login-card">
+    <div class="login-brand">
+      <span class="login-mark">ASTON</span>
+      <span class="login-sub">Technician Portal</span>
+    </div>
+    <div id="loginErr" class="login-err" hidden></div>
+    <form id="loginForm" autocomplete="on" novalidate>
+      <label class="field">
+        <span class="field-label">Username</span>
+        <input id="portalUser" type="text" name="username" autocomplete="username" autocapitalize="off" spellcheck="false" required/>
+      </label>
+      <label class="field">
+        <span class="field-label">Password</span>
+        <input id="portalPass" type="password" name="password" autocomplete="current-password" required/>
+      </label>
+      <button type="submit" id="loginBtn" class="btn btn-primary" style="margin-top:6px">Sign In</button>
+    </form>
+  </div>
+</div>
+
+<!-- ==================== PORTAL VIEW ==================== -->
+<div id="portalView" class="portal-view" hidden>
+
+  <header class="portal-header">
+    <div class="portal-header-left">
+      <div class="portal-title">ASTON TECH PORTAL</div>
+      <div class="portal-user" id="techNameEl"></div>
+      <span class="daily-badge" id="dailyBadge" hidden></span>
+    </div>
+    <button class="logout-btn" id="logoutBtn">Log out</button>
+  </header>
+
+  <div class="portal-body">
+
+    <!-- Status selector -->
+    <div class="card">
+      <div class="card-title">My Status</div>
+      <div class="status-grid">
+        <button class="status-btn" data-s="active"><svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>Active</button>
+        <button class="status-btn" data-s="away"><svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Away</button>
+        <button class="status-btn" data-s="busy"><svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 12h6"/></svg>Busy</button>
+        <button class="status-btn" data-s="meet"><svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>Meeting</button>
+        <button class="status-btn" data-s="offline"><svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v8"/><path d="M7.5 7a7 7 0 1 0 9 0"/></svg>Offline</button>
+      </div>
+    </div>
+
+    <!-- Section tabs -->
+    <div class="portal-tabs" role="tablist" aria-label="Portal sections">
+      <button type="button" class="portal-tab is-active" data-tab="lookup" role="tab" aria-selected="true">Job Lookup</button>
+      <button type="button" class="portal-tab" data-tab="myjobs" role="tab" aria-selected="false">My Jobs<span class="tab-count" id="myJobsCount" hidden>0</span></button>
+    </div>
+
+    <!-- Lookup panel -->
+    <div id="lookupPanel" class="portal-panel">
+    <!-- Job lookup -->
+    <div class="card">
+      <div class="card-title">Job Lookup</div>
+      <div class="lookup-row">
+        <input id="jobIdInput" type="text" inputmode="numeric" maxlength="7" placeholder="7-digit Job ID" autocomplete="off"/>
+        <button class="lookup-btn" id="lookupBtn">Search</button>
+      </div>
+      <div class="lookup-hint" id="lookupHint"></div>
+
+      <!-- Job card (shown after successful lookup) -->
+      <div id="jobCard" style="margin-top:14px" hidden>
+        <div class="job-card">
+          <div class="job-id-row">
+            <span class="job-id-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></span>
+            <span class="job-id" id="jId"></span>
+          </div>
+          <div id="jStatusBadge" class="job-status-badge"></div>
+          <div id="jAssignedNote" class="job-assigned-note" hidden></div>
+          <div class="job-row"><span class="job-label">Customer</span><span class="job-val" id="jCustomer"></span></div>
+          <div class="job-row"><span class="job-label">Address</span><span class="job-val" id="jAddress"></span></div>
+          <div class="job-row"><span class="job-label">Phone</span><span class="job-val"><a id="jPhone" href="#"></a></span></div>
+          <div class="job-row"><span class="job-label">Service</span><span class="job-val" id="jService"></span></div>
+          <div class="job-row" id="jDescRow" hidden><span class="job-label">Notes</span><span class="job-val" id="jDesc"></span></div>
+          <div class="job-row" id="jEtaRow" hidden><span class="job-label">ETA</span><span class="job-val" id="jEta"></span></div>
+        </div>
+
+        <!-- Actions -->
+        <div class="action-grid">
+          <button id="assignSelfBtn" class="action-btn btn-assign">Assign to Me</button>
+          <div class="action-row">
+            <button id="completeBtn" class="action-btn btn-complete" disabled>Complete ✓</button>
+            <button id="cancelTriggerBtn" class="action-btn btn-cancel-trigger" disabled>Cancel ✗</button>
+          </div>
+        </div>
+
+        <!-- Cancel panel -->
+        <div id="cancelPanel" class="cancel-panel" hidden>
+          <div class="cancel-panel-title">Select a reason</div>
+          <div class="cancel-reasons" id="cancelReasons">
+            <button class="reason-btn" data-reason="Customer cancelled">Customer cancelled</button>
+            <button class="reason-btn" data-reason="Customer not reachable">Customer not reachable</button>
+            <button class="reason-btn" data-reason="Duplicate request">Duplicate request</button>
+            <button class="reason-btn" data-reason="Wrong address">Wrong address</button>
+            <button class="reason-btn" data-reason="Resolved before arrival">Resolved before arrival</button>
+            <button class="reason-btn" data-reason="Price disagreement">Price disagreement</button>
+            <button class="reason-btn" data-reason="Out of service area">Out of service area</button>
+            <button class="reason-btn" data-reason="Safety concern">Safety concern</button>
+            <button class="reason-btn" data-reason="Parts unavailable">Parts unavailable</button>
+            <button class="reason-btn" data-reason="Other">Other (describe below)</button>
+          </div>
+          <div id="otherWrap" class="cancel-other-wrap" hidden>
+            <textarea id="otherText" class="cancel-other-input" placeholder="Describe the reason…" maxlength="300"></textarea>
+          </div>
+          <button id="cancelSubmitBtn" class="cancel-submit" disabled>Confirm Cancellation</button>
+          <button id="cancelBackBtn" class="cancel-back">Back</button>
+        </div>
+      </div>
+
+    </div><!-- /card -->
+    </div><!-- /lookupPanel -->
+
+    <!-- My Jobs panel -->
+    <div id="myJobsPanel" class="portal-panel" hidden>
+      <div class="card">
+        <div class="card-title">My Active Jobs</div>
+        <div id="myJobsList" class="myjobs-list">
+          <div class="myjobs-empty">Loading…</div>
+        </div>
+      </div>
+    </div><!-- /myJobsPanel -->
+  </div><!-- /portal-body -->
+</div>
+
+<!-- Complete celebration overlay (pure CSS, ~1s, auto-dismissed by JS) -->
+<div id="completeFx" class="complete-fx" aria-hidden="true">
+  <svg class="complete-fx-check" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 15-16"/></svg>
+  <span class="complete-fx-label">Completed</span>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="config.js?v=1"></script>
+<script>
+(function () {
+  'use strict';
+
+  var SESSION_KEY = 'apex_tech_session_v1';
+
+  // ── Status API values (API uses "meeting", button uses "meet") ──
+  var STATUS_MAP = { active: 'active', away: 'away', busy: 'busy', meet: 'meeting', offline: 'offline' };
+  var STATUS_RMAP = { active: 'active', away: 'away', busy: 'busy', meeting: 'meet', offline: 'offline' };
+
+  // ── Session helpers ──
+  function getSession() {
+    try { return JSON.parse(sessionStorage.getItem(SESSION_KEY)) || null; } catch (e) { return null; }
+  }
+  function saveSession(data) {
+    try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(data)); } catch (e) {}
+  }
+  function clearSession() {
+    try { sessionStorage.removeItem(SESSION_KEY); } catch (e) {}
+  }
+  function getToken() { var s = getSession(); return s ? s.token : null; }
+  function getTech()  { var s = getSession(); return s ? s.technician : null; }
+
+  // ── Auth fetch helper ──
+  function authFetch(path, opts) {
+    opts = opts || {};
+    opts.token = getToken();
+    return window.apiFetch(path, opts);
+  }
+
+  // ── DOM refs ──
+  var loginView   = document.getElementById('loginView');
+  var portalView  = document.getElementById('portalView');
+  var loginForm   = document.getElementById('loginForm');
+  var portalUser  = document.getElementById('portalUser');
+  var portalPass  = document.getElementById('portalPass');
+  var loginBtn    = document.getElementById('loginBtn');
+  var loginErrEl  = document.getElementById('loginErr');
+  var techNameEl  = document.getElementById('techNameEl');
+  var logoutBtn   = document.getElementById('logoutBtn');
+
+  var statusBtns  = document.querySelectorAll('.status-btn');
+  var jobIdInput  = document.getElementById('jobIdInput');
+  var lookupBtn   = document.getElementById('lookupBtn');
+  var lookupHint  = document.getElementById('lookupHint');
+  var jobCard     = document.getElementById('jobCard');
+  var assignSelfBtn    = document.getElementById('assignSelfBtn');
+  var completeBtn      = document.getElementById('completeBtn');
+  var cancelTriggerBtn = document.getElementById('cancelTriggerBtn');
+  var cancelPanel      = document.getElementById('cancelPanel');
+  var cancelReasons    = document.getElementById('cancelReasons');
+  var otherWrap        = document.getElementById('otherWrap');
+  var otherText        = document.getElementById('otherText');
+  var cancelSubmitBtn  = document.getElementById('cancelSubmitBtn');
+  var cancelBackBtn    = document.getElementById('cancelBackBtn');
+  var toastEl          = document.getElementById('toast');
+  var dailyBadge       = document.getElementById('dailyBadge');
+  var completeFx       = document.getElementById('completeFx');
+  var portalTabs       = document.querySelectorAll('.portal-tab');
+  var lookupPanel      = document.getElementById('lookupPanel');
+  var myJobsPanel      = document.getElementById('myJobsPanel');
+  var myJobsList       = document.getElementById('myJobsList');
+  var myJobsCount      = document.getElementById('myJobsCount');
+
+  var currentJob = null;   // last successful lookup result
+  var selectedReason = null;
+  var toastTimer = null;
+  var myJobs = [];         // technician's own active jobs (My Jobs tab)
+  var currentTab = 'lookup';
+
+  // ── Toast ──
+  function toast(msg, type) {
+    clearTimeout(toastTimer);
+    toastEl.textContent = msg;
+    toastEl.className = 'toast show' + (type ? ' ' + type : '');
+    toastTimer = setTimeout(function () { toastEl.className = 'toast'; }, 2800);
+  }
+
+  // ── Status icon pop (instant feedback on tap, independent of save) ──
+  function popIcon(btn) {
+    var ic = btn.querySelector('.status-icon');
+    if (!ic) return;
+    ic.classList.remove('pop');
+    void ic.offsetWidth;       // restart the animation
+    ic.classList.add('pop');
+  }
+
+  // ── Complete celebration overlay ──
+  function playCompleteFx() {
+    if (!completeFx) return;
+    completeFx.classList.remove('play');
+    void completeFx.offsetWidth;
+    completeFx.classList.add('play');
+  }
+  function hideCompleteFx() { if (completeFx) completeFx.classList.remove('play'); }
+
+  // ── Daily completed-job counter (local, per-tech, resets at midnight) ──
+  var DAILY_KEY = 'aston_tech_daily_v1';
+  function todayStr() { var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+  function techKey() { var t = getTech() || {}; return String(t.id || t._id || 'me'); }
+  function readDaily() {
+    var o;
+    try { o = JSON.parse(localStorage.getItem(DAILY_KEY)); } catch (e) { o = null; }
+    if (!o || o.date !== todayStr()) o = { date: todayStr(), counts: {} };
+    if (!o.counts) o.counts = {};
+    return o;
+  }
+  function dailyCount() { return readDaily().counts[techKey()] || 0; }
+  function bumpDaily() {
+    var o = readDaily();
+    o.counts[techKey()] = (o.counts[techKey()] || 0) + 1;
+    try { localStorage.setItem(DAILY_KEY, JSON.stringify(o)); } catch (e) {}
+    renderDaily();
+  }
+  function renderDaily() {
+    if (!dailyBadge) return;
+    var n = dailyCount();
+    if (n > 0) { dailyBadge.textContent = n + (n === 1 ? ' job' : ' jobs') + ' today 🔧'; dailyBadge.hidden = false; }
+    else { dailyBadge.hidden = true; }
+  }
+
+  // ── My Jobs tab ──────────────────────────────────────────────────────────
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  var SVG_PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0118 0z"/><circle cx="12" cy="10" r="2.6"/></svg>';
+  var SVG_WRENCH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>';
+
+  function switchTab(tab) {
+    currentTab = tab;
+    portalTabs.forEach(function (b) {
+      var on = b.getAttribute('data-tab') === tab;
+      b.classList.toggle('is-active', on);
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    if (lookupPanel) lookupPanel.hidden = tab !== 'lookup';
+    if (myJobsPanel) myJobsPanel.hidden = tab !== 'myjobs';
+    if (tab === 'myjobs') loadMyJobs(false);
+  }
+
+  function updateMyJobsCount() {
+    if (!myJobsCount) return;
+    var n = myJobs.length;
+    if (n > 0) { myJobsCount.textContent = n; myJobsCount.hidden = false; }
+    else { myJobsCount.hidden = true; }
+  }
+
+  function renderMyJobs() {
+    updateMyJobsCount();
+    if (!myJobsList) return;
+    if (!myJobs.length) {
+      myJobsList.innerHTML = '<div class="myjobs-empty">No active jobs assigned to you.</div>';
+      return;
+    }
+    myJobsList.innerHTML = myJobs.map(function (job) {
+      var st = (job.status || '').toLowerCase().replace(/\s+/g, '-');
+      var prio = job.priority || 'normal';
+      return '<button type="button" class="myjob-card" data-id="' + esc(String(job._id || job.id || '')) + '">' +
+          '<div class="myjob-top">' +
+            '<span class="myjob-id">#' + esc(job.jobId || '—') + '</span>' +
+            '<span class="myjob-prio p-' + esc(prio) + '">' + esc(prio) + '</span>' +
+            '<span class="job-status-badge s-' + esc(st) + '">' + esc(job.status || '—') + '</span>' +
+          '</div>' +
+          '<div class="myjob-customer">' + esc(job.customerName || '—') + '</div>' +
+          (job.address ? '<div class="myjob-line">' + SVG_PIN + '<span>' + esc(job.address) + '</span></div>' : '') +
+          '<div class="myjob-line">' + SVG_WRENCH + '<span>' + esc(job.serviceType || '—') + '</span></div>' +
+        '</button>';
+    }).join('');
+  }
+
+  // Fetch the technician's own active jobs. `silent` skips the loading
+  // placeholder — used for background refreshes after an action so the list
+  // doesn't flash.
+  async function loadMyJobs(silent) {
+    if (!silent && myJobsList) myJobsList.innerHTML = '<div class="myjobs-empty">Loading…</div>';
+    var res = await authFetch('/api/dispatch/my-jobs');
+    if (res.status === 401) { clearSession(); showLogin(); return; }
+    if (!res.ok || !res.data) {
+      if (!silent && myJobsList) myJobsList.innerHTML = '<div class="myjobs-empty">Could not load your jobs — try again.</div>';
+      return;
+    }
+    myJobs = res.data.jobs || [];
+    renderMyJobs();
+  }
+
+  // Tap a My Jobs card → load it into the shared lookup/action view (reused, not
+  // duplicated) and switch back to the Lookup tab.
+  if (myJobsList) {
+    myJobsList.addEventListener('click', function (e) {
+      var card = e.target.closest && e.target.closest('.myjob-card');
+      if (!card) return;
+      var id = card.getAttribute('data-id');
+      var job = null;
+      for (var i = 0; i < myJobs.length; i++) {
+        if (String(myJobs[i]._id || myJobs[i].id) === id) { job = myJobs[i]; break; }
+      }
+      if (!job) return;
+      currentJob = job;
+      jobIdInput.value = job.jobId || '';
+      lookupHint.textContent = '';
+      renderJobCard(job);
+      switchTab('lookup');
+      try { jobCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e2) {}
+    });
+  }
+
+  if (portalTabs && portalTabs.length) {
+    portalTabs.forEach(function (b) {
+      b.addEventListener('click', function () { switchTab(b.getAttribute('data-tab')); });
+    });
+  }
+
+  // ── View switching ──
+  function showLogin() {
+    loginView.hidden = false;
+    portalView.hidden = true;
+  }
+  function showPortal() {
+    loginView.hidden = true;
+    portalView.hidden = false;
+    var tech = getTech();
+    techNameEl.textContent = tech ? ((tech.firstName || '') + ' ' + (tech.lastName || '')).trim() : '';
+    if (tech && tech.status) setStatusUI(STATUS_RMAP[tech.status] || tech.status);
+    renderDaily();
+  }
+
+  // ── Status UI ──
+  function setStatusUI(btnKey) {
+    statusBtns.forEach(function (b) { b.classList.toggle('is-active', b.getAttribute('data-s') === btnKey); });
+  }
+
+  // ── Login ──
+  loginForm.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    loginErrEl.hidden = true;
+    var u = portalUser.value.trim(), p = portalPass.value;
+    if (!u || !p) { loginErrEl.textContent = 'Enter username and password.'; loginErrEl.hidden = false; return; }
+    loginBtn.disabled = true; loginBtn.textContent = 'Signing in…';
+    var res = await window.apiFetch('/api/auth/technician-login', { method: 'POST', json: { username: u, password: p } });
+    loginBtn.disabled = false; loginBtn.textContent = 'Sign In';
+    if (res.ok && res.data && res.data.token) {
+      saveSession({ token: res.data.token, technician: res.data.technician });
+      showPortal();
+    } else {
+      var msg = (res.data && res.data.message) || (res.status === 401 ? 'Invalid username or password.' : 'Login failed — try again.');
+      loginErrEl.textContent = msg;
+      loginErrEl.hidden = false;
+    }
+  });
+
+  // ── Logout ──
+  logoutBtn.addEventListener('click', function () {
+    clearSession();
+    resetJobArea();
+    loginForm.reset();
+    showLogin();
+  });
+
+  // ── Status buttons ──
+  statusBtns.forEach(function (btn) {
+    btn.addEventListener('click', async function () {
+      var btnKey = btn.getAttribute('data-s');
+      var apiStatus = STATUS_MAP[btnKey];
+      if (!apiStatus) return;
+      popIcon(btn);   // instant visual feedback; save proceeds below
+      statusBtns.forEach(function (b) { b.disabled = true; });
+      var res = await authFetch('/api/technicians/me/status', { method: 'PATCH', json: { status: apiStatus } });
+      statusBtns.forEach(function (b) { b.disabled = false; });
+      if (res.ok) {
+        setStatusUI(btnKey);
+        var s = getSession();
+        if (s && s.technician) { s.technician.status = apiStatus; saveSession(s); }
+        toast('Status: ' + (res.data && res.data.status ? res.data.status : apiStatus), 'ok');
+      } else if (res.status === 401) {
+        clearSession(); showLogin();
+      } else {
+        toast((res.data && res.data.message) || 'Could not update status.', 'err');
+      }
+    });
+  });
+
+  // ── Job lookup ──
+  function resetJobArea() {
+    currentJob = null;
+    jobCard.hidden = true;
+    lookupHint.textContent = '';
+    jobIdInput.value = '';
+    resetCancelPanel();
+  }
+
+  lookupBtn.addEventListener('click', doLookup);
+  jobIdInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') doLookup(); });
+
+  async function doLookup() {
+    var jid = jobIdInput.value.trim().replace(/\D/g, '');
+    if (jid.length !== 7) { lookupHint.textContent = 'Enter exactly 7 digits.'; lookupHint.style.color = 'var(--danger)'; return; }
+    lookupHint.textContent = 'Searching…'; lookupHint.style.color = 'var(--muted)';
+    lookupBtn.disabled = true;
+    var res = await authFetch('/api/dispatch/lookup/' + jid);
+    lookupBtn.disabled = false;
+    if (res.status === 401) { clearSession(); showLogin(); return; }
+    if (!res.ok || !res.data) {
+      lookupHint.textContent = res.status === 404 ? 'Job not found.' : 'Lookup failed — try again.';
+      lookupHint.style.color = 'var(--danger)';
+      jobCard.hidden = true; currentJob = null; return;
+    }
+    lookupHint.textContent = '';
+    currentJob = res.data;
+    renderJobCard(res.data);
+  }
+
+  function renderJobCard(job) {
+    document.getElementById('jId').textContent = 'JOB #' + (job.jobId || '—');
+
+    // Status badge
+    var badge = document.getElementById('jStatusBadge');
+    var st = (job.status || '').toLowerCase().replace(/\s+/g, '-');
+    badge.className = 'job-status-badge s-' + st;
+    badge.textContent = job.status || '—';
+
+    // Fields
+    document.getElementById('jCustomer').textContent = job.customerName || '—';
+    document.getElementById('jAddress').textContent  = job.address || '—';
+    var phoneEl = document.getElementById('jPhone');
+    phoneEl.textContent = job.phone || '—';
+    phoneEl.href = job.phone ? 'tel:' + job.phone.replace(/\s/g,'') : '#';
+    document.getElementById('jService').textContent  = job.serviceType || '—';
+    var descRow = document.getElementById('jDescRow');
+    if (job.description) { document.getElementById('jDesc').textContent = job.description; descRow.hidden = false; }
+    else { descRow.hidden = true; }
+    var etaRow = document.getElementById('jEtaRow');
+    if (job.eta) { document.getElementById('jEta').textContent = job.eta; etaRow.hidden = false; }
+    else { etaRow.hidden = true; }
+
+    // Assigned note
+    var note = document.getElementById('jAssignedNote');
+    var myId = String((getTech() || {}).id || (getTech() || {})._id || '');
+    var jobTechId = String(job.technicianId || '');
+    var isTerminal = job.status === 'completed' || job.status === 'cancelled';
+    var isMine = jobTechId && myId && jobTechId === myId;
+    var isOthers = jobTechId && !isMine;
+
+    if (isOthers) {
+      note.textContent = 'Assigned to ' + (job.assignedTo || 'another technician') + '.';
+      note.hidden = false;
+    } else { note.hidden = true; }
+
+    // Reset action buttons to baseline (DOM is reused across lookups)
+    assignSelfBtn.textContent = 'Assign to Me';
+    assignSelfBtn.classList.remove('assigned-pop');
+    completeBtn.textContent = 'Complete ✓';
+    cancelTriggerBtn.textContent = 'Cancel ✗';
+
+    // Action buttons
+    var canAssign   = !jobTechId && !isTerminal;
+    var canAct      = isMine && !isTerminal;
+
+    assignSelfBtn.hidden    = !canAssign;
+    assignSelfBtn.disabled  = !canAssign;
+    completeBtn.disabled    = !canAct;
+    cancelTriggerBtn.disabled = !canAct;
+
+    resetCancelPanel();
+    jobCard.hidden = false;
+  }
+
+  // ── Assign Self ──
+  assignSelfBtn.addEventListener('click', async function () {
+    if (!currentJob) return;
+    var id = currentJob._id || currentJob.id;
+    assignSelfBtn.disabled = true; assignSelfBtn.textContent = '…';
+    var res = await authFetch('/api/dispatch/' + id + '/assign-self', { method: 'PATCH', json: {} });
+    assignSelfBtn.textContent = 'Assign to Me';
+    if (res.status === 401) { clearSession(); showLogin(); return; }
+    if (res.ok && res.data) {
+      currentJob = Object.assign({}, currentJob, res.data);
+      // Refresh tech session data for technicianId
+      var s = getSession();
+      if (s && s.technician) currentJob.technicianId = String(s.technician.id || s.technician._id || '');
+      toast('Assigned to you!', 'ok');
+      assignSelfBtn.textContent = '✓ Assigned';
+      assignSelfBtn.classList.add('assigned-pop');
+      setTimeout(function () { renderJobCard(currentJob); }, 650);
+      loadMyJobs(true);   // newly-claimed job now appears in My Jobs
+    } else {
+      assignSelfBtn.disabled = false;
+      toast((res.data && res.data.message) || 'Could not assign.', 'err');
+    }
+  });
+
+  // ── Complete ──
+  completeBtn.addEventListener('click', async function () {
+    if (!currentJob) return;
+    var id = currentJob._id || currentJob.id;
+    completeBtn.disabled = true; completeBtn.textContent = '…';
+    var res = await authFetch('/api/dispatch/' + id + '/complete', { method: 'PATCH', json: {} });
+    completeBtn.textContent = 'Complete ✓';
+    if (res.status === 401) { clearSession(); showLogin(); return; }
+    if (res.ok) {
+      bumpDaily();
+      playCompleteFx();
+      toast('Job completed!', 'ok');
+      loadMyJobs(true);   // completed job drops out of My Jobs
+      setTimeout(function () { hideCompleteFx(); resetJobArea(); if (jobIdInput) jobIdInput.focus(); }, 1050);
+    } else {
+      completeBtn.disabled = false;
+      toast((res.data && res.data.message) || 'Could not complete job.', 'err');
+    }
+  });
+
+  // ── Cancel flow ──
+  cancelTriggerBtn.addEventListener('click', function () {
+    cancelPanel.hidden = false;
+    cancelTriggerBtn.disabled = true;
+    cancelPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+
+  cancelBackBtn.addEventListener('click', function () {
+    resetCancelPanel();
+    cancelTriggerBtn.disabled = false;
+  });
+
+  // Reason selection
+  var reasonBtns = document.querySelectorAll('.reason-btn');
+  reasonBtns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      reasonBtns.forEach(function (b) { b.classList.remove('selected'); });
+      btn.classList.add('selected');
+      selectedReason = btn.getAttribute('data-reason');
+      otherWrap.hidden = selectedReason !== 'Other';
+      if (selectedReason === 'Other') { otherText.focus(); cancelSubmitBtn.disabled = true; }
+      else { cancelSubmitBtn.disabled = false; }
+    });
+  });
+
+  otherText.addEventListener('input', function () {
+    cancelSubmitBtn.disabled = otherText.value.trim().length < 3;
+  });
+
+  cancelSubmitBtn.addEventListener('click', async function () {
+    if (!currentJob || !selectedReason) return;
+    var reason = selectedReason === 'Other' ? otherText.value.trim() : selectedReason;
+    if (!reason) return;
+    var id = currentJob._id || currentJob.id;
+    cancelSubmitBtn.disabled = true; cancelSubmitBtn.textContent = '…';
+    var res = await authFetch('/api/dispatch/' + id + '/cancel', { method: 'PATCH', json: { reason: reason } });
+    cancelSubmitBtn.textContent = 'Confirm Cancellation';
+    if (res.status === 401) { clearSession(); showLogin(); return; }
+    if (res.ok) {
+      toast('Job cancelled.', 'ok');
+      currentJob = Object.assign({}, currentJob, { status: 'cancelled' });
+      renderJobCard(currentJob);
+      resetCancelPanel();
+      loadMyJobs(true);   // cancelled job drops out of My Jobs
+    } else {
+      cancelSubmitBtn.disabled = false;
+      toast((res.data && res.data.message) || 'Could not cancel job.', 'err');
+    }
+  });
+
+  function resetCancelPanel() {
+    cancelPanel.hidden = true;
+    selectedReason = null;
+    otherWrap.hidden = true;
+    otherText.value = '';
+    cancelSubmitBtn.disabled = true;
+    cancelSubmitBtn.textContent = 'Confirm Cancellation';
+    reasonBtns.forEach(function (b) { b.classList.remove('selected'); });
+  }
+
+  // ── Init ──
+  var session = getSession();
+  if (session && session.token) {
+    showPortal();
+  } else {
+    showLogin();
+  }
+
+})();
+</script>
+</body>
+</html>

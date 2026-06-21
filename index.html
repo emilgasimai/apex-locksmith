@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="tailwind.css"/>
 <link rel="stylesheet" id="leafletCss" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" media="print" onload="this.media='all'" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-<link rel="stylesheet" href="styles.css?v=27"/>
+<link rel="stylesheet" href="styles.css?v=29"/>
 </head>
 <body class="bg-bg text-ink">
 
@@ -228,23 +228,23 @@
   <div class="trust-frost" aria-hidden="true"></div>
   <div class="trust-content max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-9 grid grid-cols-2 lg:grid-cols-4 gap-y-6 gap-x-0">
     <div class="lg:border-r border-rule px-0 lg:pr-6 flex flex-col items-center lg:items-start">
-      <div class="font-display t-num-lg counter" data-target="4" style="color:#27E0F5;">0</div>
+      <div class="font-display t-num-lg counter" data-target="4" style="color:#27E0F5;">4</div>
       <div class="font-display mt-1.5" style="font-size:14px;letter-spacing:.06em;">YRS / TORONTO</div>
       <div class="font-mono t-cap-sm mt-1" style="color:#9a9a9a;">EST. 2022</div>
     </div>
     <div class="lg:border-r border-rule px-0 lg:px-6 flex flex-col items-center lg:items-start">
       <!-- TODO: integrate real Google rating + review count via Google Places API once live -->
-      <div class="font-display t-num-lg counter" data-target="100" data-suffix="%" style="color:#27E0F5;">0</div>
+      <div class="font-display t-num-lg counter" data-target="100" data-suffix="%" style="color:#27E0F5;">100%</div>
       <div class="font-display mt-1.5" style="font-size:14px;letter-spacing:.06em;">SATISFACTION</div>
       <div class="font-mono t-cap-sm mt-1" style="color:#9a9a9a;">GUARANTEED WORK</div>
     </div>
     <div class="lg:border-r border-rule px-0 lg:px-6 flex flex-col items-center lg:items-start">
-      <div class="font-display t-num-lg counter" data-target="15" style="color:#27E0F5;">0</div>
+      <div class="font-display t-num-lg counter" data-target="15" style="color:#27E0F5;">15</div>
       <div class="font-display mt-1.5" style="font-size:14px;letter-spacing:.06em;">M MEDIAN ETA</div>
       <div class="font-mono t-cap-sm mt-1" style="color:#9a9a9a;">24/7 DISPATCH</div>
     </div>
     <div class="px-0 lg:pl-6 flex flex-col items-center lg:items-start">
-      <div class="font-display t-num-lg counter" data-target="6000" data-suffix="+" data-format="comma" style="color:#27E0F5;">0</div>
+      <div class="font-display t-num-lg counter" data-target="6000" data-suffix="+" data-format="comma" style="color:#27E0F5;">6,000+</div>
       <div class="font-display mt-1.5" style="font-size:14px;letter-spacing:.06em;">JOBS COMPLETED</div>
       <div class="font-mono t-cap-sm mt-1" style="color:#9a9a9a;">AND COUNTING</div>
     </div>
@@ -254,9 +254,8 @@
 <!-- ───── SERVICE FINDER + ZIP ───── -->
 <section class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16">
   <!-- Section heading -->
-  <div class="flex items-end justify-between gap-4 pb-3 mb-7" style="border-bottom:3px solid #EDEDED;">
+  <div class="flex items-end gap-4 pb-3 mb-7" style="border-bottom:3px solid #EDEDED;justify-content:center;text-align:center;">
     <div class="flex gap-4 sm:gap-3 items-end">
-      <span class="hazard" style="color:#EDEDED;">NO.02</span>
       <div>
         <div class="font-mono t-cap" style="opacity:.6;">Triage</div>
         <div class="font-display t-h2 uppercase mt-1">What's <span style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;">locked?</span></div>
@@ -266,9 +265,9 @@
   <div class="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-5">
     <!-- Finder card -->
     <div style="background:#242427;border:2px solid #EDEDED;">
-      <div class="flex justify-between items-center px-4 sm:px-5 py-3" style="background:#EDEDED;color:#1A1A1A;">
-        <div class="font-display uppercase" style="font-size:18px;letter-spacing:.04em;">SERVICE FINDER</div>
-        <div class="font-mono t-cap-sm" style="opacity:.7;">STEP 1 OF 1</div>
+      <div class="flex justify-between items-center px-4 sm:px-5 py-3" style="background:#1A1A1A;color:#27E0F5;border-bottom:2px solid #27E0F5;">
+        <div class="font-display uppercase" style="font-size:18px;letter-spacing:.04em;color:#27E0F5;">SERVICE FINDER</div>
+        <div class="font-mono t-cap-sm" style="opacity:.7;color:#9a9a9a;">STEP 1 OF 1</div>
       </div>
       <div class="p-5 sm:p-6">
         <div class="font-body t-body" style="color:#9a9a9a;margin-bottom:12px;">What did you lock yourself out of?</div>
@@ -332,7 +331,7 @@
         <div class="absolute inset-0 pointer-events-none" style="background:linear-gradient(to top, rgba(0,0,0,0.90) 0%, rgba(0,0,0,0.55) 30%, rgba(0,0,0,0) 65%);"></div>
         <!-- Top-left chip -->
         <div class="absolute top-3 left-3">
-          <span class="hazard" style="color:#1A1A1A;background:#f4c20a;border-color:#1A1A1A;">VETTED TECH</span>
+          <span class="hazard" style="color:#1A1A1A;background:#27E0F5;border-color:#1A1A1A;">VETTED TECH</span>
         </div>
         <!-- Bottom caption -->
         <div class="absolute left-4 right-4 bottom-4">
@@ -350,15 +349,14 @@
 <section id="services" class="section-divider">
   <div class="svc-bg-overlay" aria-hidden="true"></div>
   <div class="svc-content-wrap max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16">
-  <div class="flex items-end justify-between gap-4 pb-3 mb-7" style="border-bottom:3px solid #EDEDED;">
+  <div class="flex items-end gap-4 pb-3 mb-7 sec-head--ctrl" style="border-bottom:3px solid #EDEDED;justify-content:center;text-align:center;">
     <div class="flex gap-4 sm:gap-3 items-end">
-      <span class="hazard" style="color:#EDEDED;">NO.03</span>
       <div>
         <div class="font-mono t-cap" style="opacity:.6;">Service catalogue</div>
         <div class="font-display t-h2 uppercase mt-1">What <span style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;">we</span> do</div>
       </div>
     </div>
-    <div class="hidden md:flex gap-2 shrink-0 pb-1">
+    <div class="hidden md:flex gap-2 shrink-0 pb-1 sec-head-ctrl">
       <button type="button" class="svc-arrow" data-svc-dir="prev" aria-label="Previous services">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
       </button>
@@ -510,9 +508,8 @@
 
 <!-- ───── PROCESS ───── -->
 <section class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16">
-  <div class="flex items-end justify-between gap-4 pb-3 mb-7" style="border-bottom:3px solid #EDEDED;">
+  <div class="flex items-end gap-4 pb-3 mb-7" style="border-bottom:3px solid #EDEDED;justify-content:center;text-align:center;">
     <div class="flex gap-4 sm:gap-3 items-end">
-      <span class="hazard" style="color:#EDEDED;">NO.04</span>
       <div>
         <div class="font-mono t-cap" style="opacity:.6;">Procedure</div>
         <div class="font-display t-h2 uppercase mt-1">Three <span style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;">steps</span></div>
@@ -520,19 +517,19 @@
     </div>
   </div>
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-    <div class="step-card relative p-6 pt-5" style="background:#242427;border:2px solid #EDEDED;">
+    <div class="step-card relative p-6 pt-5">
       <div class="caution-stripe absolute top-0 left-0 right-0" style="height:6px"></div>
       <div class="font-display t-num-xl mt-3" style="color:#27E0F5;">01</div>
       <div class="font-display uppercase mt-3" style="font-size:22px;letter-spacing:.02em;">Call dispatch</div>
       <p class="font-body t-body mt-2" style="color:#9a9a9a;">24/7 live operator. Response initiated immediately.</p>
     </div>
-    <div class="step-card relative p-6 pt-5" style="background:#242427;border:2px solid #EDEDED;">
+    <div class="step-card relative p-6 pt-5">
       <div class="caution-stripe absolute top-0 left-0 right-0" style="height:6px"></div>
       <div class="font-display t-num-xl mt-3" style="color:#27E0F5;">02</div>
       <div class="font-display uppercase mt-3" style="font-size:22px;letter-spacing:.02em;">Tech routed</div>
       <p class="font-body t-body mt-2" style="color:#9a9a9a;">Nearest certified technician dispatched to your location.</p>
     </div>
-    <div class="step-card relative p-6 pt-5" style="background:#242427;border:2px solid #EDEDED;">
+    <div class="step-card relative p-6 pt-5">
       <div class="caution-stripe absolute top-0 left-0 right-0" style="height:6px"></div>
       <div class="font-display t-num-xl mt-3" style="color:#27E0F5;">03</div>
       <div class="font-display uppercase mt-3" style="font-size:22px;letter-spacing:.02em;">You are <span class="safe-pulse" style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;">safe</span></div>
@@ -547,9 +544,8 @@
   <div class="about-vignette" aria-hidden="true"></div>
   <div class="about-inner max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10">
     <div class="max-w-[760px]">
-      <div class="flex flex-row items-end justify-start gap-2 md:gap-3 pb-3 mb-6" style="border-bottom:3px solid #EDEDED;">
-        <span class="hazard" style="color:#EDEDED;">NO.05</span>
-        <div class="text-left">
+      <div class="flex flex-row items-end gap-2 md:gap-3 pb-3 mb-6" style="border-bottom:3px solid #EDEDED;justify-content:center;text-align:center;">
+        <div>
           <div class="font-mono t-cap" style="opacity:.6;">The shop</div>
           <div class="font-display t-h2 uppercase mt-1">ON THE ROAD <span class="onroad-247" style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;position:relative;">24/7<span class="pulse-dot onroad-dot" aria-hidden="true"></span></span></div>
         </div>
@@ -559,7 +555,6 @@
       </p>
       <div class="flex gap-2 flex-wrap mt-8 justify-start">
         <!-- TODO: re-add "Licensed · LIC # · Bonded · Insured" credential tags once official license is obtained -->
-        <span class="hazard cred-tag" style="color:#EDEDED;background:#242427;">ALOA MEMBER</span>
         <span class="hazard cred-tag" style="color:#EDEDED;background:#242427;">SERVING GTA</span>
       </div>
     </div>
@@ -571,9 +566,8 @@
 <section id="why" class="why-section section-divider">
   <div class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16 relative">
     <div class="why-pulse-line" aria-hidden="true"></div>
-    <div class="flex items-end justify-between gap-4 pb-3 mb-9">
+    <div class="flex items-end gap-4 pb-3 mb-9" style="justify-content:center;text-align:center;">
       <div class="flex gap-4 sm:gap-3 items-end">
-        <span class="hazard" style="color:#EDEDED;">NO.06</span>
         <div>
           <div class="font-mono t-cap" style="opacity:.6;">Why us</div>
           <div class="font-display t-h2 uppercase mt-1">Why <span class="aston-pulse" style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;">Aston</span><span class="aston-q" aria-hidden="true">?</span></div>
@@ -616,16 +610,15 @@
 
 <!-- ───── REVIEWS ───── -->
 <section id="reviews" class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16 section-divider">
-  <div class="flex flex-wrap items-center md:items-end justify-center md:justify-between gap-4 pb-3 mb-7" style="border-bottom:3px solid #EDEDED;">
+  <div class="flex flex-wrap items-center md:items-end gap-4 pb-3 mb-7 sec-head--ctrl" style="border-bottom:3px solid #EDEDED;justify-content:center;text-align:center;">
     <div class="flex flex-col md:flex-row gap-2 md:gap-3 items-center md:items-end">
-      <span class="hazard" style="color:#EDEDED;">NO.07</span>
-      <div class="text-center md:text-left">
+      <div>
         <div class="font-mono t-cap" style="opacity:.6;">From our customers</div>
         <div class="font-display t-h2 uppercase mt-1">What our <span style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;">customers</span> say</div>
       </div>
     </div>
     <!-- TODO: link to / embed real Google Reviews via Google Places API once live -->
-    <button type="button" id="leaveReviewBtn" class="btn-msg-outline font-display uppercase inline-flex items-center justify-center shrink-0">Leave a review →</button>
+    <button type="button" id="leaveReviewBtn" class="btn-msg-outline font-display uppercase inline-flex items-center justify-center shrink-0 sec-head-ctrl">Leave a review →</button>
   </div>
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="reviewGrid">
     <article class="review-card flex flex-col p-5" style="background:#242427;border:2px solid #EDEDED;">
@@ -675,9 +668,8 @@
 
 <!-- ───── CONTACT ───── -->
 <section id="contact" class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16 section-divider">
-  <div class="flex items-end justify-between gap-4 pb-3 mb-7" style="border-bottom:3px solid #EDEDED;">
+  <div class="flex items-end gap-4 pb-3 mb-7" style="border-bottom:3px solid #EDEDED;justify-content:center;text-align:center;">
     <div class="flex gap-4 sm:gap-3 items-end">
-      <span class="hazard" style="color:#EDEDED;">NO.08</span>
       <div>
         <div class="font-mono t-cap" style="opacity:.6;">Reach us</div>
         <div class="font-display t-h2 uppercase mt-1">Pick up <span style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;">the phone</span>.</div>
@@ -712,15 +704,12 @@
           <div class="font-body mt-2.5" style="font-size:13px;line-height:1.55;">Toronto &amp; GTA<br/>24/7 mobile dispatch</div>
         </div>
       </div>
-      <!-- TODO: replace [PHONE_NUMBER] with real WhatsApp Business number when available -->
+      <!-- wa.me/SMS fallback uses the real dispatch number; content-patch.js overrides from business info when available -->
       <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <a href="https://wa.me/[PHONE_NUMBER]" data-biz-wa class="btn-msg-outline font-display uppercase inline-flex items-center justify-center">WHATSAPP →</a>
-        <a href="sms:[PHONE_NUMBER]" data-biz-sms class="btn-msg-outline font-display uppercase inline-flex items-center justify-center">SMS →</a>
+        <a href="https://wa.me/14372495464" data-biz-wa class="btn-msg-outline font-display uppercase inline-flex items-center justify-center">WHATSAPP →</a>
+        <a href="sms:+14372495464" data-biz-sms class="btn-msg-outline font-display uppercase inline-flex items-center justify-center">SMS →</a>
       </div>
-      <div class="mt-3">
-        <button type="button" id="getQuoteBtn" class="btn-msg-outline font-display uppercase inline-flex items-center justify-center" style="width:100%;">Get a quote →</button>
-      </div>
-      <!-- Brand wordmark fills the space below the quote button on desktop (hidden on mobile/tablet). -->
+      <!-- Brand wordmark fills the space below the messaging buttons on desktop (hidden on mobile/tablet). -->
       <div class="reach-logo-wrap" aria-hidden="true">
         <span class="neon-logo reach-logo">
           <span class="neon-logo-main">ASTON</span>
@@ -783,7 +772,7 @@
 </a>
 
 <!-- ───── FLOATING MESSAGE BUTTON (WhatsApp + SMS) ───── -->
-<!-- TODO: replace [PHONE_NUMBER] with real WhatsApp Business number when available -->
+<!-- wa.me/SMS fallback uses the real dispatch number; content-patch.js overrides from business info when available -->
 <div id="msgFab" class="msg-fab">
   <button type="button" id="msgFabToggle" class="msg-fab-btn" aria-label="Message us" aria-expanded="false" aria-haspopup="menu">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -791,7 +780,7 @@
     </svg>
   </button>
   <div class="msg-fab-options" role="menu" aria-label="Message options">
-    <a href="https://wa.me/[PHONE_NUMBER]" data-biz-wa class="msg-fab-opt msg-fab-wa" target="_blank" rel="noopener noreferrer" role="menuitem" aria-label="Message us on WhatsApp">
+    <a href="https://wa.me/14372495464" data-biz-wa class="msg-fab-opt msg-fab-wa" target="_blank" rel="noopener noreferrer" role="menuitem" aria-label="Message us on WhatsApp">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
         <path d="M.057 24l1.687-6.163a11.867 11.867 0 0 1-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 0 1 8.413 3.488 11.824 11.824 0 0 1 3.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 0 1-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
       </svg>
@@ -849,57 +838,6 @@
   </div>
 </footer>
 
-<!-- ───── GET A QUOTE MODAL ───── -->
-<div id="quoteModal" class="site-modal" hidden role="dialog" aria-modal="true" aria-labelledby="quoteModalTitle">
-  <div class="site-modal-box">
-    <button type="button" class="site-modal-close" data-close aria-label="Close">&times;</button>
-    <span class="hazard" style="color:#1A1A1A;background:#f4c20a;border-color:#1A1A1A;width:fit-content;">FREE QUOTE</span>
-    <div id="quoteModalTitle" class="font-display uppercase site-modal-title">Get a quote</div>
-    <form id="quoteForm" class="grid gap-3.5" novalidate>
-      <label class="grid gap-1.5">
-        <span class="font-mono t-cap-sm" style="color:#9a9a9a;font-weight:700;">NAME</span>
-        <input id="quoteName" placeholder="Marcus H." required/>
-        <div id="quoteName-error" class="form-error">Enter your name</div>
-      </label>
-      <label class="grid gap-1.5">
-        <span class="font-mono t-cap-sm" style="color:#9a9a9a;font-weight:700;">PHONE</span>
-        <input id="quotePhone" data-format="phone" placeholder="(416) 555-1234" inputmode="numeric" maxlength="14" autocomplete="tel" required/>
-        <div id="quotePhone-error" class="form-error">Enter a valid 10-digit phone</div>
-      </label>
-      <label class="grid gap-1.5">
-        <span class="font-mono t-cap-sm" style="color:#9a9a9a;font-weight:700;">POSTAL CODE</span>
-        <input id="quotePostal" data-format="postal" placeholder="A0A 0A0" maxlength="7" autocomplete="postal-code" autocapitalize="characters" spellcheck="false" required/>
-        <div id="quotePostal-error" class="form-error">Use Canadian format: A0A 0A0</div>
-      </label>
-      <label class="grid gap-1.5">
-        <span class="font-mono t-cap-sm" style="color:#9a9a9a;font-weight:700;">SERVICE</span>
-        <select id="quoteService" required>
-          <option value="">Select a service…</option>
-          <option>24/7 Emergency Lockouts</option>
-          <option>Residential Rekey &amp; Install</option>
-          <option>Commercial &amp; Business</option>
-          <option>Automotive</option>
-          <option>Smart Locks &amp; Access</option>
-          <option>Safes — Open, Move, Install</option>
-          <option>Security Systems</option>
-          <option>Other</option>
-        </select>
-        <div id="quoteService-error" class="form-error">Choose a service</div>
-      </label>
-      <label class="grid gap-1.5">
-        <span class="font-mono t-cap-sm" style="color:#9a9a9a;font-weight:700;">DETAILS (OPTIONAL)</span>
-        <textarea id="quoteDetails" rows="3" placeholder="Door type, number of locks, timing, etc."></textarea>
-      </label>
-      <button type="submit" class="btn-hivis font-display uppercase" style="padding:14px 22px;background:#27E0F5;color:#1A1A1A;border:2px solid #EDEDED;cursor:pointer;font-size:16px;letter-spacing:.06em;">Request quote →</button>
-      <div id="quoteFail" class="form-error" style="position:static;">Couldn&rsquo;t send right now — please try again, or just call us.</div>
-      <div id="quoteSuccess" class="form-success">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5cd97a" stroke-width="2.4" style="flex-shrink:0;"><path d="M4 12l5 5 11-12"/></svg>
-        <span class="font-display uppercase" style="font-size:13px;letter-spacing:.04em;">Quote request received. We&rsquo;ll call you shortly.</span>
-      </div>
-    </form>
-  </div>
-</div>
-
 <!-- ───── LEAVE A REVIEW MODAL ───── -->
 <div id="reviewModal" class="site-modal" hidden role="dialog" aria-modal="true" aria-labelledby="reviewModalTitle">
   <div class="site-modal-box">
@@ -949,7 +887,7 @@
 <script src="config.js?v=1" defer></script>
 <script src="apex-defaults.js?v=4" defer></script>
 <script src="content-patch.js?v=5" defer></script>
-<script src="app.js?v=10" defer></script>
+<script src="app.js?v=12" defer></script>
 <script src="i18n.js?v=7" defer></script>
 <script>
   (function(){

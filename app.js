@@ -771,6 +771,11 @@ onHeaderScroll();
   const counters = document.querySelectorAll('.counter');
   if (!counters.length) return;
 
+  // Progressive enhancement: the HTML ships the real final values so they show
+  // even if this script never runs. Since it IS running, reset to 0 now and let
+  // the IntersectionObserver animate each one up when it scrolls into view.
+  counters.forEach(el => { el.textContent = '0'; });
+
   function runCounter(el) {
     if (el.classList.contains('counted')) return;
     el.classList.add('counted');
@@ -1019,28 +1024,37 @@ scrollBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 's
 (function () {
   const track = document.getElementById('svcTrack');
   if (!track) return;
-  const slides = Array.from(track.children);
   const dotsWrap = document.getElementById('svcDots');
   const prevBtn = document.querySelector('.svc-arrow[data-svc-dir="prev"]');
   const nextBtn = document.querySelector('.svc-arrow[data-svc-dir="next"]');
 
-  const step = () => slides.length > 1
-    ? slides[1].offsetLeft - slides[0].offsetLeft
-    : slides[0].offsetWidth;
+  // Read slides LIVE every time. content-patch.js rebuilds #svcTrack's children
+  // once the backend content loads; caching the node list here would leave us
+  // holding detached elements (offsetLeft 0 → step 0 → dead arrows/dots).
+  const getSlides = () => Array.from(track.children);
+  const step = () => {
+    const s = getSlides();
+    return s.length > 1 ? s[1].offsetLeft - s[0].offsetLeft : (s[0] ? s[0].offsetWidth : 0);
+  };
 
-  slides.forEach((_, i) => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'svc-dot';
-    b.setAttribute('aria-label', 'Go to service ' + (i + 1));
-    b.addEventListener('click', () => track.scrollTo({ left: i * step(), behavior: 'smooth' }));
-    dotsWrap.appendChild(b);
-  });
-  const dots = Array.from(dotsWrap.children);
+  function buildDots() {
+    if (!dotsWrap) return;
+    dotsWrap.innerHTML = '';
+    getSlides().forEach((_, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'svc-dot';
+      b.setAttribute('aria-label', 'Go to service ' + (i + 1));
+      b.addEventListener('click', () => track.scrollTo({ left: i * step(), behavior: 'smooth' }));
+      dotsWrap.appendChild(b);
+    });
+  }
 
   function update() {
+    const slides = getSlides();
+    const dots = dotsWrap ? Array.from(dotsWrap.children) : [];
     const atEnd = track.scrollLeft >= track.scrollWidth - track.clientWidth - 4;
-    let idx = atEnd ? slides.length - 1 : Math.round(track.scrollLeft / step());
+    let idx = atEnd ? slides.length - 1 : Math.round(track.scrollLeft / (step() || 1));
     idx = Math.max(0, Math.min(slides.length - 1, idx));
     dots.forEach((d, i) => d.classList.toggle('active', i === idx));
     if (prevBtn) prevBtn.disabled = track.scrollLeft <= 4;
@@ -1050,7 +1064,15 @@ scrollBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 's
   if (nextBtn) nextBtn.addEventListener('click', () => track.scrollBy({ left: step(), behavior: 'smooth' }));
   track.addEventListener('scroll', () => requestAnimationFrame(update), { passive: true });
   window.addEventListener('resize', update);
+
+  buildDots();
   update();
+
+  // When the cards are swapped in later (content-patch.js sets track.innerHTML),
+  // rebuild the dots for the new slide set and re-evaluate arrow state.
+  if (window.MutationObserver) {
+    new MutationObserver(() => { buildDots(); update(); }).observe(track, { childList: true });
+  }
 
   // mouse drag-to-scroll (touch uses native scrolling)
   let down = false, startX = 0, startScroll = 0, moved = false;
@@ -1082,7 +1104,6 @@ scrollBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 's
 /* ════════════════════════════════════════════════════════════════════════
    BACKEND INTEGRATION (public site)
    - Approved reviews:  GET  {API}/api/reviews  → re-render #reviewGrid
-   - Get a Quote modal: POST {API}/api/quotes
    - Leave a Review:    POST {API}/api/reviews  (published after approval)
    All of it degrades gracefully: if the backend is unreachable the static /
    admin-managed content stays exactly as it is today.
@@ -1138,85 +1159,6 @@ scrollBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 's
     if (e.key !== 'Escape') return;
     document.querySelectorAll('.site-modal.is-open').forEach(closeModal);
   });
-
-  /* ── GET A QUOTE ── */
-  const quoteModal = document.getElementById('quoteModal');
-  const quoteForm = document.getElementById('quoteForm');
-  if (quoteModal && quoteForm) {
-    const qName = document.getElementById('quoteName');
-    const qPhone = document.getElementById('quotePhone');
-    const qPostal = document.getElementById('quotePostal');
-    const qService = document.getElementById('quoteService');
-    const qDetails = document.getElementById('quoteDetails');
-    const qFail = document.getElementById('quoteFail');
-    const qSuccess = document.getElementById('quoteSuccess');
-
-    function openQuote(serviceTitle) {
-      qFail.classList.remove('show');
-      qSuccess.classList.remove('show');
-      if (serviceTitle) {
-        let matched = false;
-        Array.from(qService.options).forEach((o) => {
-          if (o.value && o.value.toLowerCase() === serviceTitle.toLowerCase()) { qService.value = o.value; matched = true; }
-        });
-        if (!matched) {
-          qService.value = 'Other';
-          if (!qDetails.value) qDetails.value = serviceTitle;
-        }
-      }
-      openModal(quoteModal);
-    }
-
-    const quoteBtn = document.getElementById('getQuoteBtn');
-    if (quoteBtn) quoteBtn.addEventListener('click', () => openQuote(''));
-
-    // Carousel "Book it" cards open the quote modal pre-filled with that
-    // service (the trailing HELP card keeps its tel: behaviour).
-    const svcTrack = document.getElementById('svcTrack');
-    if (svcTrack && !inAdminPreview) {
-      svcTrack.addEventListener('click', (e) => {
-        const card = e.target.closest('a.svc-card');
-        if (!card || card.classList.contains('svc-cta')) return;
-        e.preventDefault();
-        const h = card.querySelector('.svc-body h3');
-        openQuote(h ? h.textContent.trim() : '');
-      });
-    }
-
-    quoteForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      let valid = true;
-      if (!qName.value.trim()) { showError(qName); valid = false; } else { clearError(qName); }
-      if (!isValidPhone(qPhone.value)) { showError(qPhone); valid = false; } else { clearError(qPhone); }
-      if (!isValidPostal(qPostal.value)) { showError(qPostal); valid = false; } else { clearError(qPostal); }
-      if (!qService.value) { showError(qService); valid = false; } else { clearError(qService); }
-      if (!valid) return;
-
-      const btn = quoteForm.querySelector('button[type="submit"]');
-      btn.disabled = true;
-      qFail.classList.remove('show');
-
-      const res = await window.apiFetch('/api/quotes', {
-        method: 'POST',
-        json: {
-          name: qName.value.trim(),
-          phone: qPhone.value.replace(/\D/g, ''),
-          postalCode: qPostal.value.trim().toUpperCase(),
-          serviceType: qService.value,
-          details: qDetails.value.trim()
-        }
-      });
-
-      btn.disabled = false;
-      if (res.ok) {
-        qSuccess.classList.add('show');
-        quoteForm.reset();
-        setTimeout(() => { closeModal(quoteModal); qSuccess.classList.remove('show'); }, 2600);
-      } else {
-        qFail.classList.add('show');                          // keep their input
-      }
-    });
-  }
 
   /* ── LEAVE A REVIEW ── */
   const reviewModal = document.getElementById('reviewModal');

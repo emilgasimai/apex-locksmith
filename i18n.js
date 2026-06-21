@@ -135,7 +135,6 @@
     'ON THE ROAD': 'SUR LA ROUTE',
     'Our technicians are experienced and supported by a dedicated dispatch operator. Every vehicle and every technician is ready to provide reliable service, backed by the experience and trust earned from thousands of families across Toronto. The technician who arrives at your door has passed a security check, completed training, and is trusted by thousands of Toronto families.':
       "Nos techniciens sont expérimentés et appuyés par un répartiteur dédié. Chaque véhicule et chaque technicien est prêt à offrir un service fiable, fort de l'expérience et de la confiance acquises auprès de milliers de familles à Toronto. Le technicien qui se présente à votre porte a fait l'objet d'une vérification de sécurité, a suivi une formation et jouit de la confiance de milliers de familles torontoises.",
-    'ALOA MEMBER': 'MEMBRE ALOA',
     'SERVING GTA': 'AU SERVICE DU GTA',
 
     /* ── Why Aston ── */
@@ -199,19 +198,6 @@
     'Tell us what you need': 'Dites-nous ce dont vous avez besoin',
     "Couldn't send right now — please try again, or just call us.":
       "Échec de l'envoi — réessayez ou appelez-nous.",
-
-    /* ── Get a Quote modal ── */
-    'Get a quote →': 'Obtenez un devis →',
-    'FREE QUOTE': 'DEVIS GRATUIT',
-    'Get a quote': 'Obtenez un devis',
-    'SERVICE': 'SERVICE',
-    'Select a service…': 'Choisissez un service…',
-    'Choose a service': 'Choisissez un service',
-    'Other': 'Autre',
-    'DETAILS (OPTIONAL)': 'DÉTAILS (FACULTATIF)',
-    'Door type, number of locks, timing, etc.': 'Type de porte, nombre de serrures, délai, etc.',
-    'Request quote →': 'Demander un devis →',
-    "Quote request received. We'll call you shortly.": 'Demande de devis reçue. Nous vous appellerons sous peu.',
 
     /* ── Leave a Review modal ── */
     'Leave a review →': 'Laissez un avis →',

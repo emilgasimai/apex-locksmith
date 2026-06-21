@@ -1762,6 +1762,8 @@
   const tcPhone = document.getElementById('tcPhone');
   const tcEmail = document.getElementById('tcEmail');
   const tcNotes = document.getElementById('tcNotes');
+  const tcUsername = document.getElementById('tcUsername');
+  const tcPassword = document.getElementById('tcPassword');
   const tcErr   = document.getElementById('tcErr');
   const tcAddBtn = document.getElementById('tcAddBtn');
   const PHONE_RE = /^[0-9+()\-.\s]{7,30}$/;
@@ -1787,10 +1789,11 @@
     const row = document.createElement('div');
     row.className = 'people-row';
     row.setAttribute('data-id', id);
+    var statusDot = '<span class="tech-status-dot" data-status="' + attr(t.status || 'offline') + '" title="' + attr(t.status || 'offline') + '"></span>';
     row.innerHTML =
       '<div class="people-main">' +
-        '<span class="people-name">' + esc(name) + '</span>' +
-        '<span class="people-sub">' + esc(t.phone || '') + (t.email ? ' · ' + esc(t.email) : '') + '</span>' +
+        '<span class="people-name">' + statusDot + esc(name) + '</span>' +
+        '<span class="people-sub">' + esc(t.phone || '') + (t.email ? ' · ' + esc(t.email) : '') + (t.username ? ' · @' + esc(t.username) : '') + '</span>' +
       '</div>' +
       peopleSwitchHtml(t.active) +
       '<div class="people-actions">' +
@@ -1803,6 +1806,8 @@
         '<input type="tel" data-f="phone" value="' + attr(t.phone || '') + '" placeholder="Phone"/>' +
         '<input type="email" data-f="email" value="' + attr(t.email || '') + '" placeholder="Email (optional)"/>' +
         '<input type="text" data-f="notes" value="' + attr(t.notes || '') + '" placeholder="Notes (optional)"/>' +
+        '<input type="text" data-f="username" value="' + attr(t.username || '') + '" placeholder="Username (portal login)" spellcheck="false"/>' +
+        '<input type="password" data-f="password" value="" placeholder="New password (leave blank to keep)" autocomplete="new-password"/>' +
         '<div class="people-inline-foot">' +
           '<span class="people-inline-err" data-edit-err hidden></span>' +
           '<button type="submit" class="btn btn-primary btn-sm">Save</button>' +
@@ -1836,12 +1841,14 @@
       const phone     = editForm.querySelector('[data-f="phone"]').value.trim();
       const email     = editForm.querySelector('[data-f="email"]').value.trim();
       const notes     = editForm.querySelector('[data-f="notes"]').value.trim();
+      const username  = editForm.querySelector('[data-f="username"]').value.trim();
+      const newPassword = editForm.querySelector('[data-f="password"]').value;
       if (!firstName || !lastName) { editErr.textContent = 'First and last name required'; editErr.hidden = false; return; }
       if (!PHONE_RE.test(phone))   { editErr.textContent = 'Enter a valid phone number'; editErr.hidden = false; return; }
-      // Backend rejects an empty email string (it must be a valid address) — omit
-      // it when blank rather than trying to clear it.
       const payload = { firstName: firstName, lastName: lastName, phone: phone, notes: notes };
       if (email) payload.email = email;
+      if (username) payload.username = username;
+      if (newPassword) payload.password = newPassword;
       const res = await AdminStore.updateTechnician(id, payload);
       if (!res.ok) { editErr.textContent = res.message || 'Could not save'; editErr.hidden = false; return; }
       showToast('Technician updated');
@@ -1865,11 +1872,15 @@
       tcErr.hidden = true;
       const firstName = tcFirst.value.trim(), lastName = tcLast.value.trim();
       const phone = tcPhone.value.trim(), email = tcEmail.value.trim(), notes = tcNotes.value.trim();
+      const username = tcUsername ? tcUsername.value.trim() : '';
+      const password = tcPassword ? tcPassword.value : '';
       if (!firstName || !lastName) return showTcErr('Enter the first and last name');
       if (!PHONE_RE.test(phone)) return showTcErr('Enter a valid phone number');
       const payload = { firstName: firstName, lastName: lastName, phone: phone };
       if (email) payload.email = email;
       if (notes) payload.notes = notes;
+      if (username) payload.username = username;
+      if (password) payload.password = password;
       tcAddBtn.disabled = true;
       const res = await AdminStore.createTechnician(payload);
       tcAddBtn.disabled = false;
@@ -1961,6 +1972,14 @@
     return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]))
       .toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
+  // Hour buckets ('…THH:00') → '2 PM'; otherwise fall back to the day label.
+  function fmtLabel(s) {
+    const hm = /T(\d{2}):/.exec(String(s || ''));
+    if (!hm) return fmtDayLabel(s);
+    const h = Number(hm[1]);
+    const hr = (h % 12) || 12;
+    return hr + (h < 12 ? ' AM' : ' PM');
+  }
 
   async function loadDashboard() {
     dashError.hidden = true;
@@ -2007,10 +2026,11 @@
     if (!el) return;
     const v = ts && Array.isArray(ts.values) ? ts.values : null;
     if (!v || v.length < 2) { el.innerHTML = ''; return; }
+    const vs = ts && ts.period === 'day' ? 'vs. previous hour' : 'vs. previous day';
     const curr = v[v.length - 1], prev = v[v.length - 2];
-    if (curr > prev) el.innerHTML = '<span class="trend up" title="vs. previous day">▲</span>';
-    else if (curr < prev) el.innerHTML = '<span class="trend down" title="vs. previous day">▼</span>';
-    else el.innerHTML = '<span class="trend flat" title="vs. previous day">–</span>';
+    if (curr > prev) el.innerHTML = '<span class="trend up" title="' + vs + '">▲</span>';
+    else if (curr < prev) el.innerHTML = '<span class="trend down" title="' + vs + '">▼</span>';
+    else el.innerHTML = '<span class="trend flat" title="' + vs + '">–</span>';
   }
 
   // 4 — Needs attention cards.
@@ -2082,7 +2102,7 @@
     hideEmpty(emptyEl);
     charts[key] = new Chart(document.getElementById(canvasId), {
       type: 'bar',
-      data: { labels: ts.labels.map(fmtDayLabel), datasets: [{
+      data: { labels: ts.labels.map(fmtLabel), datasets: [{
         data: ts.values, backgroundColor: C.accentSoft, hoverBackgroundColor: C.accent,
         borderColor: C.accent, borderWidth: 1, borderRadius: 3, maxBarThickness: 28,
       }] },
@@ -2104,7 +2124,7 @@
     } catch (e) {}
     charts[key] = new Chart(cv, {
       type: 'line',
-      data: { labels: ts.labels.map(fmtDayLabel), datasets: [{
+      data: { labels: ts.labels.map(fmtLabel), datasets: [{
         data: ts.values, borderColor: C.ok, backgroundColor: fill, fill: true,
         tension: .35, borderWidth: 2, pointRadius: 0, pointHoverRadius: 4,
         pointBackgroundColor: C.ok, pointHoverBackgroundColor: C.ok,

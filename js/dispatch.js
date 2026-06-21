@@ -10,6 +10,7 @@
      GET   /api/dispatch/stats        → { byStatus:{[status]:n}, total, today, completedToday }
      GET   /api/dispatch?status=&priority=&limit=  → { items:[job], total, page, pages }
      PATCH /api/dispatch/:id/assign   → { assignedTo }            (staff)
+     PATCH /api/dispatch/:id/unassign → clears tech assignment    (staff)
      PATCH /api/dispatch/:id/status   → { status }   (400 if unchanged) (staff)
      DELETE /api/dispatch/:id         → admin only — NOT exposed here.
    ============================================================================ */
@@ -523,8 +524,23 @@
 
   // Prominent assignment chip. showUnassigned draws the "needs a tech" tag for
   // active jobs; otherwise an unassigned terminal job just shows nothing.
+  var TECH_STATUS_ICON = { active: '🟢', away: '🟡', busy: '🟠', meeting: '🟣', offline: '⚫' };
+  var TECH_STATUS_COLOR = { active: '#22c55e', away: '#eab308', busy: '#f97316', meeting: '#a855f7', offline: '#6b7280' };
+
   function assignTagHtml(job, showUnassigned) {
-    if (job.assignedTo) return '<span class="badge assigned-tag" data-assign-tag>' + ICON_PERSON + esc(job.assignedTo) + '</span>';
+    if (job.assignedTo) {
+      var dot = '';
+      if (job.technicianId) {
+        var jtid = String(job.technicianId);
+        var tech = null;
+        for (var ti = 0; ti < technicians.length; ti++) { if (String(technicians[ti]._id || technicians[ti].id) === jtid) { tech = technicians[ti]; break; } }
+        if (tech && tech.status) {
+          var col = TECH_STATUS_COLOR[tech.status] || '#6b7280';
+          dot = '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:' + col + ';margin-right:4px;vertical-align:middle;flex-shrink:0"></span>';
+        }
+      }
+      return '<span class="badge assigned-tag" data-assign-tag>' + ICON_PERSON + dot + esc(job.assignedTo) + '</span>';
+    }
     return showUnassigned ? '<span class="badge unassigned-tag" data-assign-tag>Unassigned</span>' : '<span data-assign-tag hidden></span>';
   }
 
@@ -540,7 +556,8 @@
         var tid = String(t._id || t.id);
         var nm = ((t.firstName || '') + ' ' + (t.lastName || '')).trim();
         var on = jobTechId ? (tid === jobTechId) : (!!assignedName && nm.toLowerCase() === assignedName);
-        var label = nm + (t.openJobCount > 0 ? ' (' + t.openJobCount + ' open)' : '');
+        var icon = TECH_STATUS_ICON[t.status] || '⚫';
+        var label = icon + ' ' + nm + (t.openJobCount > 0 ? ' (' + t.openJobCount + ' open)' : '');
         opts += '<option value="' + esc(tid) + '"' + (on ? ' selected' : '') + '>' + esc(label) + '</option>';
       });
       return { control: '<select class="tech-select" aria-label="Assign technician">' + opts + '</select>', note: '' };
@@ -1523,7 +1540,7 @@
     if (job) { job.assignedTo = ''; job.technicianId = null; render(false); } // optimistic
     btn.disabled = true;
     state.pending++;
-    authedFetch('/api/dispatch/' + id + '/assign', { method: 'PATCH', json: { assignedTo: '' } })
+    authedFetch('/api/dispatch/' + id + '/unassign', { method: 'PATCH', json: {} })
       .then(function (res) {
         state.pending--;
         if (res.ok) {
