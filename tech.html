@@ -142,10 +142,9 @@ a{color:inherit;text-decoration:none}
 .job-card{
   position:relative;
   background:linear-gradient(180deg,#202024,#191a1d);
-  border:1px solid var(--border);border-left:3px solid var(--cyan);
+  border:1px solid var(--border);
   border-radius:10px;padding:16px;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.04),
-             0 10px 30px -16px rgba(39,224,245,.45),
              0 10px 24px -14px rgba(0,0,0,.6);
 }
 .job-id-row{display:flex;align-items:center;gap:8px;margin-bottom:12px}
@@ -205,14 +204,18 @@ a{color:inherit;text-decoration:none}
 /* ── Slide to Complete (Uber-style: pill track + round knob) ── */
 .slide{
   position:relative;height:56px;border-radius:28px;          /* pill */
-  background:var(--surface2);border:1px solid var(--border);
+  background:var(--surface2);border:1.5px solid rgba(255,255,255,.22);
   overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:pan-y;
 }
 .slide.is-disabled{opacity:.4;pointer-events:none}
 /* Fill ends UNDER the round knob (set in JS) so its edge never juts past the
    knob's border. overflow:hidden reveals the drifting symbols as it grows. */
-.slide-fill{position:absolute;left:0;top:0;height:100%;width:0;background:var(--cyan);border-radius:28px;overflow:hidden}
-.slide-thumb,.slide-fill{transition:transform .3s cubic-bezier(.2,.7,.3,1.25),width .3s cubic-bezier(.2,.7,.3,1.25),background .12s linear}
+/* Fill spans the full pill height — parent overflow:hidden clips it to the pill
+   shape. Opacity goes from 0 (idle) to 1 (complete) driven by JS so the bar
+   fades in as you drag and becomes solid only at 100%. */
+.slide-fill{position:absolute;left:0;top:0;height:100%;width:0;background:var(--cyan);border-radius:0;overflow:hidden;opacity:0}
+.slide-thumb{transition:transform .3s cubic-bezier(.2,.7,.3,1.25),background .12s linear}
+.slide-fill{transition:transform .3s cubic-bezier(.2,.7,.3,1.25),width .3s cubic-bezier(.2,.7,.3,1.25),opacity .22s linear,background .12s linear}
 .slide.is-dragging .slide-thumb,.slide.is-dragging .slide-fill{transition:none}
 /* Floating locksmith symbols — same drifting idea as the site's hero bg, but
    inside the cyan fill so they're revealed as you pull the knob across. */
@@ -228,7 +231,16 @@ a{color:inherit;text-decoration:none}
   position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
   color:var(--muted);pointer-events:none;padding-left:44px;z-index:1;
+  /* Soft cyan light-sweep across the text to draw the eye while idle. */
+  background:linear-gradient(100deg,var(--muted) 0%,var(--muted) 38%,#8df2ff 46%,#27E0F5 50%,#8df2ff 54%,var(--muted) 62%,var(--muted) 100%);
+  background-size:260% 100%;background-repeat:no-repeat;
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  /* alternate direction = smooth reverse sweep, no jump at the loop boundary */
+  animation:slideHintShimmer 2s ease-in-out infinite alternate;
 }
+@keyframes slideHintShimmer{from{background-position:220% 0}to{background-position:-120% 0}}
+.slide.is-dragging .slide-hint{animation:none}              /* stop the sweep once dragging */
+@media(prefers-reduced-motion:reduce){.slide-hint{animation:none}}
 .slide-thumb{
   position:absolute;left:4px;top:4px;width:48px;height:48px;z-index:2;
   display:flex;align-items:center;justify-content:center;
@@ -243,6 +255,17 @@ a{color:inherit;text-decoration:none}
 .slide-thumb.is-loading .slide-spin{display:inline-block}
 .slide-thumb.is-loading .slide-arrow{display:none}
 @media(prefers-reduced-motion:reduce){.slide-sym{animation:none}}
+
+/* ── Completion confetti — locksmith symbols burst from the full bar ── */
+.confetti-layer{position:fixed;inset:0;pointer-events:none;z-index:210;overflow:hidden}
+.confetti-bit{position:fixed;color:var(--cyan);will-change:transform,opacity;animation:confettiBurst .9s cubic-bezier(.15,.6,.3,1) forwards}
+.confetti-bit svg{width:100%;height:100%;display:block;fill:currentColor;filter:drop-shadow(0 0 4px rgba(39,224,245,.55))}
+@keyframes confettiBurst{
+  0%{transform:translate(-50%,-50%) scale(.3) rotate(0deg);opacity:0}
+  12%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(0deg)}
+  100%{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(.9) rotate(var(--rot));opacity:0}
+}
+@media(prefers-reduced-motion:reduce){.confetti-bit{display:none}}
 
 /* ── Cancel panel ── */
 .cancel-panel{margin-top:12px;background:var(--bg);border:1px solid rgba(239,68,68,.25);border-radius:10px;padding:14px}
@@ -306,13 +329,13 @@ a{color:inherit;text-decoration:none}
 .complete-fx.play{opacity:1;pointer-events:auto}
 .complete-fx-check{width:104px;height:104px}
 .complete-fx.play .complete-fx-check{animation:fxGrow .45s cubic-bezier(.2,.7,.3,1.5)}
-.complete-fx-check circle{fill:none;stroke:var(--ok);stroke-width:3;stroke-dasharray:170;stroke-dashoffset:170}
+.complete-fx-check circle{fill:none;stroke:var(--cyan);stroke-width:3;stroke-dasharray:170;stroke-dashoffset:170}
 .complete-fx.play .complete-fx-check circle{animation:fxDraw .5s ease forwards}
-.complete-fx-check path{fill:none;stroke:var(--ok);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:48;stroke-dashoffset:48;filter:drop-shadow(0 0 8px rgba(34,197,94,.75))}
+.complete-fx-check path{fill:none;stroke:var(--cyan);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:48;stroke-dashoffset:48;filter:drop-shadow(0 0 8px rgba(39,224,245,.75))}
 .complete-fx.play .complete-fx-check path{animation:fxDraw .32s .26s ease forwards}
 @keyframes fxGrow{0%{transform:scale(.3);opacity:0}60%{opacity:1}100%{transform:scale(1);opacity:1}}
 @keyframes fxDraw{to{stroke-dashoffset:0}}
-.complete-fx-label{position:absolute;top:62%;font-size:14px;font-weight:800;letter-spacing:.18em;color:var(--ok);text-transform:uppercase;opacity:0}
+.complete-fx-label{position:absolute;top:62%;font-size:14px;font-weight:800;letter-spacing:.18em;color:var(--cyan);text-transform:uppercase;opacity:0}
 .complete-fx.play .complete-fx-label{animation:fxLabel .4s .4s ease forwards}
 @keyframes fxLabel{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
@@ -338,7 +361,7 @@ a{color:inherit;text-decoration:none}
 .myjobs-empty{color:var(--muted);font-size:14px;text-align:center;padding:18px 8px}
 .myjob-card{
   display:block;width:100%;text-align:left;cursor:pointer;font:inherit;color:var(--ink);
-  background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--cyan);
+  background:var(--surface2);border:1px solid var(--border);
   border-radius:10px;padding:13px 14px;
   transition:border-color .15s ease,transform .08s ease;
 }
@@ -513,6 +536,9 @@ a{color:inherit;text-decoration:none}
     </div><!-- /myJobsPanel -->
   </div><!-- /portal-body -->
 </div>
+
+<!-- Completion confetti burst (locksmith symbols), then the centre sign below -->
+<div id="confettiLayer" class="confetti-layer" aria-hidden="true"></div>
 
 <!-- Complete celebration overlay (pure CSS, ~1s, auto-dismissed by JS) -->
 <div id="completeFx" class="complete-fx" aria-hidden="true">
@@ -938,23 +964,22 @@ a{color:inherit;text-decoration:none}
   function paintSlide(p) {
     var thumbW = slideThumb.offsetWidth || 48;
     slideThumb.style.transform = 'translateX(' + slidePos + 'px)';
-    // Fill ends under the round knob's centre, so its (straight) edge is always
-    // hidden behind the knob — no mismatch against the knob's rounded border.
-    slideFill.style.width = (slidePos + thumbW / 2 + 4) + 'px';
-    // Fill colour interpolates dim teal → bright cyan as progress grows.
-    slideFill.style.background = 'rgb(' + lerp(18, 39, p) + ',' + lerp(120, 224, p) + ',' + lerp(132, 245, p) + ')';
+    slideFill.style.width = slidePos > 0 ? (slidePos + thumbW + 4) + 'px' : '0px';
+    slideFill.style.opacity = slidePos > 0 ? p.toFixed(3) : '0'; // transparent at 0%, solid at 100%
     slideHint.style.opacity = Math.max(0, 1 - p * 1.6);
   }
 
   // Drifting locksmith symbols inside the fill (same idea as the site's hero
   // particle bg). Built once; the growing cyan fill reveals them as you pull.
+  // The three locksmith glyphs — reused by the slide background AND the confetti.
+  var SLIDE_SVGS = [
+    '<svg viewBox="0 0 24 24"><path d="M14 2a6 6 0 0 0-5.7 7.9L2 16.2V22h5.8l.6-.6V19h2v-2h2l1.2-1.2A6 6 0 1 0 14 2zm2.5 5.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg>',
+    '<svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm3 8H9V7a3 3 0 0 1 6 0v3z"/></svg>',
+    '<svg viewBox="0 0 24 24"><path d="M22 6.5a5.5 5.5 0 0 1-7.4 5.2l-7.1 7.1a2.1 2.1 0 1 1-3-3l7.1-7.1A5.5 5.5 0 0 1 17 1.2L14 4.4l1.3 4 4 1.3 3.1-3.1z"/></svg>'
+  ];
   function buildSlideSymbols() {
     if (!slideSymbols || slideSymbols.childElementCount) return;
-    var SVGS = [
-      '<svg viewBox="0 0 24 24"><path d="M14 2a6 6 0 0 0-5.7 7.9L2 16.2V22h5.8l.6-.6V19h2v-2h2l1.2-1.2A6 6 0 1 0 14 2zm2.5 5.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg>',
-      '<svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm3 8H9V7a3 3 0 0 1 6 0v3z"/></svg>',
-      '<svg viewBox="0 0 24 24"><path d="M22 6.5a5.5 5.5 0 0 1-7.4 5.2l-7.1 7.1a2.1 2.1 0 1 1-3-3l7.1-7.1A5.5 5.5 0 0 1 17 1.2L14 4.4l1.3 4 4 1.3 3.1-3.1z"/></svg>'
-    ];
+    var SVGS = SLIDE_SVGS;
     var n = 8, html = '';
     for (var i = 0; i < n; i++) {
       var size = 13 + Math.floor(Math.random() * 10);
@@ -975,6 +1000,28 @@ a{color:inherit;text-decoration:none}
   // while the fill "window" widens over them (rather than squishing).
   function sizeSlideSymbols() {
     if (slideSymbols && slideEl.clientWidth) slideSymbols.style.width = slideEl.clientWidth + 'px';
+  }
+  // Confetti burst — the slide's locksmith symbols "explode" outward from the
+  // full bar. Plays on completion BEFORE the centre complete sign appears.
+  function burstConfetti() {
+    var layer = document.getElementById('confettiLayer');
+    if (!layer || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+    var rect = slideThumb.getBoundingClientRect();  // burst from the knob, not the bar centre
+    var ox = rect.left + rect.width / 2, oy = rect.top + rect.height / 2;
+    var N = 22, html = '';
+    for (var i = 0; i < N; i++) {
+      var size = 12 + Math.floor(Math.random() * 14);
+      var ang  = Math.random() * Math.PI * 2;
+      var dist = 70 + Math.random() * 170;
+      var dx = Math.round(Math.cos(ang) * dist);
+      var dy = Math.round(Math.sin(ang) * dist - (70 + Math.random() * 90)); // bias the burst upward
+      var rot = Math.round(Math.random() * 720 - 360);
+      var dur = (0.7 + Math.random() * 0.5).toFixed(2);
+      html += '<span class="confetti-bit" style="left:' + ox + 'px;top:' + oy + 'px;width:' + size + 'px;height:' + size + 'px;' +
+        '--dx:' + dx + 'px;--dy:' + dy + 'px;--rot:' + rot + 'deg;animation-duration:' + dur + 's">' + SLIDE_SVGS[i % SLIDE_SVGS.length] + '</span>';
+    }
+    layer.innerHTML = html;
+    setTimeout(function () { if (layer) layer.innerHTML = ''; }, 1500);
   }
   function setSlideLoading(on) {
     slideLoading = on;
@@ -1013,10 +1060,11 @@ a{color:inherit;text-decoration:none}
     if (res.status === 401) { clearSession(); showLogin(); return; }
     if (res.ok) {
       bumpDaily();
-      playCompleteFx();
+      burstConfetti();                  // 1) symbols explode out of the full bar
       toast('Job completed!', 'ok');
       loadMyJobs(true);   // completed job drops out of My Jobs
-      setTimeout(function () { hideCompleteFx(); resetJobArea(); if (jobIdInput) jobIdInput.focus(); }, 1050);
+      setTimeout(playCompleteFx, 360);  // 2) THEN the centre complete sign
+      setTimeout(function () { hideCompleteFx(); resetJobArea(); if (jobIdInput) jobIdInput.focus(); }, 1500);
     } else {
       slideReset(true);   // snap back so the tech can retry
       toast((res.data && res.data.message) || 'Could not complete job.', 'err');
