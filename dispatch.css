@@ -874,3 +874,25 @@ body.is-embed .dash-main { max-width: none; }
 [data-theme="light"] .audio-hint { background: rgba(244,194,10,.14); color: #7a6000; border-color: rgba(244,194,10,.5); }
 [data-theme="light"] .audio-hint svg { color: #b58900; }
 [data-theme="light"] .btn-job-delete:hover { color: #c62828; border-color: rgba(198,40,40,.5); background: rgba(198,40,40,.08); }
+
+/* ════════ Unified Aston loader (identical across admin / dispatch / tech) ════════ */
+.aston-spinner{
+  display:inline-block;vertical-align:middle;flex:none;
+  width:var(--asp-size,20px);height:var(--asp-size,20px);
+  border:var(--asp-bw,2.5px) solid rgba(39,224,245,.25);
+  border-top-color:#27E0F5;border-radius:50%;
+  animation:aston-spin .7s linear infinite;
+}
+.aston-spinner-sm{--asp-size:16px;--asp-bw:2px}
+.aston-spinner-lg{--asp-size:34px;--asp-bw:3px}
+.aston-loading{display:flex;align-items:center;justify-content:center;gap:10px;color:var(--muted);font-size:13px;padding:18px 8px}
+@keyframes aston-spin{to{transform:rotate(360deg)}}
+/* Button in-flight: hide the label, show a centered spinner */
+.btn.is-loading{color:transparent!important;position:relative;pointer-events:none}
+.btn.is-loading::after{
+  content:"";position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;
+  border:2.5px solid rgba(39,224,245,.3);border-top-color:#27E0F5;border-radius:50%;
+  animation:aston-spin .7s linear infinite;
+}
+/* On a cyan (primary) button the cyan spinner would vanish — invert to dark. */
+.btn-primary.is-loading::after{border-color:rgba(4,24,28,.3);border-top-color:var(--accent-ink,#04181c)}

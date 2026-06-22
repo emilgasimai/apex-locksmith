@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <meta name="robots" content="noindex,nofollow"/>
 <title>Aston Admin</title>
-<link rel="stylesheet" href="admin.css?v=18"/>
+<link rel="stylesheet" href="admin.css?v=20"/>
 </head>
 <body>
 
@@ -96,7 +96,7 @@
 
           <!-- 1 — Today summary -->
           <div class="dash-summary" id="dashSummary">
-            <div class="manager-empty">Loading…</div>
+            <div class="aston-loading"><span class="aston-spinner"></span>Loading…</div>
           </div>
 
           <!-- 2 — Trends (jobs + revenue) -->
@@ -148,7 +148,7 @@
               </div>
               <div class="chart-card">
                 <div class="chart-card-head"><span class="chart-title">Job source</span></div>
-                <ul class="source-list" id="sourceList"><li class="manager-empty">Loading…</li></ul>
+                <ul class="source-list" id="sourceList"><li class="aston-loading"><span class="aston-spinner"></span>Loading…</li></ul>
               </div>
             </div>
           </div>
@@ -157,14 +157,14 @@
           <div class="dash-block">
             <h3 class="dash-h3">Needs attention</h3>
             <div class="dash-attention" id="dashAttention">
-              <div class="manager-empty">Loading…</div>
+              <div class="aston-loading"><span class="aston-spinner"></span>Loading…</div>
             </div>
           </div>
 
           <!-- 5 — Technician workload -->
           <div class="dash-block">
             <h3 class="dash-h3">Technician workload</h3>
-            <div class="tech-workload" id="techWorkload"><div class="manager-empty">Loading…</div></div>
+            <div class="tech-workload" id="techWorkload"><div class="aston-loading"><span class="aston-spinner"></span>Loading…</div></div>
           </div>
 
           <!-- 6 — Recent activity -->
@@ -414,6 +414,13 @@
 
       <!-- ── Dispatch Control (embedded dispatch board, reuses the admin JWT) ── -->
       <section class="view view-embed" data-view="dispatch-board" hidden>
+        <!-- TEMPORARY — remove before launch -->
+        <div class="test-tools" id="testTools">
+          <span class="test-tools-tag">⚠ Test tools — remove before launch</span>
+          <button type="button" class="test-btn" id="genTestJobsBtn">Generate Test Jobs</button>
+          <button type="button" class="test-btn test-btn-danger" id="clearTestJobsBtn">Clear Test Jobs</button>
+        </div>
+        <!-- /TEMPORARY -->
         <iframe id="dispatchFrame" class="dispatch-frame" title="Dispatch board" loading="lazy"></iframe>
       </section>
 
@@ -434,7 +441,7 @@
           </div>
           <div id="revError" class="people-notice" hidden></div>
           <div id="revCards" class="dash-cards">
-            <div class="manager-empty">Loading…</div>
+            <div class="aston-loading"><span class="aston-spinner"></span>Loading…</div>
           </div>
         </div>
       </section>
@@ -473,7 +480,7 @@
           </div>
           <div id="duNotice" class="people-notice" hidden></div>
           <div class="manager-list" id="dispatchUserList">
-            <div class="manager-empty">Loading…</div>
+            <div class="aston-loading"><span class="aston-spinner"></span>Loading…</div>
           </div>
 
           <div class="people-add">
@@ -506,7 +513,7 @@
           </div>
           <div id="tcNotice" class="people-notice" hidden></div>
           <div class="manager-list" id="techList">
-            <div class="manager-empty">Loading…</div>
+            <div class="aston-loading"><span class="aston-spinner"></span>Loading…</div>
           </div>
 
           <div class="people-add">
@@ -547,7 +554,7 @@
       </div>
       <button id="drillClose" type="button" class="icon-btn" aria-label="Close">&times;</button>
     </div>
-    <div id="drillBody" class="drill-body"><div class="manager-empty">Loading…</div></div>
+    <div id="drillBody" class="drill-body"><div class="aston-loading"><span class="aston-spinner"></span>Loading…</div></div>
   </div>
 </div>
 
@@ -568,7 +575,7 @@
 <!-- Chart.js (admin analytics dashboard). Loaded before admin.js so window.Chart is ready; all chart code degrades gracefully if this fails to load. -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="admin-store.js?v=19"></script>
-<script src="admin.js?v=21"></script>
+<script src="admin.js?v=23"></script>
 </body>
 </html>
 

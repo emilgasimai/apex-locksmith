@@ -189,6 +189,61 @@ a{color:inherit;text-decoration:none}
 .btn-cancel-trigger{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:var(--danger)}
 .btn-cancel-trigger:hover:not(:disabled){background:rgba(239,68,68,.22)}
 
+/* ════════ Unified Aston loader (identical across admin / dispatch / tech) ════════ */
+.aston-spinner{
+  display:inline-block;vertical-align:middle;flex:none;
+  width:var(--asp-size,20px);height:var(--asp-size,20px);
+  border:var(--asp-bw,2.5px) solid rgba(39,224,245,.25);
+  border-top-color:#27E0F5;border-radius:50%;
+  animation:aston-spin .7s linear infinite;
+}
+.aston-spinner-sm{--asp-size:16px;--asp-bw:2px}
+.aston-spinner-lg{--asp-size:34px;--asp-bw:3px}
+.aston-loading{display:flex;align-items:center;justify-content:center;gap:10px;color:var(--muted);font-size:13px;padding:18px 8px}
+@keyframes aston-spin{to{transform:rotate(360deg)}}
+
+/* ── Slide to Complete (Uber-style: pill track + round knob) ── */
+.slide{
+  position:relative;height:56px;border-radius:28px;          /* pill */
+  background:var(--surface2);border:1px solid var(--border);
+  overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:pan-y;
+}
+.slide.is-disabled{opacity:.4;pointer-events:none}
+/* Fill ends UNDER the round knob (set in JS) so its edge never juts past the
+   knob's border. overflow:hidden reveals the drifting symbols as it grows. */
+.slide-fill{position:absolute;left:0;top:0;height:100%;width:0;background:var(--cyan);border-radius:28px;overflow:hidden}
+.slide-thumb,.slide-fill{transition:transform .3s cubic-bezier(.2,.7,.3,1.25),width .3s cubic-bezier(.2,.7,.3,1.25),background .12s linear}
+.slide.is-dragging .slide-thumb,.slide.is-dragging .slide-fill{transition:none}
+/* Floating locksmith symbols — same drifting idea as the site's hero bg, but
+   inside the cyan fill so they're revealed as you pull the knob across. */
+.slide-symbols{position:absolute;left:0;top:0;height:100%;pointer-events:none}
+.slide-sym{position:absolute;color:rgba(3,20,24,.55);will-change:transform;animation:slideSymDrift var(--dur,7s) ease-in-out infinite}
+.slide-sym svg{width:100%;height:100%;display:block;fill:currentColor}
+@keyframes slideSymDrift{
+  0%{transform:translate(0,0) rotate(0deg)}
+  50%{transform:translate(var(--dx,6px),var(--dy,-5px)) rotate(var(--dr,40deg))}
+  100%{transform:translate(0,0) rotate(0deg)}
+}
+.slide-hint{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);pointer-events:none;padding-left:44px;z-index:1;
+}
+.slide-thumb{
+  position:absolute;left:4px;top:4px;width:48px;height:48px;z-index:2;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--cyan);color:#0f0f10;border-radius:50%;       /* round knob */
+  box-shadow:0 4px 14px -4px rgba(39,224,245,.6);cursor:grab;touch-action:none;will-change:transform;
+}
+.slide-thumb:active{cursor:grabbing}
+.slide-thumb:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.slide-arrow{width:22px;height:22px}
+.slide-thumb.is-loading{background:var(--surface);color:var(--cyan);cursor:default;box-shadow:none}
+.slide-thumb .slide-spin{display:none}
+.slide-thumb.is-loading .slide-spin{display:inline-block}
+.slide-thumb.is-loading .slide-arrow{display:none}
+@media(prefers-reduced-motion:reduce){.slide-sym{animation:none}}
+
 /* ── Cancel panel ── */
 .cancel-panel{margin-top:12px;background:var(--bg);border:1px solid rgba(239,68,68,.25);border-radius:10px;padding:14px}
 .cancel-panel-title{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--danger);margin-bottom:12px;text-transform:uppercase}
@@ -407,10 +462,18 @@ a{color:inherit;text-decoration:none}
         <!-- Actions -->
         <div class="action-grid">
           <button id="assignSelfBtn" class="action-btn btn-assign">Assign to Me</button>
-          <div class="action-row">
-            <button id="completeBtn" class="action-btn btn-complete" disabled>Complete ✓</button>
-            <button id="cancelTriggerBtn" class="action-btn btn-cancel-trigger" disabled>Cancel ✗</button>
+
+          <!-- Slide to Complete (replaces the old Complete button) -->
+          <div id="completeSlide" class="slide is-disabled" aria-disabled="true">
+            <div class="slide-fill" id="slideFill"><div class="slide-symbols" id="slideSymbols" aria-hidden="true"></div></div>
+            <span class="slide-hint" id="slideHint">Slide to complete</span>
+            <div class="slide-thumb" id="slideThumb" role="button" tabindex="-1" aria-label="Slide to complete the job">
+              <svg class="slide-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              <span class="slide-spin aston-spinner aston-spinner-sm" aria-hidden="true"></span>
+            </div>
           </div>
+
+          <button id="cancelTriggerBtn" class="action-btn btn-cancel-trigger" disabled>Cancel</button>
         </div>
 
         <!-- Cancel panel -->
@@ -444,7 +507,7 @@ a{color:inherit;text-decoration:none}
       <div class="card">
         <div class="card-title">My Active Jobs</div>
         <div id="myJobsList" class="myjobs-list">
-          <div class="myjobs-empty">Loading…</div>
+          <div class="aston-loading"><span class="aston-spinner"></span>Loading…</div>
         </div>
       </div>
     </div><!-- /myJobsPanel -->
@@ -507,7 +570,11 @@ a{color:inherit;text-decoration:none}
   var lookupHint  = document.getElementById('lookupHint');
   var jobCard     = document.getElementById('jobCard');
   var assignSelfBtn    = document.getElementById('assignSelfBtn');
-  var completeBtn      = document.getElementById('completeBtn');
+  var slideEl    = document.getElementById('completeSlide');
+  var slideFill  = document.getElementById('slideFill');
+  var slideSymbols = document.getElementById('slideSymbols');
+  var slideHint  = document.getElementById('slideHint');
+  var slideThumb = document.getElementById('slideThumb');
   var cancelTriggerBtn = document.getElementById('cancelTriggerBtn');
   var cancelPanel      = document.getElementById('cancelPanel');
   var cancelReasons    = document.getElementById('cancelReasons');
@@ -529,6 +596,11 @@ a{color:inherit;text-decoration:none}
   var toastTimer = null;
   var myJobs = [];         // technician's own active jobs (My Jobs tab)
   var currentTab = 'lookup';
+
+  // ── Slide-to-Complete state ──
+  var slideEnabled = false, slideDragging = false, slideLoading = false;
+  var slideStartX = 0, slidePos = 0, slideMax = 0;
+  var SLIDE_THRESHOLD = 0.8;   // release past 80% completes
 
   // ── Toast ──
   function toast(msg, type) {
@@ -636,7 +708,7 @@ a{color:inherit;text-decoration:none}
   // placeholder — used for background refreshes after an action so the list
   // doesn't flash.
   async function loadMyJobs(silent) {
-    if (!silent && myJobsList) myJobsList.innerHTML = '<div class="myjobs-empty">Loading…</div>';
+    if (!silent && myJobsList) myJobsList.innerHTML = '<div class="aston-loading"><span class="aston-spinner"></span>Loading…</div>';
     var res = await authFetch('/api/dispatch/my-jobs');
     if (res.status === 401) { clearSession(); showLogin(); return; }
     if (!res.ok || !res.data) {
@@ -750,6 +822,7 @@ a{color:inherit;text-decoration:none}
     lookupHint.textContent = '';
     jobIdInput.value = '';
     resetCancelPanel();
+    slideReset(false);
   }
 
   lookupBtn.addEventListener('click', doLookup);
@@ -812,8 +885,7 @@ a{color:inherit;text-decoration:none}
     // Reset action buttons to baseline (DOM is reused across lookups)
     assignSelfBtn.textContent = 'Assign to Me';
     assignSelfBtn.classList.remove('assigned-pop');
-    completeBtn.textContent = 'Complete ✓';
-    cancelTriggerBtn.textContent = 'Cancel ✗';
+    cancelTriggerBtn.textContent = 'Cancel';
 
     // Action buttons
     var canAssign   = !jobTechId && !isTerminal;
@@ -821,7 +893,7 @@ a{color:inherit;text-decoration:none}
 
     assignSelfBtn.hidden    = !canAssign;
     assignSelfBtn.disabled  = !canAssign;
-    completeBtn.disabled    = !canAct;
+    setSlideEnabled(canAct);          // Complete is now a slide-to-confirm control
     cancelTriggerBtn.disabled = !canAct;
 
     resetCancelPanel();
@@ -852,13 +924,92 @@ a{color:inherit;text-decoration:none}
     }
   });
 
-  // ── Complete ──
-  completeBtn.addEventListener('click', async function () {
-    if (!currentJob) return;
+  // ── Complete (Slide to Complete) ─────────────────────────────────────────
+  // Pure CSS/JS slide-to-confirm. Pointer Events cover mouse + touch with one
+  // code path; the thumb captures the pointer so the drag survives leaving the
+  // track. Release past 80% locks to the end, enters the loading (spinner)
+  // state, and fires the complete request — the spinner stays until the request
+  // resolves, so slow connections can't double-submit.
+  function slideMetrics() {
+    var thumbW = slideThumb.offsetWidth || 48;
+    return Math.max(1, slideEl.clientWidth - thumbW - 8); // 4px inset each side
+  }
+  function lerp(a, b, t) { return Math.round(a + (b - a) * t); }
+  function paintSlide(p) {
+    var thumbW = slideThumb.offsetWidth || 48;
+    slideThumb.style.transform = 'translateX(' + slidePos + 'px)';
+    // Fill ends under the round knob's centre, so its (straight) edge is always
+    // hidden behind the knob — no mismatch against the knob's rounded border.
+    slideFill.style.width = (slidePos + thumbW / 2 + 4) + 'px';
+    // Fill colour interpolates dim teal → bright cyan as progress grows.
+    slideFill.style.background = 'rgb(' + lerp(18, 39, p) + ',' + lerp(120, 224, p) + ',' + lerp(132, 245, p) + ')';
+    slideHint.style.opacity = Math.max(0, 1 - p * 1.6);
+  }
+
+  // Drifting locksmith symbols inside the fill (same idea as the site's hero
+  // particle bg). Built once; the growing cyan fill reveals them as you pull.
+  function buildSlideSymbols() {
+    if (!slideSymbols || slideSymbols.childElementCount) return;
+    var SVGS = [
+      '<svg viewBox="0 0 24 24"><path d="M14 2a6 6 0 0 0-5.7 7.9L2 16.2V22h5.8l.6-.6V19h2v-2h2l1.2-1.2A6 6 0 1 0 14 2zm2.5 5.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg>',
+      '<svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm3 8H9V7a3 3 0 0 1 6 0v3z"/></svg>',
+      '<svg viewBox="0 0 24 24"><path d="M22 6.5a5.5 5.5 0 0 1-7.4 5.2l-7.1 7.1a2.1 2.1 0 1 1-3-3l7.1-7.1A5.5 5.5 0 0 1 17 1.2L14 4.4l1.3 4 4 1.3 3.1-3.1z"/></svg>'
+    ];
+    var n = 8, html = '';
+    for (var i = 0; i < n; i++) {
+      var size = 13 + Math.floor(Math.random() * 10);
+      // Even bands across the track (+ jitter) so they spread, not clump.
+      var left = Math.round((i + 0.1 + Math.random() * 0.8) * (100 / n));
+      var top  = Math.floor(Math.random() * 58);
+      var dx = (Math.random() * 16 - 8).toFixed(1);
+      var dy = (Math.random() * 12 - 6).toFixed(1);
+      var dr = Math.floor(Math.random() * 80 - 40);
+      var dur = (5 + Math.random() * 5).toFixed(1);
+      var delay = (-Math.random() * 6).toFixed(1);
+      html += '<span class="slide-sym" style="left:' + left + '%;top:' + top + '%;width:' + size + 'px;height:' + size + 'px;' +
+        '--dx:' + dx + 'px;--dy:' + dy + 'px;--dr:' + dr + 'deg;--dur:' + dur + 's;animation-delay:' + delay + 's">' + SVGS[i % SVGS.length] + '</span>';
+    }
+    slideSymbols.innerHTML = html;
+  }
+  // Pin the symbol layer to the full track width so symbols keep their spots
+  // while the fill "window" widens over them (rather than squishing).
+  function sizeSlideSymbols() {
+    if (slideSymbols && slideEl.clientWidth) slideSymbols.style.width = slideEl.clientWidth + 'px';
+  }
+  function setSlideLoading(on) {
+    slideLoading = on;
+    slideThumb.classList.toggle('is-loading', on);
+    slideThumb.setAttribute('aria-busy', on ? 'true' : 'false');
+  }
+  function slideReset(animate) {
+    slideEl.classList.toggle('is-dragging', !animate); // animate=true → keep transition for a smooth snap-back
+    slideDragging = false;
+    slidePos = 0;
+    setSlideLoading(false);
+    paintSlide(0);
+  }
+  function setSlideEnabled(on) {
+    slideEnabled = on;
+    slideEl.classList.toggle('is-disabled', !on);
+    slideEl.setAttribute('aria-disabled', on ? 'false' : 'true');
+    slideThumb.tabIndex = on ? 0 : -1;
+    buildSlideSymbols();
+    sizeSlideSymbols();
+    slideReset(false);                 // fresh render → idle at the start
+  }
+  function slideToEnd() {
+    slideEl.classList.remove('is-dragging'); // transition on for the snap-to-end
+    slideMax = slideMetrics();
+    sizeSlideSymbols();                      // ensure symbols span the track (covers the keyboard path)
+    slidePos = slideMax;
+    paintSlide(1);
+    setSlideLoading(true);
+  }
+
+  async function fireComplete() {
+    if (!currentJob) { slideReset(true); return; }
     var id = currentJob._id || currentJob.id;
-    completeBtn.disabled = true; completeBtn.textContent = '…';
     var res = await authFetch('/api/dispatch/' + id + '/complete', { method: 'PATCH', json: {} });
-    completeBtn.textContent = 'Complete ✓';
     if (res.status === 401) { clearSession(); showLogin(); return; }
     if (res.ok) {
       bumpDaily();
@@ -867,9 +1018,40 @@ a{color:inherit;text-decoration:none}
       loadMyJobs(true);   // completed job drops out of My Jobs
       setTimeout(function () { hideCompleteFx(); resetJobArea(); if (jobIdInput) jobIdInput.focus(); }, 1050);
     } else {
-      completeBtn.disabled = false;
+      slideReset(true);   // snap back so the tech can retry
       toast((res.data && res.data.message) || 'Could not complete job.', 'err');
     }
+  }
+
+  function onSlideDown(e) {
+    if (!slideEnabled || slideLoading) return;
+    slideDragging = true;
+    slideMax = slideMetrics();
+    sizeSlideSymbols();                       // slide is on-screen now → pin symbol layer to its real width
+    slideStartX = e.clientX - slidePos;       // so a re-grab mid-snap doesn't jump
+    slideEl.classList.add('is-dragging');     // 1:1 movement (no transition) while dragging
+    try { slideThumb.setPointerCapture(e.pointerId); } catch (err) {}
+  }
+  function onSlideMove(e) {
+    if (!slideDragging) return;
+    slidePos = Math.max(0, Math.min(slideMax, e.clientX - slideStartX));
+    paintSlide(slideMax ? slidePos / slideMax : 0);
+  }
+  function onSlideUp() {
+    if (!slideDragging) return;
+    slideDragging = false;
+    var p = slideMax ? slidePos / slideMax : 0;
+    if (p >= SLIDE_THRESHOLD) { slideToEnd(); fireComplete(); }
+    else { slideReset(true); }                // snap back
+  }
+  slideThumb.addEventListener('pointerdown', onSlideDown);
+  slideThumb.addEventListener('pointermove', onSlideMove);
+  slideThumb.addEventListener('pointerup', onSlideUp);
+  slideThumb.addEventListener('pointercancel', onSlideUp);
+  // Keyboard fallback: Enter/Space on the focused thumb completes.
+  slideThumb.addEventListener('keydown', function (e) {
+    if (!slideEnabled || slideLoading) return;
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); slideToEnd(); fireComplete(); }
   });
 
   // ── Cancel flow ──

@@ -288,6 +288,46 @@
     dispatchBadgeTimer = setInterval(pollDispatchBadge, 30000);
   }
 
+  /* ── TEMPORARY — remove before launch ──
+     QA test-job tools shown above the embedded dispatch board. They call the
+     admin-only backend endpoints with the admin JWT, then reload the iframe so
+     the seeded/cleared jobs show up immediately. */
+  function reloadDispatchFrame() {
+    const f = document.getElementById('dispatchFrame');
+    if (!f) return;
+    if (dispatchFrameLoaded && f.contentWindow) {
+      try { f.contentWindow.location.reload(); return; } catch (e) { /* fall through to a src reset */ }
+    }
+    f.src = '/dispatch.html?embed=1';
+    dispatchFrameLoaded = true;
+  }
+  async function runTestTool(btn, path, method) {
+    const s = await AdminStore.getSession();
+    const orig = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Working…';
+    const res = await window.apiFetch(path, { method: method, token: s && s.token });
+    btn.disabled = false; btn.textContent = orig;
+    return res;
+  }
+  const genTestJobsBtn = document.getElementById('genTestJobsBtn');
+  const clearTestJobsBtn = document.getElementById('clearTestJobsBtn');
+  if (genTestJobsBtn) {
+    genTestJobsBtn.addEventListener('click', async function () {
+      const res = await runTestTool(genTestJobsBtn, '/api/dispatch/generate-test-jobs', 'POST');
+      if (res.ok) { showToast((res.data && res.data.message) || 'Test jobs generated'); reloadDispatchFrame(); }
+      else showToast((res.data && res.data.message) || 'Could not generate test jobs');
+    });
+  }
+  if (clearTestJobsBtn) {
+    clearTestJobsBtn.addEventListener('click', async function () {
+      if (!confirm('Delete ALL test jobs (every "TEST — " job)? This cannot be undone.')) return;
+      const res = await runTestTool(clearTestJobsBtn, '/api/dispatch/test-jobs', 'DELETE');
+      if (res.ok) { showToast((res.data && res.data.message) || 'Test jobs cleared'); reloadDispatchFrame(); }
+      else showToast((res.data && res.data.message) || 'Could not clear test jobs');
+    });
+  }
+  /* ── /TEMPORARY ── */
+
   /* ========================================================================
      5. CONTENT EDITOR
      ===================================================================== */
@@ -846,6 +886,7 @@
   // the iframe so it re-renders pristinely from storage via content-patch.js.
   applyBtn.addEventListener('click', async function () {
     applyBtn.disabled = true;
+    applyBtn.classList.add('is-loading');
     const partial = {
       content: pending,
       carousel: pendingCarousel,
@@ -864,6 +905,7 @@
       partial.business = biz;
     }
     const res = await AdminStore.saveBundle(partial);
+    applyBtn.classList.remove('is-loading');
     saved = clone(pending);
     savedCarousel = clone(pendingCarousel);
     savedServices = clone(pendingServices);
@@ -1270,7 +1312,9 @@
   });
   bizSaveBtn.addEventListener('click', async function () {
     const b = readBizInputs();
+    bizSaveBtn.classList.add('is-loading');
     const res = await AdminStore.saveBusinessInfo(b);
+    bizSaveBtn.classList.remove('is-loading');
     bizSaved = clone(b);
     previewBusiness();
     refreshBizControls();
@@ -1365,7 +1409,9 @@
     reviewList.scrollTop = reviewList.scrollHeight;
   });
   reviewApplyBtn.addEventListener('click', async function () {
+    reviewApplyBtn.classList.add('is-loading');
     const res = await AdminStore.saveReviews(pendingReviews);
+    reviewApplyBtn.classList.remove('is-loading');
     savedReviews = clone(pendingReviews);
     previewReviews();
     refreshReviewControls();
@@ -1674,7 +1720,7 @@
   }
 
   async function loadDispatchUsers() {
-    dispatchUserList.innerHTML = '<div class="manager-empty">Loading…</div>';
+    dispatchUserList.innerHTML = '<div class="aston-loading"><span class="aston-spinner"></span>Loading…</div>';
     duNotice.hidden = true;
     const users = await AdminStore.listUsers();
     if (users == null) {
@@ -1848,7 +1894,7 @@
   const PHONE_RE = /^[0-9+()\-.\s]{7,30}$/;
 
   async function loadTechnicians() {
-    techList.innerHTML = '<div class="manager-empty">Loading…</div>';
+    techList.innerHTML = '<div class="aston-loading"><span class="aston-spinner"></span>Loading…</div>';
     const techs = await AdminStore.listTechnicians();
     if (techs == null) {
       techList.innerHTML = '<div class="manager-empty">Backend unreachable — can’t load technicians right now.</div>';
@@ -2414,7 +2460,7 @@
   async function openDrill(d) {
     drillTitle.textContent = d.title || 'Details';
     drillSub.textContent = '';
-    drillBody.innerHTML = '<div class="manager-empty">Loading…</div>';
+    drillBody.innerHTML = '<div class="aston-loading"><span class="aston-spinner"></span>Loading…</div>';
     openDrillModal();
     if (d.kind === 'contacts') {
       renderContactDrill(await AdminStore.getUnreadContacts());
@@ -2549,7 +2595,7 @@
       b.classList.toggle('is-active', b.dataset.period === revPeriod);
     });
     revError.hidden = true;
-    revCards.innerHTML = '<div class="manager-empty">Loading…</div>';
+    revCards.innerHTML = '<div class="aston-loading"><span class="aston-spinner"></span>Loading…</div>';
     const d = await AdminStore.getRevenue(revPeriod);
     if (!d) {
       revCards.innerHTML = '';

@@ -1191,7 +1191,7 @@
       filters.status = ''; if (filterStatus) filterStatus.value = ''; // status filter is per-active-tab
       if (tab === 'archive') {
         // Archive is fetched on demand (admin only); show a loading state, then paint.
-        queue.innerHTML = '<div class="queue-loading">Loading archive…</div>';
+        queue.innerHTML = '<div class="aston-loading"><span class="aston-spinner"></span>Loading archive…</div>';
         syncTabButtons(); syncFilters();
         loadArchive();
         return;
@@ -1691,8 +1691,10 @@
       }
     }
     searchActive = true;
-    queue.innerHTML = '<div class="queue-loading">Searching…</div>';
+    var sb = $('searchBtn'); if (sb) sb.classList.add('is-loading');
+    queue.innerHTML = '<div class="aston-loading"><span class="aston-spinner"></span>Searching…</div>';
     authedFetch('/api/dispatch/search?' + param).then(function (res) {
+      if (sb) sb.classList.remove('is-loading');
       if (!res.ok) {
         if (res.status !== 401) {
           queue.innerHTML = '<div class="queue-empty">' +
@@ -1730,7 +1732,7 @@
     custModal.hidden = false;
     void custModal.offsetWidth;            // reflow → fade-in transition
     custModal.classList.add('is-open');
-    custBody.innerHTML = '<div class="cust-loading">Loading…</div>';
+    custBody.innerHTML = '<div class="aston-loading"><span class="aston-spinner"></span>Loading…</div>';
     custTitle.textContent = 'Customer · ' + phone;
     authedFetch('/api/dispatch/customer/' + encodeURIComponent(phone)).then(function (res) {
       if (!res.ok) {

@@ -862,8 +862,27 @@ input:focus, textarea:focus {
 }
 
 /* Embedded dispatch board — the iframe fills the whole main content area. */
-.view-embed { padding: 0; }
+.view-embed { padding: 0; display: flex; flex-direction: column; }
 .dispatch-frame { flex: 1 1 auto; width: 100%; border: 0; display: block; background: var(--bg); }
+
+/* TEMPORARY — remove before launch. QA-only test-job tools; styled with hazard
+   stripes + dashed amber so they read as clearly NOT part of the real UI. */
+.test-tools {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 8px 12px; border-bottom: 1px dashed rgba(244,194,10,.5);
+  background: repeating-linear-gradient(45deg, rgba(244,194,10,.06), rgba(244,194,10,.06) 10px, transparent 10px, transparent 20px);
+}
+.test-tools-tag { font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: .03em; color: #f4c20a; text-transform: uppercase; }
+.test-btn {
+  font: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
+  padding: 5px 11px; border-radius: 4px;
+  border: 1px dashed rgba(244,194,10,.6); background: rgba(244,194,10,.1); color: #f4d35e;
+  transition: background-color .12s ease;
+}
+.test-btn:hover { background: rgba(244,194,10,.18); }
+.test-btn:disabled { opacity: .5; cursor: not-allowed; }
+.test-btn-danger { border-color: rgba(255,93,93,.6); background: rgba(255,93,93,.1); color: #ff9b9b; }
+.test-btn-danger:hover { background: rgba(255,93,93,.18); }
 
 /* ============================================================================
    People management — Dispatch users + Technicians
@@ -1191,3 +1210,25 @@ input:focus, textarea:focus {
 .version-filter { display: flex; align-items: center; gap: 12px; margin: 4px 0 12px; }
 .version-filter-count { font-size: 12px; color: var(--muted-2); }
 
+
+/* ════════ Unified Aston loader (identical across admin / dispatch / tech) ════════ */
+.aston-spinner{
+  display:inline-block;vertical-align:middle;flex:none;
+  width:var(--asp-size,20px);height:var(--asp-size,20px);
+  border:var(--asp-bw,2.5px) solid rgba(39,224,245,.25);
+  border-top-color:#27E0F5;border-radius:50%;
+  animation:aston-spin .7s linear infinite;
+}
+.aston-spinner-sm{--asp-size:16px;--asp-bw:2px}
+.aston-spinner-lg{--asp-size:34px;--asp-bw:3px}
+.aston-loading{display:flex;align-items:center;justify-content:center;gap:10px;color:var(--muted);font-size:13px;padding:18px 8px}
+@keyframes aston-spin{to{transform:rotate(360deg)}}
+/* Button in-flight: hide the label, show a centered spinner */
+.btn.is-loading{color:transparent!important;position:relative;pointer-events:none}
+.btn.is-loading::after{
+  content:"";position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;
+  border:2.5px solid rgba(39,224,245,.3);border-top-color:#27E0F5;border-radius:50%;
+  animation:aston-spin .7s linear infinite;
+}
+/* On a cyan (primary) button the cyan spinner would vanish — invert to dark. */
+.btn-primary.is-loading::after{border-color:rgba(13,42,47,.35);border-top-color:var(--accent-ink,#0d2a2f)}
