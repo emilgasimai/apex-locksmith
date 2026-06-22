@@ -118,6 +118,7 @@
      ===================================================================== */
   let sessionTimer = null;
   let lastPersist = 0;
+  let currentUsername = '';   // logged-in admin's username (lowercase) — for self-delete guard
 
   function enterDashboard() {
     loginView.hidden = true;
@@ -125,6 +126,7 @@
     dashView.hidden = false;
     AdminStore.getSession().then(function (s) {
       topbarUser.textContent = (s && (s.displayName || s.username)) || 'admin';
+      currentUsername = (s && s.username ? String(s.username) : '').toLowerCase();
     });
     startSessionWatch();
     startDispatchBadge();
@@ -1425,23 +1427,48 @@
     if (currentView === 'versions') loadVersions();
   }
 
+  const versionsNamedOnlyEl = document.getElementById('versionsNamedOnly');
+  const versionFilterCount  = document.getElementById('versionFilterCount');
+  let versionsAll = [];                 // full backend list (named + auto-saved)
+  let versionsNamedOnly = false;        // filter: hide auto-saved snapshots
+
   async function loadVersions() {
     const list = await AdminStore.getVersions();
     if (list == null) {
+      versionsAll = [];
       versionList.innerHTML = '<div class="manager-empty">Backend unreachable — version history is unavailable right now.</div>';
+      if (versionFilterCount) versionFilterCount.textContent = '';
     } else {
-      renderVersionList(list);
+      versionsAll = list;
+      renderVersionList();
     }
     renderDefaults();
   }
 
-  function renderVersionList(list) {
+  // Render from versionsAll, applying the "named only" filter.
+  function renderVersionList() {
+    const named = versionsAll.filter(function (v) { return !!v.name; });
+    const list = versionsNamedOnly ? named : versionsAll;
+    if (versionFilterCount) {
+      versionFilterCount.textContent = versionsAll.length
+        ? named.length + ' named · ' + versionsAll.length + ' total'
+        : '';
+    }
     versionList.innerHTML = '';
     if (!list.length) {
-      versionList.innerHTML = '<div class="manager-empty">No saved versions yet. One is captured automatically each time you Apply or Save changes.</div>';
+      versionList.innerHTML = versionsNamedOnly
+        ? '<div class="manager-empty">No named checkpoints yet. Rename a snapshot to keep it here.</div>'
+        : '<div class="manager-empty">No saved versions yet. One is captured automatically each time you Apply or Save changes.</div>';
       return;
     }
     list.forEach(function (v) { versionList.appendChild(buildVersionRow(v)); });
+  }
+
+  if (versionsNamedOnlyEl) {
+    versionsNamedOnlyEl.addEventListener('change', function () {
+      versionsNamedOnly = versionsNamedOnlyEl.checked;
+      renderVersionList();
+    });
   }
 
   function buildVersionRow(v) {
@@ -1663,22 +1690,45 @@
     dispatch.forEach(function (u) { dispatchUserList.appendChild(buildDispatchUserRow(u)); });
   }
 
+  // Split a stored displayName ("First Last Extra") into first + rest. Dispatch
+  // users have no separate name fields on the backend — only displayName.
+  function splitName(displayName) {
+    const parts = String(displayName || '').trim().split(/\s+/);
+    if (!parts[0]) return { first: '', last: '' };
+    return { first: parts[0], last: parts.slice(1).join(' ') };
+  }
+
   function buildDispatchUserRow(u) {
     const id = u.id || u._id;
     const name = u.displayName || u.username;
+    const nm = splitName(u.displayName);
+    const isSelf = currentUsername && String(u.username).toLowerCase() === currentUsername;
     const row = document.createElement('div');
     row.className = 'people-row';
     row.setAttribute('data-id', id);
     row.innerHTML =
       '<div class="people-main">' +
         '<span class="people-name">' + esc(name) + '</span>' +
-        '<span class="people-sub">@' + esc(u.username) + '</span>' +
+        '<span class="people-sub">@' + esc(u.username) + (isSelf ? ' · <em>you</em>' : '') + '</span>' +
       '</div>' +
       peopleSwitchHtml(u.active) +
       '<div class="people-actions">' +
+        '<button type="button" class="btn btn-ghost btn-sm" data-act="edit">Edit</button>' +
         '<button type="button" class="btn btn-ghost btn-sm" data-act="pass">Password</button>' +
-        '<button type="button" class="btn btn-danger btn-sm" data-act="del">Delete</button>' +
+        (isSelf
+          ? '<button type="button" class="btn btn-danger btn-sm" data-act="del" disabled title="You can’t delete your own account">Delete</button>'
+          : '<button type="button" class="btn btn-danger btn-sm" data-act="del">Delete</button>') +
       '</div>' +
+      '<form class="people-inline people-inline-edit" data-edit-form hidden autocomplete="off">' +
+        '<input type="text" data-f="firstName" value="' + attr(nm.first) + '" placeholder="First name"/>' +
+        '<input type="text" data-f="lastName" value="' + attr(nm.last) + '" placeholder="Last name"/>' +
+        '<input type="text" data-f="username" value="' + attr(u.username || '') + '" placeholder="Username" spellcheck="false" autocapitalize="off"/>' +
+        '<div class="people-inline-foot">' +
+          '<span class="people-inline-err" data-edit-err hidden></span>' +
+          '<button type="submit" class="btn btn-primary btn-sm">Save</button>' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-act="edit-cancel">Cancel</button>' +
+        '</div>' +
+      '</form>' +
       '<form class="people-inline" data-pass-form hidden autocomplete="off">' +
         '<input type="password" data-f="p1" placeholder="New password" autocomplete="new-password"/>' +
         '<input type="password" data-f="p2" placeholder="Confirm password" autocomplete="new-password"/>' +
@@ -1686,6 +1736,35 @@
         '<button type="button" class="btn btn-ghost btn-sm" data-act="pass-cancel">Cancel</button>' +
         '<span class="people-inline-err" data-pass-err hidden></span>' +
       '</form>';
+
+    // Edit (first / last / username) — writes displayName + username to the backend.
+    const editForm = row.querySelector('[data-edit-form]');
+    const editErr  = editForm.querySelector('[data-edit-err]');
+    row.querySelector('[data-act="edit"]').addEventListener('click', function () {
+      editForm.hidden = !editForm.hidden;
+      editErr.hidden = true;
+      if (!editForm.hidden) editForm.querySelector('[data-f="firstName"]').focus();
+    });
+    row.querySelector('[data-act="edit-cancel"]').addEventListener('click', function () {
+      editForm.hidden = true; editErr.hidden = true;
+    });
+    editForm.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      editErr.hidden = true;
+      const first = editForm.querySelector('[data-f="firstName"]').value.trim();
+      const last  = editForm.querySelector('[data-f="lastName"]').value.trim();
+      const username = editForm.querySelector('[data-f="username"]').value.trim();
+      if (!first || !last) { editErr.textContent = 'Enter the first and last name'; editErr.hidden = false; return; }
+      if (username.length < 3) { editErr.textContent = 'Username must be at least 3 characters'; editErr.hidden = false; return; }
+      if (!/^[a-zA-Z0-9._-]+$/.test(username)) { editErr.textContent = 'Username: letters, numbers, dots, dashes, underscores only'; editErr.hidden = false; return; }
+      const res = await AdminStore.updateUser(id, { displayName: (first + ' ' + last).trim(), username: username });
+      if (!res.ok) {
+        editErr.textContent = res.message || (res.status === 409 ? 'Username already taken' : 'Could not save');
+        editErr.hidden = false; return;
+      }
+      showToast('Dispatch user updated');
+      loadDispatchUsers();
+    });
 
     const cb = row.querySelector('[data-act="active"]');
     cb.addEventListener('change', async function () {
@@ -2004,16 +2083,30 @@
     loadTechWorkload();
   }
 
-  // 1 — Today summary cards (big number + day-over-day trend arrow).
+  // 1 — Today summary cards (big number + day-over-day trend arrow). Each card
+  // is clickable and drills into the list of items it counts.
   function renderSummary(d) {
     const t = d.today || {};
     dashSummary.innerHTML =
-      sumCard(t.newJobs != null ? t.newJobs : 0, 'New jobs today', 'is-accent', 'jobs') +
-      sumCard(t.completedJobs != null ? t.completedJobs : 0, 'Completed today', 'is-ok', '') +
-      sumCard(money(t.revenue), 'Revenue today', 'is-ok', 'revenue');
+      sumCard(t.newJobs != null ? t.newJobs : 0, 'New jobs today', 'is-accent', 'jobs',
+        { kind: 'jobs', type: 'new', period: 'today', title: 'New jobs today' }) +
+      sumCard(t.completedJobs != null ? t.completedJobs : 0, 'Completed today', 'is-ok', '',
+        { kind: 'jobs', type: 'completed', period: 'today', price: true, title: 'Completed today' }) +
+      sumCard(money(t.revenue), 'Revenue today', 'is-ok', 'revenue',
+        { kind: 'jobs', type: 'completed', period: 'today', price: true, title: 'Revenue today — completed jobs' });
   }
-  function sumCard(num, label, cls, trendKey) {
-    return '<div class="sum-card ' + cls + '">' +
+  // Serialize a drill descriptor onto a card as data-* attributes + a11y role.
+  function drillAttrs(drill) {
+    if (!drill) return '';
+    return ' data-drill="' + attr(drill.kind) + '"' +
+      (drill.type ? ' data-drill-type="' + attr(drill.type) + '"' : '') +
+      (drill.period ? ' data-drill-period="' + attr(drill.period) + '"' : '') +
+      (drill.price ? ' data-drill-price="1"' : '') +
+      ' data-drill-title="' + attr(drill.title || '') + '"' +
+      ' role="button" tabindex="0"';
+  }
+  function sumCard(num, label, cls, trendKey, drill) {
+    return '<div class="sum-card ' + cls + (drill ? ' is-clickable' : '') + '"' + drillAttrs(drill) + '>' +
       '<div class="sum-card-top">' +
         '<span class="sum-num">' + esc(String(num)) + '</span>' +
         '<span class="sum-trend" data-trend="' + esc(trendKey || '') + '"></span>' +
@@ -2033,16 +2126,21 @@
     else el.innerHTML = '<span class="trend flat" title="' + vs + '">–</span>';
   }
 
-  // 4 — Needs attention cards.
+  // 4 — Needs attention cards. The three with a backend drill-down are
+  // clickable; "Pending reviews" (customer-review moderation) has no detail
+  // endpoint yet, so it stays static.
   function renderAttention(d) {
     dashAttention.innerHTML =
-      attnCard(d.pendingReviewJobs, 'Pending review', 'warn') +
-      attnCard(d.inProgressJobs, 'In progress', 'prog') +
-      attnCard(d.newContacts, 'Unread contacts', 'accent') +
-      attnCard(d.pendingReviews, 'Pending reviews', 'muted');
+      attnCard(d.pendingReviewJobs, 'Pending review', 'warn',
+        { kind: 'jobs', type: 'pending-review', title: 'Pending review' }) +
+      attnCard(d.inProgressJobs, 'In progress', 'prog',
+        { kind: 'jobs', type: 'in-progress', title: 'In progress' }) +
+      attnCard(d.newContacts, 'Unread contacts', 'accent',
+        { kind: 'contacts', title: 'Unread contacts' }) +
+      attnCard(d.pendingReviews, 'Pending reviews', 'muted', null);
   }
-  function attnCard(n, label, tone) {
-    return '<div class="attn-card attn-' + tone + '">' +
+  function attnCard(n, label, tone, drill) {
+    return '<div class="attn-card attn-' + tone + (drill ? ' is-clickable' : '') + '"' + drillAttrs(drill) + '>' +
       '<span class="attn-num">' + esc(String(n != null ? n : 0)) + '</span>' +
       '<span class="attn-label">' + esc(label) + '</span>' +
     '</div>';
@@ -2265,6 +2363,179 @@
     }).join('');
   }
   if (dashRefreshBtn) dashRefreshBtn.addEventListener('click', loadDashboard);
+
+  /* ── Dashboard card drill-down (modal) ──────────────────────────────────
+     Clicking a summary / attention card opens a detail list of the items it
+     counts (backend /api/dashboard/jobs-detail or /unread-contacts). Job rows
+     deep-link into the embedded dispatch board. */
+  const drillModal = document.getElementById('drillModal');
+  const drillTitle = document.getElementById('drillTitle');
+  const drillSub   = document.getElementById('drillSub');
+  const drillBody  = document.getElementById('drillBody');
+  const drillClose = document.getElementById('drillClose');
+
+  function openDrillModal() {
+    drillModal.hidden = false;
+    void drillModal.offsetWidth;
+    drillModal.classList.add('is-open');
+  }
+  function closeDrill() {
+    drillModal.classList.remove('is-open');
+    setTimeout(function () { if (!drillModal.classList.contains('is-open')) drillModal.hidden = true; }, 170);
+  }
+  drillClose.addEventListener('click', closeDrill);
+  drillModal.addEventListener('click', function (e) { if (e.target === drillModal) closeDrill(); });
+  document.addEventListener('keydown', function (e) { if (!drillModal.hidden && e.key === 'Escape') closeDrill(); });
+
+  function cardDrill(el) {
+    return {
+      kind: el.getAttribute('data-drill'),
+      type: el.getAttribute('data-drill-type') || '',
+      period: el.getAttribute('data-drill-period') || '',
+      price: el.getAttribute('data-drill-price') === '1',
+      title: el.getAttribute('data-drill-title') || 'Details',
+    };
+  }
+  function onDashCardActivate(e) {
+    const card = e.target.closest('[data-drill]');
+    if (!card) return;
+    if (e.type === 'keydown') {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+    }
+    openDrill(cardDrill(card));
+  }
+  [dashSummary, dashAttention].forEach(function (host) {
+    if (!host) return;
+    host.addEventListener('click', onDashCardActivate);
+    host.addEventListener('keydown', onDashCardActivate);
+  });
+
+  async function openDrill(d) {
+    drillTitle.textContent = d.title || 'Details';
+    drillSub.textContent = '';
+    drillBody.innerHTML = '<div class="manager-empty">Loading…</div>';
+    openDrillModal();
+    if (d.kind === 'contacts') {
+      renderContactDrill(await AdminStore.getUnreadContacts());
+    } else {
+      renderJobsDrill(await AdminStore.getJobsDetail(d.type, d.period || ''), d);
+    }
+  }
+
+  function renderJobsDrill(data, d) {
+    if (!data) { drillBody.innerHTML = '<div class="manager-empty">Backend unreachable — couldn’t load this list.</div>'; return; }
+    const jobs = data.jobs || [];
+    drillSub.textContent = jobs.length + (jobs.length === 1 ? ' job' : ' jobs');
+    if (!jobs.length) { drillBody.innerHTML = '<div class="manager-empty">Nothing here right now.</div>'; return; }
+    drillBody.innerHTML = '<div class="drill-list">' + jobs.map(function (j) {
+      const st = (j.status || '').toLowerCase();
+      const prio = j.priority || 'normal';
+      const hasJob = !!j.jobId;
+      return '<div class="drill-row drill-job' + (hasJob ? ' is-openable' : '') + '"' +
+          (hasJob ? ' data-jobid="' + attr(j.jobId) + '" role="button" tabindex="0" title="Open in dispatch board"' : '') + '>' +
+          '<div class="drill-row-top">' +
+            '<span class="drill-jobid">' + (j.jobId ? '#' + esc(j.jobId) : '—') + '</span>' +
+            '<span class="drill-badge status-' + esc(st) + '">' + esc(DASH_STATUS_LABEL[j.status] || j.status || '—') + '</span>' +
+            '<span class="drill-prio prio-' + esc(prio) + '">' + esc(prio) + '</span>' +
+            (d.price ? '<span class="drill-price">' + esc(money(j.price)) + '</span>' : '') +
+          '</div>' +
+          '<div class="drill-customer">' + esc(j.customerName || 'Unknown') + '</div>' +
+          '<div class="drill-meta">' +
+            (j.phone ? '<span>' + esc(j.phone) + '</span>' : '') +
+            (j.serviceType ? '<span>' + esc(j.serviceType) + '</span>' : '') +
+          '</div>' +
+          (j.address ? '<div class="drill-addr">' + esc(j.address) + '</div>' : '') +
+        '</div>';
+    }).join('') + '</div>';
+  }
+
+  function renderContactDrill(data) {
+    if (!data) { drillBody.innerHTML = '<div class="manager-empty">Backend unreachable — couldn’t load contacts.</div>'; return; }
+    const contacts = data.contacts || [];
+    drillSub.textContent = contacts.length + ' unread';
+    if (!contacts.length) { drillBody.innerHTML = '<div class="manager-empty">No unread messages.</div>'; return; }
+    drillBody.innerHTML = '<div class="drill-list">' + contacts.map(function (c) {
+      const tel = String(c.phone || '').replace(/\s/g, '');
+      return '<div class="drill-row drill-contact" data-cid="' + attr(String(c.id)) + '">' +
+          '<div class="drill-row-top">' +
+            '<span class="drill-customer">' + esc(c.customerName || 'Unknown') + '</span>' +
+            '<span class="drill-time">' + esc(timeAgo(c.createdAt)) + '</span>' +
+          '</div>' +
+          (c.phone ? '<div class="drill-meta"><a href="tel:' + attr(tel) + '">' + esc(c.phone) + '</a></div>' : '') +
+          '<div class="drill-message">' + esc(c.message || '') + '</div>' +
+          '<div class="drill-row-actions"><button type="button" class="btn btn-ghost btn-sm" data-act="mark-read">Mark read</button></div>' +
+        '</div>';
+    }).join('') + '</div>';
+  }
+
+  // Decrement the "Unread contacts" attention card without a full reload.
+  function bumpUnreadCard(delta) {
+    if (!dashAttention) return;
+    dashAttention.querySelectorAll('.attn-card').forEach(function (c) {
+      const label = c.querySelector('.attn-label');
+      if (label && /unread contacts/i.test(label.textContent)) {
+        const numEl = c.querySelector('.attn-num');
+        numEl.textContent = Math.max(0, (parseInt(numEl.textContent, 10) || 0) + delta);
+      }
+    });
+  }
+
+  async function markContactReadRow(row) {
+    const id = row.getAttribute('data-cid');
+    const btn = row.querySelector('[data-act="mark-read"]');
+    if (btn) { btn.disabled = true; btn.textContent = '…'; }
+    const res = await AdminStore.markContactRead(id);
+    if (!res.ok) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Mark read'; }
+      showToast(res.message || 'Could not mark read'); return;
+    }
+    row.classList.add('is-read');
+    const actions = row.querySelector('.drill-row-actions');
+    if (actions) actions.innerHTML = '<span class="drill-read-tag">Read ✓</span>';
+    bumpUnreadCard(-1);
+    const n = drillBody.querySelectorAll('.drill-contact:not(.is-read)').length;
+    drillSub.textContent = n + ' unread';
+    showToast('Marked read');
+  }
+
+  drillBody.addEventListener('click', function (e) {
+    const mark = e.target.closest('[data-act="mark-read"]');
+    if (mark) { const row = mark.closest('[data-cid]'); if (row) markContactReadRow(row); return; }
+    const jobRow = e.target.closest('.drill-job.is-openable');
+    if (jobRow) openJobInDispatch(jobRow.getAttribute('data-jobid'));
+  });
+  drillBody.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const jobRow = e.target.closest('.drill-job.is-openable');
+    if (jobRow) { e.preventDefault(); openJobInDispatch(jobRow.getAttribute('data-jobid')); }
+  });
+
+  /* ── Deep-link a job into the embedded dispatch board ──
+     Handshake: dispatch.js posts 'aston-dispatch-ready' once its first queue
+     load finishes; we hold the requested jobId until then, then post it back. */
+  let dispatchReady = false;
+  let dispatchPendingJob = null;
+  window.addEventListener('message', function (e) {
+    if (e.origin !== window.location.origin) return;
+    if (e.data && e.data.type === 'aston-dispatch-ready') { dispatchReady = true; flushDispatchPendingJob(); }
+  });
+  function flushDispatchPendingJob() {
+    if (!dispatchPendingJob || !dispatchReady) return;
+    const f = document.getElementById('dispatchFrame');
+    if (f && f.contentWindow) {
+      try { f.contentWindow.postMessage({ type: 'aston-open-job', jobId: dispatchPendingJob }, window.location.origin); } catch (e) {}
+    }
+    dispatchPendingJob = null;
+  }
+  function openJobInDispatch(jobId) {
+    if (!jobId) return;
+    dispatchPendingJob = String(jobId);
+    closeDrill();
+    if (typeof closeSidebar === 'function') closeSidebar();
+    setActiveView('dispatch-board');
+    flushDispatchPendingJob();   // posts now if the board is already up; else the ready handshake will
+  }
 
   // ── Revenue ──
   const revCards = document.getElementById('revCards');

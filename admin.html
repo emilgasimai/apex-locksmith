@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <meta name="robots" content="noindex,nofollow"/>
 <title>Aston Admin</title>
-<link rel="stylesheet" href="admin.css?v=17"/>
+<link rel="stylesheet" href="admin.css?v=18"/>
 </head>
 <body>
 
@@ -66,8 +66,6 @@
         <li><button type="button" class="nav-item" data-view="business">Business Info</button></li>
         <li><button type="button" class="nav-item" data-view="reviews">Reviews</button></li>
         <li><button type="button" class="nav-item" data-view="versions">Saved Changes</button></li>
-        <li><button type="button" class="nav-item" data-view="requests">Incoming Requests</button></li>
-        <li><button type="button" class="nav-item" data-view="analytics">Analytics</button></li>
         <li class="nav-sep" role="separator"></li>
         <li><button type="button" class="nav-item nav-item-dispatch" data-view="dispatch-board">Dispatch Control<span class="nav-badge" id="dispatchBadge" hidden>0</span></button></li>
         <li><button type="button" class="nav-item" data-view="dispatch-users">Dispatch Personnel</button></li>
@@ -75,7 +73,7 @@
         <li><button type="button" class="nav-item" data-view="revenue">Revenue</button></li>
         <li><button type="button" class="nav-item" data-view="export">Export</button></li>
       </ul>
-      <div class="sidebar-foot">v1 · client-side preview</div>
+      <div class="sidebar-foot">v1.0.0</div>
     </nav>
 
     <!-- Mobile drawer backdrop -->
@@ -388,6 +386,15 @@
 
           <div id="defaultCurrent" class="default-current"></div>
 
+          <div class="version-filter">
+            <label class="people-switch version-filter-switch" title="Hide auto-saved snapshots and show only named checkpoints">
+              <input type="checkbox" id="versionsNamedOnly"/>
+              <span class="people-switch-track"><span class="people-switch-thumb"></span></span>
+              <span class="people-switch-label">Named only</span>
+            </label>
+            <span class="version-filter-count" id="versionFilterCount"></span>
+          </div>
+
           <div class="manager-list" id="versionList"></div>
 
           <!-- Protected Default checkpoints -->
@@ -402,22 +409,6 @@
               Restore Default
             </button>
           </div>
-        </div>
-      </section>
-
-      <!-- ── Incoming Requests (backend) ── -->
-      <section class="view view-placeholder" data-view="requests" hidden>
-        <div class="placeholder-card">
-          <h2>Incoming Requests</h2>
-          <p class="placeholder-backend">Available once backend is connected.</p>
-        </div>
-      </section>
-
-      <!-- ── Analytics (backend) ── -->
-      <section class="view view-placeholder" data-view="analytics" hidden>
-        <div class="placeholder-card">
-          <h2>Analytics</h2>
-          <p class="placeholder-backend">Available once backend is connected.</p>
         </div>
       </section>
 
@@ -546,6 +537,20 @@
 <!-- Toast -->
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
+<!-- Dashboard card drill-down modal -->
+<div id="drillModal" class="modal-overlay drill-overlay" hidden>
+  <div class="modal-box drill-box" role="dialog" aria-modal="true" aria-labelledby="drillTitle">
+    <div class="drill-head">
+      <div>
+        <h3 id="drillTitle" class="modal-title">Details</h3>
+        <p id="drillSub" class="drill-sub"></p>
+      </div>
+      <button id="drillClose" type="button" class="icon-btn" aria-label="Close">&times;</button>
+    </div>
+    <div id="drillBody" class="drill-body"><div class="manager-empty">Loading…</div></div>
+  </div>
+</div>
+
 <!-- Confirm modal — styled warning dialog (used by Restore Default) -->
 <div id="confirmModal" class="modal-overlay" hidden>
   <div class="modal-box" role="alertdialog" aria-modal="true" aria-labelledby="confirmModalTitle" aria-describedby="confirmModalMsg">
@@ -562,8 +567,8 @@
 <script src="apex-defaults.js?v=12"></script>
 <!-- Chart.js (admin analytics dashboard). Loaded before admin.js so window.Chart is ready; all chart code degrades gracefully if this fails to load. -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="admin-store.js?v=18"></script>
-<script src="admin.js?v=20"></script>
+<script src="admin-store.js?v=19"></script>
+<script src="admin.js?v=21"></script>
 </body>
 </html>
 

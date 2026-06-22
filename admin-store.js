@@ -422,6 +422,29 @@ const AdminStore = (function () {
       return res.ok && res.data ? res.data : null;
     },
 
+    /* ── Dashboard card drill-downs ── */
+
+    // GET /api/dashboard/jobs-detail?type=new|completed|pending-review|in-progress&period=today|week|month
+    // → { type, from, to, total, jobs:[{jobId,customerName,phone,serviceType,address,status,priority,createdAt,price}] }, or null.
+    async getJobsDetail(type, period) {
+      const p = new URLSearchParams({ type: type });
+      if (period) p.set('period', period);
+      const res = await api('/api/dashboard/jobs-detail?' + p.toString());
+      return res.ok && res.data ? res.data : null;
+    },
+
+    // GET /api/dashboard/unread-contacts → { total, contacts:[{id,customerName,phone,message,createdAt}] }, or null.
+    async getUnreadContacts() {
+      const res = await api('/api/dashboard/unread-contacts');
+      return res.ok && res.data ? res.data : null;
+    },
+
+    // PATCH /api/contact/:id/status { status:'read' } — clears one from the unread list.
+    async markContactRead(id) {
+      const res = await api('/api/contact/' + encodeURIComponent(id) + '/status', { method: 'PATCH', json: { status: 'read' } });
+      return { ok: res.ok, status: res.status, message: (res.data && res.data.message) || null };
+    },
+
     /* ── Dashboard charts (each returns its payload, or null if unreachable) ── */
 
     // GET /api/dashboard/timeseries → { metric, period, from, to, labels:[], values:[] }.

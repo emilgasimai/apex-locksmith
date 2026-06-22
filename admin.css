@@ -1122,3 +1122,72 @@ input:focus, textarea:focus {
   .dash-block-head { flex-direction: column; align-items: flex-start; gap: 10px; }
 }
 
+/* ============================================================================
+   Dashboard card drill-down — clickable cards + detail modal
+   ============================================================================ */
+.sum-card.is-clickable,
+.attn-card.is-clickable { cursor: pointer; transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease; }
+.sum-card.is-clickable:hover,
+.attn-card.is-clickable:hover {
+  transform: translateY(-2px); border-color: var(--accent);
+  box-shadow: 0 8px 22px -12px rgba(39, 224, 245, .5);
+}
+.sum-card.is-clickable:focus-visible,
+.attn-card.is-clickable:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sum-card.is-clickable:active,
+.attn-card.is-clickable:active { transform: translateY(0); }
+/* affordance: a small chevron that nudges on hover */
+.sum-card.is-clickable::after,
+.attn-card.is-clickable::after {
+  content: "\203A"; position: absolute; top: 8px; right: 12px;
+  font-size: 18px; line-height: 1; color: var(--muted-2);
+  transition: color .12s ease, transform .12s ease;
+}
+.sum-card.is-clickable:hover::after,
+.attn-card.is-clickable:hover::after { color: var(--accent); transform: translateX(2px); }
+
+.drill-box {
+  max-width: 560px; border-top-color: var(--accent);
+  display: flex; flex-direction: column; max-height: min(82vh, 720px); padding: 18px 18px 16px;
+}
+.drill-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.drill-head .modal-title { margin: 0; }
+.drill-sub { margin: 2px 0 0; font-size: 12px; color: var(--muted); }
+.drill-body { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.drill-list { display: flex; flex-direction: column; gap: 8px; }
+.drill-row { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 11px 13px; }
+.drill-job.is-openable { cursor: pointer; transition: border-color .12s ease, background .12s ease; }
+.drill-job.is-openable:hover { border-color: var(--accent); background: #2a2a2e; }
+.drill-job.is-openable:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.drill-row-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.drill-jobid { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--accent); }
+.drill-badge { font-size: 10.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.drill-badge.status-completed { color: var(--ok); }
+.drill-badge.status-in-progress { color: #ff9f1c; }
+.drill-badge.status-pending-review { color: #f4c20a; }
+.drill-badge.status-assigned { color: #60a0ff; }
+.drill-badge.status-approved { color: #7ee2e8; }
+.drill-badge.status-cancelled { color: var(--danger); }
+.drill-prio {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+  color: var(--muted-2); padding: 1px 7px; border: 1px solid var(--line); border-radius: 999px;
+}
+.drill-prio.prio-emergency { color: var(--danger); border-color: rgba(255, 93, 93, .5); }
+.drill-prio.prio-high { color: #ff9f1c; border-color: rgba(255, 159, 28, .5); }
+.drill-price { margin-left: auto; font-family: var(--mono); font-size: 13px; font-weight: 800; color: var(--ok); }
+.drill-customer { font-size: 14px; font-weight: 600; color: var(--ink); }
+.drill-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 3px; font-size: 12.5px; color: var(--muted); }
+.drill-meta a { color: var(--accent); }
+.drill-addr { margin-top: 4px; font-size: 12.5px; color: var(--muted-2); }
+.drill-message { margin-top: 6px; font-size: 13px; line-height: 1.5; color: var(--ink); white-space: pre-wrap; word-break: break-word; }
+.drill-contact .drill-row-top { margin-bottom: 4px; }
+.drill-time { margin-left: auto; font-size: 11.5px; color: var(--muted-2); }
+.drill-row-actions { margin-top: 8px; display: flex; justify-content: flex-end; }
+.drill-contact.is-read { opacity: .55; }
+.drill-read-tag { font-size: 11.5px; font-weight: 700; color: var(--ok); }
+@media (max-width: 480px) { .drill-box { max-width: 100%; max-height: 88vh; } }
+
+/* Saved Changes — named-only snapshot filter */
+.version-filter { display: flex; align-items: center; gap: 12px; margin: 4px 0 12px; }
+.version-filter-count { font-size: 12px; color: var(--muted-2); }
+

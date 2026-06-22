@@ -374,7 +374,28 @@
     lastActivity = Date.now();
     // Load technicians first so the very first render of the queue already has
     // the assign dropdown populated. Animate the first paint.
-    loadTechnicians().then(function () { loadStats(); return loadJobs(true); });
+    loadTechnicians().then(function () { loadStats(); return loadJobs(true); })
+      .then(function () { if (EMBED) notifyEmbedReady(); });   // tell the admin panel deep-links can be served now
+  }
+
+  /* ───────────── embedded deep-link bridge (admin panel) ─────────────
+     The admin dashboard's card drill-downs can open a specific job here. We
+     announce readiness to the parent only AFTER the first queue load, so a
+     deep-linked search isn't clobbered by the initial render. */
+  var embedReadyNotified = false;
+  function notifyEmbedReady() {
+    if (embedReadyNotified) return;
+    embedReadyNotified = true;
+    try { window.parent.postMessage({ type: 'aston-dispatch-ready' }, window.location.origin); } catch (e) {}
+  }
+  function onEmbedMessage(e) {
+    if (e.origin !== window.location.origin) return;
+    var d = e.data || {};
+    if (d.type === 'aston-open-job' && d.jobId) {
+      if (searchInput) searchInput.value = String(d.jobId);
+      runSearch();
+      try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e2) {}
+    }
   }
 
   /* ───────────── technicians (assign dropdown) ───────────── */
@@ -1857,6 +1878,7 @@
     if (EMBED) {
       // Embedded in the admin panel: reuse the admin JWT, skip the login UI.
       document.body.classList.add('is-embed');
+      window.addEventListener('message', onEmbedMessage);   // accept deep-links from the admin dashboard
       if (activeToken()) showDashboard();
       else if (queue) { dashView.hidden = false; loginView.hidden = true; queue.innerHTML = '<div class="queue-empty">Open the dispatch board from the admin panel.</div>'; }
       return;
