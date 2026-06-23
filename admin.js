@@ -2580,8 +2580,22 @@
             (j.serviceType ? '<span>' + esc(j.serviceType) + '</span>' : '') +
           '</div>' +
           (j.address ? '<div class="drill-addr">' + esc(j.address) + '</div>' : '') +
+          priceBreakdownHtml(j) +
         '</div>';
     }).join('') + '</div>';
+  }
+
+  // Itemized charge breakdown for a completed job (Service fee, HST, night fee,
+  // total). Returns '' for jobs that were never priced via the technician flow.
+  function priceBreakdownHtml(j) {
+    if (j.serviceFee == null && j.totalCharged == null) return '';
+    const total = j.totalCharged != null ? j.totalCharged : j.price;
+    return '<div class="price-breakdown">' +
+        '<div class="pb-row"><span>Service fee</span><span>' + esc(money(j.serviceFee)) + '</span></div>' +
+        '<div class="pb-row"><span>Tax · 13% HST</span><span>' + esc(money(j.taxAmount)) + '</span></div>' +
+        (j.nightFee ? '<div class="pb-row"><span>Night fee</span><span>' + esc(money(j.nightFee)) + '</span></div>' : '') +
+        '<div class="pb-row pb-total"><span>Total</span><span>' + esc(money(total)) + '</span></div>' +
+      '</div>';
   }
 
   function renderContactDrill(data) {
@@ -2691,11 +2705,21 @@
       revError.textContent = 'Backend unreachable — revenue is unavailable right now.';
       return;
     }
+    const b = d.breakdown || {};
+    const breakdownBlock = (b.serviceFee != null || b.taxAmount != null || b.nightFee != null)
+      ? '<div class="rev-breakdown">' +
+          '<div class="rev-breakdown-title">Revenue breakdown</div>' +
+          '<div class="pb-row"><span>Service fees</span><span>' + esc(money(b.serviceFee)) + '</span></div>' +
+          '<div class="pb-row"><span>Tax · 13% HST</span><span>' + esc(money(b.taxAmount)) + '</span></div>' +
+          '<div class="pb-row"><span>Night fees</span><span>' + esc(money(b.nightFee)) + '</span></div>' +
+          '<div class="pb-row pb-total"><span>Total revenue</span><span>' + esc(money(d.revenue)) + '</span></div>' +
+        '</div>'
+      : '';
     revCards.innerHTML = statGroup('',
       statCard(money(d.revenue), 'Revenue', { cls: 'is-revenue' }) +
       statCard(d.jobCount != null ? d.jobCount : 0, 'Completed jobs') +
       statCard(money(d.averageJobValue), 'Avg job value')
-    );
+    ) + breakdownBlock;
   }
   if (revPeriods) {
     revPeriods.addEventListener('click', function (e) {

@@ -972,8 +972,12 @@ input:focus, textarea:focus {
 
 @media (max-width: 560px) {
   .people-row { grid-template-columns: 1fr auto; }
-  .people-switch { order: 3; }
-  .people-actions { order: 2; }
+  .people-main   { grid-column: 1 / 2; }
+  .people-switch { grid-column: 2 / 3; justify-self: end; }
+  /* Actions move to their own full-width row and may wrap, so 3 buttons
+     (Edit / Password / Delete on Dispatch Personnel) never run off-screen. */
+  .people-actions { grid-column: 1 / -1; order: 1; flex-wrap: wrap; }
+  .people-inline  { order: 2; }
   .people-form-grid { grid-template-columns: 1fr; }
 }
 
@@ -1223,6 +1227,15 @@ input:focus, textarea:focus {
 .tech-sec-title { margin: 16px 0 8px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
 .tech-shift-dur { margin-left: auto; font-family: var(--mono); font-size: 13px; font-weight: 800; color: var(--ink); }
 .tech-shift-dur.is-ongoing { color: var(--accent); }
+
+/* Itemized charge breakdown — drill-down job rows + revenue view */
+.price-breakdown { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: 4px; }
+.pb-row { display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; color: var(--muted); }
+.pb-row span:last-child { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); font-weight: 600; }
+.pb-row.pb-total { margin-top: 2px; padding-top: 6px; border-top: 1px solid var(--line); font-weight: 700; color: var(--ink); }
+.pb-row.pb-total span:last-child { color: var(--ok); font-weight: 800; }
+.rev-breakdown { margin-top: 14px; padding: 14px 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; display: flex; flex-direction: column; gap: 5px; max-width: 360px; }
+.rev-breakdown-title { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 4px; }
 
 /* Saved Changes — named-only snapshot filter */
 .version-filter { display: flex; align-items: center; gap: 12px; margin: 4px 0 12px; }

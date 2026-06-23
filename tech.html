@@ -202,6 +202,44 @@ a{color:inherit;text-decoration:none}
 .btn-complete:hover:not(:disabled){background:rgba(34,197,94,.25)}
 .btn-cancel-trigger{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:var(--danger)}
 .btn-cancel-trigger:hover:not(:disabled){background:rgba(239,68,68,.22)}
+.btn-finish{background:var(--cyan);color:#0f0f10}
+.btn-finish:hover:not(:disabled){opacity:.9}
+
+/* ── Pricing popup (Finish flow) ── */
+.price-modal{
+  position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;
+  padding:18px;background:rgba(8,10,12,.72);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+  opacity:0;transition:opacity .18s ease;
+}
+.price-modal.is-open{opacity:1}
+.price-modal[hidden]{display:none}
+.price-box{
+  width:100%;max-width:380px;background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;padding:20px;box-shadow:0 24px 60px -16px rgba(0,0,0,.7);
+  transform:translateY(8px) scale(.98);transition:transform .2s cubic-bezier(.2,.7,.3,1.4);
+}
+.price-modal.is-open .price-box{transform:translateY(0) scale(1)}
+.price-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.price-title{margin:0;font-size:17px;font-weight:800;letter-spacing:.01em;color:var(--ink)}
+.price-close{background:none;border:none;color:var(--muted);font-size:26px;line-height:1;cursor:pointer;padding:0 2px}
+.price-close:hover{color:var(--ink)}
+.price-field{display:block;margin-bottom:16px}
+.price-field-label{display:block;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.price-input-wrap{display:flex;align-items:center;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:0 14px;transition:border-color .15s,box-shadow .15s}
+.price-input-wrap:focus-within{border-color:var(--cyan);box-shadow:0 0 0 2px var(--cyan-dim)}
+.price-currency{font-size:20px;font-weight:800;color:var(--muted);margin-right:6px}
+.price-input-wrap input{flex:1;min-width:0;background:none;border:none;outline:none;color:var(--ink);font:inherit;font-size:22px;font-weight:800;padding:14px 0;font-variant-numeric:tabular-nums}
+.price-rows{display:flex;flex-direction:column;gap:9px;padding:14px 2px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:16px}
+.price-row{display:flex;align-items:center;justify-content:space-between;font-size:14px;color:var(--muted)}
+.price-row span:last-child{font-variant-numeric:tabular-nums;font-weight:700;color:var(--ink)}
+.price-row.price-total{font-size:16px;font-weight:800;color:var(--ink);padding-top:9px;border-top:1px dashed var(--border)}
+.price-row.price-total span:last-child{color:var(--cyan);font-size:19px}
+.price-err{color:var(--danger);font-size:13px;font-weight:600;margin-bottom:12px}
+.price-err[hidden]{display:none}
+.price-confirm{width:100%;padding:15px;border:none;border-radius:10px;background:var(--cyan);color:#0f0f10;font:inherit;font-size:16px;font-weight:800;cursor:pointer;transition:opacity .15s,transform .1s}
+.price-confirm:hover{opacity:.9}
+.price-confirm:active{transform:scale(.98)}
+.price-note{margin:12px 0 0;font-size:11.5px;line-height:1.5;color:var(--muted-2,var(--muted));text-align:center}
 
 /* ════════ Unified Aston loader (identical across admin / dispatch / tech) ════════ */
 .aston-spinner{
@@ -406,6 +444,29 @@ a{color:inherit;text-decoration:none}
 .myjob-line{display:flex;gap:7px;font-size:13px;color:var(--muted);line-height:1.35;margin-top:2px}
 .myjob-line svg{width:13px;height:13px;flex-shrink:0;margin-top:2px;color:var(--off)}
 
+/* ── Archives (past jobs under My Jobs) ── */
+.archives-link{
+  display:block;margin:16px auto 2px;padding:5px 10px;
+  background:none;border:none;cursor:pointer;font:inherit;
+  color:var(--muted);font-size:12.5px;letter-spacing:.04em;
+  text-decoration:underline;text-underline-offset:3px;opacity:.65;
+  transition:opacity .15s ease,color .15s ease;
+}
+.archives-link:hover,.archives-link:focus-visible{opacity:1;color:var(--cyan);outline:none}
+.archives-back{background:none;border:none;cursor:pointer;font:inherit;color:var(--muted);font-size:13px;padding:0 0 10px;display:inline-flex;align-items:center;gap:4px}
+.archives-back:hover{color:var(--cyan)}
+.archives-filter{display:flex;gap:6px;margin:4px 0 14px;flex-wrap:wrap}
+.arch-filter-btn{
+  flex:1 1 auto;min-width:64px;padding:8px 6px;border-radius:8px;cursor:pointer;font:inherit;
+  background:var(--surface2);border:1px solid var(--border);color:var(--muted);
+  font-size:12.5px;font-weight:700;transition:background .15s,color .15s,border-color .15s;
+}
+.arch-filter-btn:hover{color:var(--ink)}
+.arch-filter-btn.is-active{background:var(--cyan-dim);border-color:var(--cyan);color:var(--cyan)}
+.arch-card{cursor:default}
+.arch-card:active{transform:none}
+.arch-price{margin-left:8px;font-weight:800;color:var(--ok);font-size:13px;font-variant-numeric:tabular-nums}
+
 /* ── Toast ── */
 .toast{
   position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(0);
@@ -431,6 +492,44 @@ a{color:inherit;text-decoration:none}
   .status-btn[data-s="offline"]{grid-column:2/3}
   .shift-timer{grid-column:3/4;flex-direction:column;gap:5px;padding:12px 4px}
   .shift-timer-val{font-size:13px;letter-spacing:.04em}
+}
+
+/* ── First-run: one big, centered, pulsing "Active" button ── */
+/* Only on the very first offline/unset load: hide the other four statuses and
+   present a single prominent Active CTA. The timer keeps its place. */
+.status-card.first-run .status-btn:not([data-s="active"]) { display: none; }
+.status-card.first-run .status-btn[data-s="active"] {
+  grid-column: 1 / 3;            /* phones: span the two left cells; timer keeps the 3rd */
+  min-height: 104px;
+  font-size: 16px;
+  letter-spacing: .08em;
+  border-color: var(--ok);
+  color: var(--ink);
+  background: rgba(34,197,94,.12);
+  animation: bigActivePulse 2.4s ease-in-out infinite;
+}
+.status-card.first-run .status-btn[data-s="active"] .status-icon { width: 30px; height: 30px; color: var(--ok); }
+@keyframes bigActivePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0), 0 0 16px 0 rgba(34,197,94,.22); transform: scale(1); }
+  50%      { box-shadow: 0 0 0 6px rgba(34,197,94,.10), 0 0 30px 3px rgba(34,197,94,.42); transform: scale(1.015); }
+}
+@media (min-width: 441px) {
+  /* tablet/desktop: span the full row; the timer sits on its own row below */
+  .status-card.first-run .status-btn[data-s="active"] { grid-column: 1 / -1; min-height: 92px; }
+}
+/* Tap → the Active button settles into the first slot, then the other four
+   stagger in. Pure CSS — JS only toggles the .revealing / .first-run classes. */
+.status-card.revealing .status-btn[data-s="active"] { animation: activeSettle .42s cubic-bezier(.2,.7,.3,1.2) both; }
+.status-card.revealing .status-btn:not([data-s="active"]) { animation: statusReveal .4s cubic-bezier(.2,.7,.3,1.2) both; }
+.status-card.revealing .status-btn[data-s="away"]    { animation-delay: .30s; }
+.status-card.revealing .status-btn[data-s="busy"]    { animation-delay: .37s; }
+.status-card.revealing .status-btn[data-s="meet"]    { animation-delay: .44s; }
+.status-card.revealing .status-btn[data-s="offline"] { animation-delay: .51s; }
+@keyframes activeSettle { from { transform: scale(1.06); } to { transform: none; } }
+@keyframes statusReveal { from { opacity: 0; transform: translateY(10px) scale(.82); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .status-card.first-run .status-btn[data-s="active"] { animation: none; }
+  .status-card.revealing .status-btn { animation: none; }
 }
 </style>
 </head>
@@ -472,7 +571,7 @@ a{color:inherit;text-decoration:none}
   <div class="portal-body">
 
     <!-- Status selector -->
-    <div class="card">
+    <div class="card status-card" id="statusCard">
       <div class="card-title">My Status</div>
       <div class="status-grid">
         <button class="status-btn" data-s="active"><svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>Active</button>
@@ -527,6 +626,9 @@ a{color:inherit;text-decoration:none}
         <div class="action-grid">
           <button id="assignSelfBtn" class="action-btn btn-assign">Assign to Me</button>
 
+          <!-- Finish — opens the pricing popup; confirming it enables Slide + Cancel -->
+          <button id="finishBtn" class="action-btn btn-finish" hidden>Finish</button>
+
           <!-- Slide to Complete (replaces the old Complete button) -->
           <div id="completeSlide" class="slide is-disabled" aria-disabled="true">
             <div class="slide-fill" id="slideFill"><div class="slide-symbols" id="slideSymbols" aria-hidden="true"></div></div>
@@ -568,11 +670,26 @@ a{color:inherit;text-decoration:none}
 
     <!-- My Jobs panel -->
     <div id="myJobsPanel" class="portal-panel" hidden>
-      <div class="card">
+      <div class="card" id="myActiveCard">
         <div class="card-title">My Active Jobs</div>
         <div id="myJobsList" class="myjobs-list">
           <div class="aston-loading"><span class="aston-spinner"></span>Loading…</div>
         </div>
+        <!-- Subtle, footer-style link to past jobs -->
+        <button type="button" id="archivesLink" class="archives-link">Archives</button>
+      </div>
+
+      <!-- Archives sub-view — past jobs with a status filter -->
+      <div class="card" id="archivesView" hidden>
+        <button type="button" id="archivesBack" class="archives-back">← Back to active</button>
+        <div class="card-title">Archives</div>
+        <div class="archives-filter" id="archivesFilter" role="tablist" aria-label="Filter archived jobs">
+          <button type="button" class="arch-filter-btn is-active" data-arch="all">All</button>
+          <button type="button" class="arch-filter-btn" data-arch="completed">Completed</button>
+          <button type="button" class="arch-filter-btn" data-arch="cancelled">Cancelled</button>
+          <button type="button" class="arch-filter-btn" data-arch="approved">Approved</button>
+        </div>
+        <div id="archivesList" class="myjobs-list"></div>
       </div>
     </div><!-- /myJobsPanel -->
 
@@ -588,6 +705,31 @@ a{color:inherit;text-decoration:none}
 <div id="completeFx" class="complete-fx" aria-hidden="true">
   <svg class="complete-fx-check" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 15-16"/></svg>
   <span class="complete-fx-label">Completed</span>
+</div>
+
+<!-- Pricing popup — opened by "Finish"; Confirm locks the price + enables Slide/Cancel -->
+<div id="priceModal" class="price-modal" hidden>
+  <div class="price-box" role="dialog" aria-modal="true" aria-labelledby="priceTitle">
+    <div class="price-head">
+      <h3 id="priceTitle" class="price-title">Finish &amp; price job</h3>
+      <button type="button" id="priceClose" class="price-close" aria-label="Close">&times;</button>
+    </div>
+    <label class="price-field">
+      <span class="price-field-label">Service fee</span>
+      <div class="price-input-wrap">
+        <span class="price-currency">$</span>
+        <input id="priceFee" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" autocomplete="off"/>
+      </div>
+    </label>
+    <div class="price-rows">
+      <div class="price-row"><span>Tax (13% HST)</span><span id="priceTax">$0.00</span></div>
+      <div class="price-row" id="priceNightRow" hidden><span>Night fee · after-hours</span><span id="priceNight">$49.00</span></div>
+      <div class="price-row price-total"><span>Total</span><span id="priceTotal">$0.00</span></div>
+    </div>
+    <div class="price-err" id="priceErr" hidden></div>
+    <button type="button" id="priceConfirm" class="price-confirm">Confirm price</button>
+    <p class="price-note">Confirming locks in the price and enables <b>Slide to Complete</b>. The job isn't finished until you slide. Night fee &amp; tax are finalised on the server.</p>
+  </div>
 </div>
 
 <div id="toast" class="toast"></div>
@@ -635,12 +777,24 @@ a{color:inherit;text-decoration:none}
   var logoutBtn   = document.getElementById('logoutBtn');
 
   var statusBtns  = document.querySelectorAll('.status-btn');
+  var statusCard  = document.getElementById('statusCard');
   var jobIdInput  = document.getElementById('jobIdInput');
   var lookupBtn   = document.getElementById('lookupBtn');
   var lookupHint  = document.getElementById('lookupHint');
   var jobCard     = document.getElementById('jobCard');
   var assignSelfBtn    = document.getElementById('assignSelfBtn');
+  var finishBtn        = document.getElementById('finishBtn');
   var actionGrid       = document.querySelector('.action-grid');
+  // Pricing popup (Finish flow)
+  var priceModal   = document.getElementById('priceModal');
+  var priceFee     = document.getElementById('priceFee');
+  var priceTax     = document.getElementById('priceTax');
+  var priceNightRow= document.getElementById('priceNightRow');
+  var priceTotal   = document.getElementById('priceTotal');
+  var priceErr     = document.getElementById('priceErr');
+  var priceConfirm = document.getElementById('priceConfirm');
+  var priceClose   = document.getElementById('priceClose');
+  var confirmedServiceFee = null;   // set when the tech confirms the price; gates Slide + Cancel
   var slideEl    = document.getElementById('completeSlide');
   var slideFill  = document.getElementById('slideFill');
   var slideSymbols = document.getElementById('slideSymbols');
@@ -663,6 +817,13 @@ a{color:inherit;text-decoration:none}
   var myJobsPanel      = document.getElementById('myJobsPanel');
   var myJobsList       = document.getElementById('myJobsList');
   var myJobsCount      = document.getElementById('myJobsCount');
+  var myActiveCard     = document.getElementById('myActiveCard');
+  var archivesLink     = document.getElementById('archivesLink');
+  var archivesView     = document.getElementById('archivesView');
+  var archivesBack     = document.getElementById('archivesBack');
+  var archivesFilter   = document.getElementById('archivesFilter');
+  var archivesList     = document.getElementById('archivesList');
+  var currentArchFilter = 'all';
 
   var currentJob = null;   // last successful lookup result
   var selectedReason = null;
@@ -836,8 +997,65 @@ a{color:inherit;text-decoration:none}
     });
     if (lookupPanel) lookupPanel.hidden = tab !== 'lookup';
     if (myJobsPanel) myJobsPanel.hidden = tab !== 'myjobs';
-    if (tab === 'myjobs') loadMyJobs(false);
+    if (tab === 'myjobs') {
+      // Always default back to the active list (not the archives sub-view).
+      if (archivesView) archivesView.hidden = true;
+      if (myActiveCard) myActiveCard.hidden = false;
+      loadMyJobs(false);
+    }
   }
+
+  // ── Archives (past jobs) ──────────────────────────────────────────────────
+  function renderArchives(jobs) {
+    if (!archivesList) return;
+    if (!jobs.length) {
+      archivesList.innerHTML = '<div class="myjobs-empty">No archived jobs here.</div>';
+      return;
+    }
+    archivesList.innerHTML = jobs.map(function (job) {
+      var st = (job.status || '').toLowerCase().replace(/\s+/g, '-');
+      var total = (job.totalCharged != null ? job.totalCharged : job.price);
+      var priceHtml = (job.status === 'completed' && total != null)
+        ? '<span class="arch-price">$' + Number(total).toFixed(2) + '</span>' : '';
+      return '<div class="myjob-card arch-card">' +
+          '<div class="myjob-top">' +
+            '<span class="myjob-id">#' + esc(job.jobId || '—') + '</span>' +
+            '<span class="job-status-badge s-' + esc(st) + '">' + esc(job.status || '—') + '</span>' +
+            priceHtml +
+          '</div>' +
+          '<div class="myjob-customer">' + esc(job.customerName || '—') + '</div>' +
+          '<div class="myjob-line">' + SVG_WRENCH + '<span>' + esc(job.serviceType || '—') + '</span></div>' +
+        '</div>';
+    }).join('');
+  }
+  async function loadArchives(status) {
+    currentArchFilter = status || 'all';
+    if (archivesList) archivesList.innerHTML = '<div class="aston-loading"><span class="aston-spinner"></span>Loading…</div>';
+    var path = '/api/dispatch/my-archive' + (currentArchFilter !== 'all' ? '?status=' + encodeURIComponent(currentArchFilter) : '');
+    var res = await authFetch(path);
+    if (res.status === 401) { clearSession(); showLogin(); return; }
+    if (!res.ok || !res.data) {
+      if (archivesList) archivesList.innerHTML = '<div class="myjobs-empty">Could not load archives — try again.</div>';
+      return;
+    }
+    renderArchives(res.data.jobs || []);
+  }
+  if (archivesLink) archivesLink.addEventListener('click', function () {
+    if (myActiveCard) myActiveCard.hidden = true;
+    if (archivesView) archivesView.hidden = false;
+    loadArchives(currentArchFilter);
+  });
+  if (archivesBack) archivesBack.addEventListener('click', function () {
+    if (archivesView) archivesView.hidden = true;
+    if (myActiveCard) myActiveCard.hidden = false;
+  });
+  if (archivesFilter) archivesFilter.addEventListener('click', function (e) {
+    var b = e.target.closest('.arch-filter-btn');
+    if (!b) return;
+    archivesFilter.querySelectorAll('.arch-filter-btn').forEach(function (x) { x.classList.remove('is-active'); });
+    b.classList.add('is-active');
+    loadArchives(b.getAttribute('data-arch'));
+  });
 
   function updateMyJobsCount() {
     if (!myJobsCount) return;
@@ -924,11 +1142,29 @@ a{color:inherit;text-decoration:none}
     if (tech && tech.status) setStatusUI(STATUS_RMAP[tech.status] || tech.status);
     renderDaily();
     syncShift();   // restore the live shift timer (survives reloads)
+    maybeShowFirstRun();   // big centered Active button when offline/unset
   }
 
   // ── Status UI ──
   function setStatusUI(btnKey) {
     statusBtns.forEach(function (b) { b.classList.toggle('is-active', b.getAttribute('data-s') === btnKey); });
+  }
+
+  // First-run: on the very first offline/unset load, show one big centered
+  // "Active" button. Tapping any status (only Active is visible) reveals the
+  // full row with a staggered animation and this never re-triggers afterward.
+  function maybeShowFirstRun() {
+    if (!statusCard) return;
+    var tech = getTech();
+    var st = tech && tech.status ? tech.status : 'offline';
+    if (st === 'offline') statusCard.classList.add('first-run');
+    else statusCard.classList.remove('first-run');
+  }
+  function exitFirstRun() {
+    if (!statusCard || !statusCard.classList.contains('first-run')) return;
+    statusCard.classList.add('revealing');
+    statusCard.classList.remove('first-run');
+    setTimeout(function () { statusCard.classList.remove('revealing'); }, 1000);
   }
 
   // ── Login ──
@@ -965,6 +1201,7 @@ a{color:inherit;text-decoration:none}
       var btnKey = btn.getAttribute('data-s');
       var apiStatus = STATUS_MAP[btnKey];
       if (!apiStatus) return;
+      exitFirstRun();  // first tap (the big Active button) reveals the full row
       popIcon(btn);   // instant visual feedback; save proceeds below
       statusBtns.forEach(function (b) { b.disabled = true; });
       var res = await authFetch('/api/technicians/me/status', { method: 'PATCH', json: { status: apiStatus } });
@@ -991,6 +1228,8 @@ a{color:inherit;text-decoration:none}
     jobCard.hidden = true;
     lookupHint.textContent = '';
     jobIdInput.value = '';
+    confirmedServiceFee = null;       // clear any locked-in price
+    if (finishBtn) finishBtn.hidden = true;
     resetCancelPanel();
     slideReset(false);
   }
@@ -1068,10 +1307,16 @@ a{color:inherit;text-decoration:none}
     assignSelfBtn.hidden    = !canAssign;
     assignSelfBtn.disabled  = !canAssign;
 
+    // Finish flow: when the tech owns an open job, show "Finish" first. Slide +
+    // Cancel are visible but DISABLED until the price is confirmed in the popup.
+    confirmedServiceFee = null;             // reset pricing on every (re)render
+    finishBtn.hidden    = !canAct;
+    finishBtn.disabled  = !canAct;
+
     cancelTriggerBtn.hidden   = !canAct;
-    cancelTriggerBtn.disabled = !canAct;
+    cancelTriggerBtn.disabled = !canAct;    // Cancel is always available on an owned job
     slideEl.hidden            = !canAct;
-    setSlideEnabled(canAct);          // Complete is a slide-to-confirm control
+    setSlideEnabled(false);                 // only Slide to Complete is gated behind the price popup
 
     // Collapse the whole action row when there is nothing to do (other tech / terminal)
     if (actionGrid) actionGrid.hidden = !(canAssign || canAct);
@@ -1102,6 +1347,54 @@ a{color:inherit;text-decoration:none}
       assignSelfBtn.disabled = false;
       toast((res.data && res.data.message) || 'Could not assign.', 'err');
     }
+  });
+
+  // ── Finish → pricing popup → confirm ─────────────────────────────────────
+  // Confirming the price does NOT complete the job — it just locks the fee and
+  // unlocks Slide + Cancel. The server re-derives HST + night fee on submit.
+  var PRICE_HST = 0.13, PRICE_NIGHT_FEE = 49;
+  function isNightNow() {
+    var h = new Date().getHours();          // client-side display only
+    return h >= 21 || h < 6;
+  }
+  function money2(n) { return '$' + (Math.round(n * 100) / 100).toFixed(2); }
+  function recalcPrice() {
+    var fee = parseFloat(priceFee.value);
+    if (!isFinite(fee) || fee < 0) fee = 0;
+    var tax = Math.round(fee * PRICE_HST * 100) / 100;
+    var night = isNightNow() ? PRICE_NIGHT_FEE : 0;
+    priceTax.textContent = money2(tax);
+    priceNightRow.hidden = !night;
+    priceTotal.textContent = money2(fee + tax + night);
+  }
+  function openPriceModal() {
+    priceErr.hidden = true;
+    priceFee.value = (confirmedServiceFee != null ? confirmedServiceFee : '');
+    recalcPrice();
+    priceModal.hidden = false;
+    void priceModal.offsetWidth;
+    priceModal.classList.add('is-open');
+    setTimeout(function () { try { priceFee.focus(); } catch (e) {} }, 60);
+  }
+  function closePriceModal() {
+    priceModal.classList.remove('is-open');
+    setTimeout(function () { if (!priceModal.classList.contains('is-open')) priceModal.hidden = true; }, 200);
+  }
+  if (finishBtn) finishBtn.addEventListener('click', openPriceModal);
+  priceFee.addEventListener('input', recalcPrice);
+  priceClose.addEventListener('click', closePriceModal);
+  priceModal.addEventListener('click', function (e) { if (e.target === priceModal) closePriceModal(); });
+  document.addEventListener('keydown', function (e) { if (!priceModal.hidden && e.key === 'Escape') closePriceModal(); });
+  priceFee.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); priceConfirm.click(); } });
+  priceConfirm.addEventListener('click', function () {
+    var fee = parseFloat(priceFee.value);
+    if (!isFinite(fee) || fee < 0) { priceErr.textContent = 'Enter a valid service fee.'; priceErr.hidden = false; priceFee.focus(); return; }
+    if (fee > 1000000) { priceErr.textContent = 'That service fee is too large.'; priceErr.hidden = false; return; }
+    confirmedServiceFee = Math.round(fee * 100) / 100;
+    finishBtn.hidden = true;                 // Finish disappears
+    setSlideEnabled(true);                   // Slide to Complete becomes active (Cancel was already enabled)
+    closePriceModal();
+    toast('Price locked — slide to complete', 'ok');
   });
 
   // ── Complete (Slide to Complete) ─────────────────────────────────────────
@@ -1209,8 +1502,13 @@ a{color:inherit;text-decoration:none}
 
   async function fireComplete() {
     if (!currentJob) { slideReset(true); return; }
+    if (confirmedServiceFee == null) {        // safety net — Slide shouldn't be active without a price
+      slideReset(true);
+      toast('Tap Finish to set the price first.', 'err');
+      return;
+    }
     var id = currentJob._id || currentJob.id;
-    var res = await authFetch('/api/dispatch/' + id + '/complete', { method: 'PATCH', json: {} });
+    var res = await authFetch('/api/dispatch/' + id + '/complete', { method: 'PATCH', json: { serviceFee: confirmedServiceFee } });
     if (res.status === 401) { clearSession(); showLogin(); return; }
     if (res.ok) {
       playCompleteSound();              // 0) satisfying chime + haptic buzz

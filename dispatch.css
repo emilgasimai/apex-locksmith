@@ -516,6 +516,11 @@ textarea.ed-input { resize: vertical; min-height: 72px; line-height: 1.5; }
   .topbar-user .uname-text { max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .topbar-user .u-prefix { display: none; }  /* show just the name on small screens */
   .topbar-right { gap: 8px; }
+  /* Top-right meta (job ID, archive icon, timestamp) wraps onto its own line
+     under the badges instead of overflowing the card's right edge. */
+  .job-top { flex-wrap: wrap; }
+  .job-badges { min-width: 0; }
+  .job-top-right { flex-wrap: wrap; justify-content: flex-end; row-gap: 4px; }
 }
 
 /* Topbar theme toggle — compact, icon-only, comfortable tap target */
