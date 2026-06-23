@@ -115,37 +115,24 @@ const planLabel = document.getElementById('planLabel');
 const serviceList = document.getElementById('serviceList');
 const serviceToggle = document.getElementById('serviceToggle');
 const VISIBLE_COUNT = 4;
+// Fixed collapsed footprint (px) so the box is identical for EVERY category and
+// never jumps when switching finder tiles. Overflow lives behind the "Show All"
+// toggle — the box does not grow with content. Sized to show 4 items + a teaser.
+const COLLAPSED_HEIGHT = 150;
 let plansExpanded = false;
 let currentKey = 'home';
 
-function measureCollapsedHeight() {
-  const items = serviceList.querySelectorAll('li');
-  if (!items.length) return 0;
-  const top = serviceList.getBoundingClientRect().top;
-  const last = items[Math.min(VISIBLE_COUNT, items.length) - 1];
-  let bottom = last.getBoundingClientRect().bottom;
-  // When there are extra (hidden) services, reveal the blurred 5th item in full
-  // so users can clearly see there's more content behind the "Show All" toggle.
-  if (items.length > VISIBLE_COUNT) {
-    bottom = items[VISIBLE_COUNT].getBoundingClientRect().bottom;
-  }
-  return Math.ceil(bottom - top) + 2;
-}
-
 function applyHeights(animate) {
-  const p = PLANS[currentKey];
-  if (p.services.length <= VISIBLE_COUNT) {
-    serviceList.style.maxHeight = 'none';
-    return;
-  }
-  const target = plansExpanded ? serviceList.scrollHeight : measureCollapsedHeight();
+  // Expanded: grow to the full content height. Collapsed: snap to the fixed
+  // footprint regardless of how many services the category has.
+  const target = plansExpanded ? serviceList.scrollHeight : COLLAPSED_HEIGHT;
   if (!animate) {
     serviceList.style.transition = 'none';
-    serviceList.style.maxHeight = target + 'px';
+    serviceList.style.height = target + 'px';
     serviceList.offsetHeight;
     serviceList.style.transition = '';
   } else {
-    serviceList.style.maxHeight = target + 'px';
+    serviceList.style.height = target + 'px';
   }
 }
 

@@ -442,7 +442,7 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
 
 /* Service list box — fixed footprint so it never jumps between categories */
 .service-list-box{display:flex;flex-direction:column;}
-.service-list-box #serviceList{overflow:hidden;transition:max-height .4s ease-in-out;}
+.service-list-box #serviceList{overflow:hidden;transition:height .4s ease-in-out;}
 .service-list-box #serviceList li{transition:opacity .3s ease, transform .3s ease, filter .3s ease;}
 .service-list-box #serviceList li.service-item--extra{opacity:0;transform:translateY(-4px);transition:opacity .25s ease, transform .25s ease;}
 .service-list-box #serviceList.expanded li.service-item--extra{opacity:1;transform:translateY(0);filter:none;transition:opacity .35s ease .1s, transform .35s ease .1s, filter .35s ease .1s;}
@@ -540,6 +540,10 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
 #callFab:active{transform:scale(.96);}
 #callFab:focus-visible{outline:2px solid #27E0F5;outline-offset:3px;}
 
+/* Top dispatch-stripe phone link — hidden on phones (the CALL NOW button in the
+   mobile menu + the floating call button cover this on small screens). */
+@media (max-width:639.98px){ .topbar-tel{ display:none !important; } }
+
 /* No-rounded — brutalist */
 *{border-radius:0 !important}
 
@@ -560,6 +564,7 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
 .step-card{
   position:relative;
   overflow:hidden;
+  border-radius:18px !important; /* match .why-card badge boxes */
   background:
     radial-gradient(150px 120px at 100% 0%, rgba(39,224,245,.16), rgba(39,224,245,0) 70%),
     linear-gradient(180deg,#27272b 0%, #1e1e21 100%);

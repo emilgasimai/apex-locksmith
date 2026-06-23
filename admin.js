@@ -1984,7 +1984,98 @@
       showToast('Technician deleted');
       loadTechnicians();
     });
+
+    // Click the name/contact block → open the shift + job-history detail modal.
+    const main = row.querySelector('.people-main');
+    if (main) {
+      main.classList.add('is-clickable');
+      main.setAttribute('role', 'button');
+      main.setAttribute('tabindex', '0');
+      main.title = 'View shift & job history';
+      main.addEventListener('click', function () { openTechDetail(id, name); });
+      main.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openTechDetail(id, name); }
+      });
+    }
     return row;
+  }
+
+  /* ── Technician detail (shift history + jobs handled) ───────────────────────
+     Reuses the dashboard drill-down modal as a generic detail dialog. */
+  function techFmtDuration(sec) {
+    if (sec == null) return '—';
+    const h = Math.floor(sec / 3600), m = Math.round((sec % 3600) / 60);
+    if (h && m) return h + 'h ' + m + 'm';
+    if (h) return h + 'h';
+    return m + 'm';
+  }
+  function techFmtWhen(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ', ' +
+      d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  }
+  function renderTechDetail(shiftsData, jobsData) {
+    const summary = (shiftsData && shiftsData.summary) || {};
+    const shifts  = (shiftsData && shiftsData.shifts) || [];
+    const jobs    = (jobsData && jobsData.jobs) || [];
+    let html =
+      '<div class="tech-stats">' +
+        '<div class="tech-stat"><span class="tech-stat-num">' + esc(String(summary.totalHoursThisWeek != null ? summary.totalHoursThisWeek : 0)) + 'h</span><span class="tech-stat-label">This week</span></div>' +
+        '<div class="tech-stat"><span class="tech-stat-num">' + esc(String(summary.totalHoursThisMonth != null ? summary.totalHoursThisMonth : 0)) + 'h</span><span class="tech-stat-label">This month</span></div>' +
+        '<div class="tech-stat"><span class="tech-stat-num">' + esc(String(summary.totalShifts != null ? summary.totalShifts : 0)) + '</span><span class="tech-stat-label">Total shifts</span></div>' +
+      '</div>';
+
+    html += '<h4 class="tech-sec-title">Shift history</h4>';
+    if (!shifts.length) {
+      html += '<div class="manager-empty">No shifts recorded yet.</div>';
+    } else {
+      html += '<div class="drill-list">' + shifts.map(function (s) {
+        const ongoing = !s.endTime;
+        return '<div class="drill-row">' +
+            '<div class="drill-row-top">' +
+              '<span class="drill-jobid">' + esc(techFmtWhen(s.startTime)) + '</span>' +
+              '<span class="tech-shift-dur' + (ongoing ? ' is-ongoing' : '') + '">' + (ongoing ? 'Ongoing' : esc(techFmtDuration(s.durationSeconds))) + '</span>' +
+            '</div>' +
+            '<div class="drill-meta"><span>' + (ongoing ? 'Started ' + esc(techFmtWhen(s.startTime)) : esc(techFmtWhen(s.startTime)) + ' → ' + esc(techFmtWhen(s.endTime))) + '</span></div>' +
+          '</div>';
+      }).join('') + '</div>';
+    }
+
+    html += '<h4 class="tech-sec-title">Jobs handled</h4>';
+    if (!jobs.length) {
+      html += '<div class="manager-empty">No completed or cancelled jobs yet.</div>';
+    } else {
+      html += '<div class="drill-list">' + jobs.map(function (j) {
+        const st = (j.status || '').toLowerCase();
+        return '<div class="drill-row">' +
+            '<div class="drill-row-top">' +
+              '<span class="drill-jobid">' + (j.jobId ? '#' + esc(j.jobId) : '—') + '</span>' +
+              '<span class="drill-badge status-' + esc(st) + '">' + esc(DASH_STATUS_LABEL[j.status] || j.status || '—') + '</span>' +
+              (j.price != null ? '<span class="drill-price">' + esc(money(j.price)) + '</span>' : '') +
+            '</div>' +
+            '<div class="drill-customer">' + esc(j.customerName || 'Unknown') + '</div>' +
+            (j.completedAt ? '<div class="drill-meta"><span>' + esc(techFmtWhen(j.completedAt)) + '</span></div>' : '') +
+          '</div>';
+      }).join('') + '</div>';
+    }
+    return html;
+  }
+  async function openTechDetail(id, name) {
+    drillTitle.textContent = name || 'Technician';
+    drillSub.textContent = 'Shifts & job history';
+    drillBody.innerHTML = '<div class="aston-loading"><span class="aston-spinner"></span>Loading…</div>';
+    openDrillModal();
+    const [shiftsData, jobsData] = await Promise.all([
+      AdminStore.getTechnicianShifts(id),
+      AdminStore.getTechnicianJobsHistory(id),
+    ]);
+    if (!shiftsData && !jobsData) {
+      drillBody.innerHTML = '<div class="manager-empty">Backend unreachable — couldn’t load this technician.</div>';
+      return;
+    }
+    drillBody.innerHTML = renderTechDetail(shiftsData, jobsData);
   }
 
   function showTcErr(msg) { tcErr.textContent = msg; tcErr.hidden = false; }

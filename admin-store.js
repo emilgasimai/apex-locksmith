@@ -408,6 +408,18 @@ const AdminStore = (function () {
       return { ok: res.ok, status: res.status, message: (res.data && res.data.message) || null };
     },
 
+    // GET /api/technicians/:id/shifts → { shifts:[{startTime,endTime,durationSeconds}], summary:{totalShifts,totalHoursThisWeek,totalHoursThisMonth} }, or null.
+    async getTechnicianShifts(id) {
+      const res = await api('/api/technicians/' + encodeURIComponent(id) + '/shifts');
+      return res.ok && res.data ? res.data : null;
+    },
+
+    // GET /api/technicians/:id/jobs-history → { jobs:[{jobId,customerName,status,completedAt,price}] }, or null.
+    async getTechnicianJobsHistory(id) {
+      const res = await api('/api/technicians/' + encodeURIComponent(id) + '/jobs-history');
+      return res.ok && res.data ? res.data : null;
+    },
+
     /* ───────────── DASHBOARD / REVENUE / EXPORT ───────────── */
 
     // GET /api/dashboard/summary → overview object, or null if unreachable.
