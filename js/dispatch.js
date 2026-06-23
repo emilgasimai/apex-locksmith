@@ -1519,7 +1519,7 @@
           sel.setAttribute('data-current', next);
           var b = card.querySelector('[data-status-badge]');
           if (b) { b.className = 'badge status status-' + next; b.setAttribute('data-status-badge', ''); b.textContent = STATUS_LABEL[next]; }
-          toast('Status → ' + STATUS_LABEL[next], 'ok'); loadStats();
+          toast('Status → ' + STATUS_LABEL[next], 'status-' + next); loadStats();
         } else if (res.status !== 401) {
           sel.value = current; toast((res.data && res.data.message) || 'Could not update status.', 'err');
         }
@@ -1541,7 +1541,7 @@
         state.pending--;
         if (res.ok) {
           reconcileJob(res.data); // swap in the authoritative doc + real history
-          toast('Status → ' + STATUS_LABEL[next], 'ok');
+          toast('Status → ' + STATUS_LABEL[next], 'status-' + next);
           loadStats();
         } else if (res.status !== 401) {
           job.status = prevStatus; job.statusHistory = prevHistory; // revert

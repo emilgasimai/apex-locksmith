@@ -172,8 +172,8 @@ input:focus, select:focus {
 .topbar-brand { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
 .topbar-mark { font-weight: 800; font-size: 17px; color: var(--accent); letter-spacing: .01em; }
 .topbar-mark-sub {
-  font-size: 10px; font-weight: 700; letter-spacing: .28em; text-transform: uppercase;
-  color: var(--muted);
+  font-size: 17px; font-weight: 800; letter-spacing: .01em;
+  color: var(--ink);
 }
 .topbar-right { display: flex; align-items: center; gap: 10px; }
 .topbar-user {
@@ -475,19 +475,25 @@ textarea.ed-input { resize: vertical; min-height: 72px; line-height: 1.5; }
 .ed-actions { display: flex; gap: 8px; flex: 0 0 auto; }
 .ed-actions .btn { min-height: 36px; padding: 6px 14px; }
 
-/* Toast */
+/* Toast — uniform border (same logic as tech portal: all-sides tint matching status) */
 .toast {
   position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%) translateY(16px);
   background: var(--panel-3); color: var(--ink);
-  border: 1px solid var(--line); border-left: 3px solid var(--accent);
+  border: 1px solid var(--line);
   border-radius: 6px; padding: 11px 16px; font-size: 13px; font-weight: 600;
   box-shadow: 0 16px 40px -14px rgba(0,0,0,.8);
   opacity: 0; pointer-events: none; z-index: 200;
   transition: opacity .2s ease, transform .2s ease;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-.toast.err { border-left-color: var(--danger); }
-.toast.ok { border-left-color: var(--ok); }
+.toast.err  { border-color: var(--danger); color: var(--danger); }
+.toast.ok   { border-color: var(--ok);     color: var(--ok); }
+.toast.status-pending-review { border-color: #f0d472; color: #f0d472; }
+.toast.status-approved       { border-color: var(--accent); color: var(--accent); }
+.toast.status-assigned       { border-color: #9fd0ff; color: #9fd0ff; }
+.toast.status-in-progress    { border-color: var(--high); color: var(--high); }
+.toast.status-completed      { border-color: var(--ok);   color: var(--ok); }
+.toast.status-cancelled      { border-color: var(--danger); color: var(--danger); }
 
 /* ============================ RESPONSIVE ============================ */
 @media (max-width: 640px) {
@@ -846,7 +852,8 @@ body.is-embed .dash-main { max-width: none; }
   .topbar { padding: 0 12px; gap: 8px; }
   .topbar-right { gap: 6px; }
   #logoutBtn { padding: 8px 11px; font-size: 12.5px; min-height: 40px; }
-  .topbar-mark-sub { display: none; }          /* show just "Aston" so the row fits */
+  .topbar-mark { font-size: 16px; }
+  .topbar-mark-sub { font-size: 16px; }        /* keep "Aston Dispatch" together, just smaller */
   .topbar-user .uname-text { max-width: 72px; }
   .af-pill { flex: 1 1 auto; justify-content: center; }
   .job-phone-link { font-size: 16px; }

@@ -295,9 +295,6 @@
   function reloadDispatchFrame() {
     const f = document.getElementById('dispatchFrame');
     if (!f) return;
-    if (dispatchFrameLoaded && f.contentWindow) {
-      try { f.contentWindow.location.reload(); return; } catch (e) { /* fall through to a src reset */ }
-    }
     f.src = '/dispatch.html?embed=1';
     dispatchFrameLoaded = true;
   }

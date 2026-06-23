@@ -78,7 +78,9 @@ a{color:inherit;text-decoration:none}
   position:sticky;top:0;z-index:10;
 }
 .portal-header-left{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0}
-.portal-title{font-size:13px;font-weight:800;letter-spacing:.08em;color:var(--cyan);white-space:nowrap}
+.portal-title{font-size:15px;font-weight:800;letter-spacing:.04em;white-space:nowrap}
+.portal-title .brand-aston{color:var(--cyan)}
+.portal-title .brand-sub{color:var(--ink)}
 .portal-user{font-size:14px;font-weight:600;color:var(--ink)}
 .logout-btn{
   flex-shrink:0;white-space:nowrap;
@@ -397,6 +399,11 @@ a{color:inherit;text-decoration:none}
 }
 .toast.ok{border-color:var(--ok);color:var(--ok)}
 .toast.err{border-color:var(--danger);color:var(--danger)}
+.toast.status-active{border-color:var(--ok);color:var(--ok)}
+.toast.status-away{border-color:var(--warn);color:var(--warn)}
+.toast.status-busy{border-color:var(--busy);color:var(--busy)}
+.toast.status-meet{border-color:var(--meet);color:var(--meet)}
+.toast.status-offline{border-color:var(--off);color:var(--off)}
 .toast.show{opacity:1}
 
 @media(max-width:380px){
@@ -435,7 +442,7 @@ a{color:inherit;text-decoration:none}
 
   <header class="portal-header">
     <div class="portal-header-left">
-      <div class="portal-title">ASTON TECH PORTAL</div>
+      <div class="portal-title"><span class="brand-aston">Aston</span> <span class="brand-sub">Tech</span></div>
       <div class="portal-user" id="techNameEl"></div>
       <span class="daily-badge" id="dailyBadge" hidden></span>
     </div>
@@ -604,6 +611,7 @@ a{color:inherit;text-decoration:none}
   var lookupHint  = document.getElementById('lookupHint');
   var jobCard     = document.getElementById('jobCard');
   var assignSelfBtn    = document.getElementById('assignSelfBtn');
+  var actionGrid       = document.querySelector('.action-grid');
   var slideEl    = document.getElementById('completeSlide');
   var slideFill  = document.getElementById('slideFill');
   var slideSymbols = document.getElementById('slideSymbols');
@@ -840,7 +848,7 @@ a{color:inherit;text-decoration:none}
         setStatusUI(btnKey);
         var s = getSession();
         if (s && s.technician) { s.technician.status = apiStatus; saveSession(s); }
-        toast('Status: ' + (res.data && res.data.status ? res.data.status : apiStatus), 'ok');
+        toast('Status: ' + (res.data && res.data.status ? res.data.status : apiStatus), 'status-' + btnKey);
       } else if (res.status === 401) {
         clearSession(); showLogin();
       } else {
@@ -912,7 +920,7 @@ a{color:inherit;text-decoration:none}
     var isOthers = jobTechId && !isMine;
 
     if (isOthers) {
-      note.textContent = 'Assigned to ' + (job.assignedTo || 'another technician') + '.';
+      note.textContent = 'This job is already assigned to ' + (job.assignedTo || 'another technician') + '.';
       note.hidden = false;
     } else { note.hidden = true; }
 
@@ -921,14 +929,24 @@ a{color:inherit;text-decoration:none}
     assignSelfBtn.classList.remove('assigned-pop');
     cancelTriggerBtn.textContent = 'Cancel';
 
-    // Action buttons
-    var canAssign   = !jobTechId && !isTerminal;
-    var canAct      = isMine && !isTerminal;
+    // Action visibility — buttons are HIDDEN, not just disabled, when not applicable:
+    //   unassigned & open   → only "Assign to Me"
+    //   mine & open         → Cancel + Slide to Complete (no Assign)
+    //   another tech's job  → no action buttons at all (read-only, note shown above)
+    //   terminal            → no action buttons
+    var canAssign   = !jobTechId && !isTerminal;   // job is free to claim
+    var canAct      = isMine && !isTerminal;       // I own it and it's still open
 
     assignSelfBtn.hidden    = !canAssign;
     assignSelfBtn.disabled  = !canAssign;
-    setSlideEnabled(canAct);          // Complete is now a slide-to-confirm control
+
+    cancelTriggerBtn.hidden   = !canAct;
     cancelTriggerBtn.disabled = !canAct;
+    slideEl.hidden            = !canAct;
+    setSlideEnabled(canAct);          // Complete is a slide-to-confirm control
+
+    // Collapse the whole action row when there is nothing to do (other tech / terminal)
+    if (actionGrid) actionGrid.hidden = !(canAssign || canAct);
 
     resetCancelPanel();
     jobCard.hidden = false;
@@ -1149,7 +1167,7 @@ a{color:inherit;text-decoration:none}
     cancelSubmitBtn.textContent = 'Confirm Cancellation';
     if (res.status === 401) { clearSession(); showLogin(); return; }
     if (res.ok) {
-      toast('Job cancelled.', 'ok');
+      toast('Job cancelled.', 'err');
       currentJob = Object.assign({}, currentJob, { status: 'cancelled' });
       renderJobCard(currentJob);
       resetCancelPanel();

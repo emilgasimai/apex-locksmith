@@ -211,6 +211,8 @@ input:focus, textarea:focus {
   z-index: 70;
 }
 .topbar-brand { font-weight: 800; letter-spacing: .04em; display: inline-flex; align-items: center; gap: 9px; }
+.topbar-brand .brand-aston { color: var(--accent); }
+.topbar-brand .brand-sub   { color: var(--ink); }
 .topbar-brand-icon { width: 18px; height: 18px; flex-shrink: 0; }
 .topbar-right { display: flex; align-items: center; gap: 14px; }
 .topbar-status { font-size: 12.5px; color: var(--muted); display: inline-flex; align-items: center; gap: 7px; }
@@ -1097,22 +1099,26 @@ input:focus, textarea:focus {
 .source-bar-fill { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #1aa6b5, var(--accent)); }
 .source-val { font-family: var(--mono); font-size: 12.5px; font-weight: 700; color: var(--ink); text-align: right; }
 
-/* 4 — Needs attention */
+/* 4 — Needs attention — same construction as .sum-card (top accent stripe, no left stripe) */
 .dash-attention { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 .attn-card {
-  position: relative; background: var(--panel); border: 1px solid var(--line);
-  border-radius: 9px; padding: 14px 16px; display: flex; flex-direction: column; gap: 5px;
+  position: relative; background: linear-gradient(180deg, var(--panel) 0%, var(--bg-2) 100%);
+  border: 1px solid var(--line); border-radius: 9px; padding: 16px 18px; overflow: hidden;
+  display: flex; flex-direction: column; gap: 8px;
 }
-.attn-card::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; border-radius: 0 3px 3px 0; }
-.attn-warn::before   { background: #f4c20a; }
-.attn-prog::before   { background: var(--accent); }
-.attn-accent::before { background: #60a0ff; }
-.attn-muted::before  { background: var(--muted-2); }
-.attn-num { font-size: 24px; font-weight: 800; line-height: 1; color: var(--ink); }
+.attn-card::before {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 2px; opacity: .8;
+  background: linear-gradient(90deg, var(--accent), transparent 70%);
+}
+.attn-warn::before   { background: linear-gradient(90deg, #f4c20a, transparent 70%); }
+.attn-prog::before   { background: linear-gradient(90deg, var(--accent), transparent 70%); }
+.attn-accent::before { background: linear-gradient(90deg, #60a0ff, transparent 70%); }
+.attn-muted::before  { background: linear-gradient(90deg, var(--muted-2), transparent 70%); }
+.attn-num { font-size: 30px; font-weight: 800; line-height: 1; letter-spacing: -.02em; color: var(--ink); }
 .attn-warn .attn-num   { color: #f4c20a; }
 .attn-prog .attn-num   { color: var(--accent); }
 .attn-accent .attn-num { color: #7fb4ff; }
-.attn-label { font-size: 11px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.attn-label { font-size: 11.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
 
 /* 5 — Technician workload */
 .tech-workload { display: flex; flex-direction: column; gap: 9px; }
