@@ -90,6 +90,7 @@
   var searchForm = $('searchForm'), searchInput = $('searchInput'), searchClear = $('searchClear'), searchMeta = $('searchMeta');
   var muteToggle = $('muteToggle');
   var custModal = $('custModal'), custBody = $('custBody'), custClose = $('custClose'), custTitle = $('custTitle');
+  var agrModal = $('agrModal'), agrBody = $('agrBody'), agrClose = $('agrClose'), agrTitle = $('agrTitle');
 
   var filters = { status: '', priority: '' };
   var lastActivity = Date.now();
@@ -743,8 +744,24 @@
         '<p class="ed-val' + (!(job.aiSummary && job.aiSummary.trim()) ? ' is-empty' : '') + '" data-val>' + esc(!(job.aiSummary && job.aiSummary.trim()) ? 'No AI summary yet — click to add one.' : job.aiSummary) + '</p>' +
       '</div>' +
       jobControlsHtml(job, status) +
+      agreementProofHtml(job) +
       notesBlock +
       historyBlock;
+  }
+
+  // "View signed agreement" proof — shown only once the customer has signed.
+  // agreementSignedAt comes back on every job from the list endpoint; the full
+  // text + signature image are fetched on demand when the modal opens.
+  function agreementProofHtml(job) {
+    if (!job.agreementSignedAt) return '';
+    var id = String(job._id || job.id || '');
+    return '<div class="job-agreement">' +
+      '<button type="button" class="btn btn-ghost btn-sm btn-view-agreement" data-view-agreement data-id="' + esc(id) + '">' +
+        '<svg class="agr-ico" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg>' +
+        'View signed agreement' +
+      '</button>' +
+      '<span class="agr-signed-hint">Signed ' + esc(fmtDate(job.agreementSignedAt)) + '</span>' +
+    '</div>';
   }
 
   // statusHistory → readable rows, newest first. Each entry is a status
@@ -1331,6 +1348,8 @@
     if (delBtn) { doDelete(delBtn); return; }
     var restoreBtn = e.target.closest('.btn-restore');
     if (restoreBtn) { doRestore(restoreBtn); return; }
+    var agrBtn = e.target.closest('.btn-view-agreement');
+    if (agrBtn) { openAgreementModal(agrBtn.getAttribute('data-id')); return; }
     // History modal: small clock button on a job card, and the phone chip on note groups.
     var histPhone = e.target.closest('.job-phone-hist[data-phone]');
     if (histPhone) { openCustomerHistory(histPhone.getAttribute('data-phone')); return; }
@@ -1782,10 +1801,63 @@
   }
   if (custClose) custClose.addEventListener('click', closeCustModal);
   if (custModal) custModal.addEventListener('click', function (e) { if (e.target === custModal) closeCustModal(); });
+
+  /* ───────────── signed-agreement viewer ─────────────
+     Opens the snapshot of what the customer actually signed. We re-fetch the full
+     job (GET /:id) because the list payload omits the heavy agreementText +
+     base64 signature; those are only pulled when someone opens the proof. */
+  function openAgreementModal(id) {
+    if (!id || !agrModal) return;
+    agrModal.hidden = false;
+    void agrModal.offsetWidth;             // reflow → fade-in transition
+    agrModal.classList.add('is-open');
+    agrBody.innerHTML = '<div class="aston-loading"><span class="aston-spinner"></span>Loading…</div>';
+    agrTitle.textContent = 'Signed Agreement';
+    authedFetch('/api/dispatch/' + encodeURIComponent(id)).then(function (res) {
+      if (!res.ok) {
+        if (res.status === 401) { closeAgrModal(); return; }
+        agrBody.innerHTML = '<div class="cust-empty">' + ((res.data && res.data.message) || 'Could not load the agreement.') + '</div>';
+        return;
+      }
+      renderAgreement((res.data && res.data.job) || res.data || {});
+    });
+  }
+  function renderAgreement(job) {
+    if (!job.agreementSignedAt && !job.customerSignature && !job.agreementText) {
+      agrBody.innerHTML = '<div class="cust-empty">No signed agreement on record for this job.</div>';
+      return;
+    }
+    agrTitle.textContent = 'Signed Agreement' + (job.jobId ? ' · #' + job.jobId : '');
+    var when = job.agreementSignedAt
+      ? new Date(job.agreementSignedAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })
+      : '—';
+    var sigImg = job.customerSignature
+      ? '<img class="agr-sig-img" src="' + esc(job.customerSignature) + '" alt="Customer signature"/>'
+      : '<div class="agr-sig-empty">No signature image on file.</div>';
+    agrBody.innerHTML =
+      '<div class="agr-meta">' +
+        '<span class="agr-meta-name">' + esc(job.customerName || 'Customer') + '</span>' +
+        '<span class="agr-meta-when">Signed ' + esc(when) + '</span>' +
+      '</div>' +
+      '<div class="agr-doc">' + esc(job.agreementText || 'No agreement text was captured.') + '</div>' +
+      '<div class="agr-sig-wrap">' +
+        '<span class="agr-sig-label">Customer signature</span>' +
+        '<div class="agr-sig-box">' + sigImg + '</div>' +
+      '</div>';
+  }
+  function closeAgrModal() {
+    if (!agrModal) return;
+    agrModal.classList.remove('is-open');
+    setTimeout(function () { if (!agrModal.classList.contains('is-open')) agrModal.hidden = true; }, 170);
+  }
+  if (agrClose) agrClose.addEventListener('click', closeAgrModal);
+  if (agrModal) agrModal.addEventListener('click', function (e) { if (e.target === agrModal) closeAgrModal(); });
+
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape') return;
     if (imgModal && !imgModal.hidden) { closeLightbox(); return; }
     if (callModal && !callModal.hidden) { closeCallModal(); return; }
+    if (agrModal && !agrModal.hidden) { closeAgrModal(); return; }
     if (custModal && !custModal.hidden) closeCustModal();
   });
 

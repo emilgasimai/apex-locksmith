@@ -2519,6 +2519,18 @@
   }
   if (dashRefreshBtn) dashRefreshBtn.addEventListener('click', loadDashboard);
 
+  // Manual pull of the latest technician availability (status dots). No auto-poll —
+  // admin clicks this to refresh after a tech changes their status in the portal.
+  const techRefreshBtn = document.getElementById('techRefreshBtn');
+  if (techRefreshBtn) techRefreshBtn.addEventListener('click', async function () {
+    techRefreshBtn.disabled = true;
+    const prev = techRefreshBtn.textContent;
+    techRefreshBtn.textContent = 'Refreshing…';
+    await loadTechnicians();
+    techRefreshBtn.textContent = prev;
+    techRefreshBtn.disabled = false;
+  });
+
   /* ── Dashboard card drill-down (modal) ──────────────────────────────────
      Clicking a summary / attention card opens a detail list of the items it
      counts (backend /api/dashboard/jobs-detail or /unread-contacts). Job rows

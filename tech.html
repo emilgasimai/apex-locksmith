@@ -244,6 +244,10 @@ a{color:inherit;text-decoration:none}
 .btn-cancel-trigger:hover:not(:disabled){background:rgba(239,68,68,.22)}
 .btn-finish{background:var(--cyan);color:#0f0f10}
 .btn-finish:hover:not(:disabled){opacity:.9}
+/* Get Signature — outlined cyan (a step before completing), distinct from the
+   solid cyan "Complete Job" that follows it. */
+.btn-get-sig{background:var(--cyan-dim);border:1px solid rgba(39,224,245,.4);color:var(--cyan)}
+.btn-get-sig:hover:not(:disabled){background:rgba(39,224,245,.22)}
 
 /* ── Pricing popup (Finish flow) ── */
 .price-modal{
@@ -549,6 +553,12 @@ a{color:inherit;text-decoration:none}
   animation: bigActivePulse 2.4s ease-in-out infinite;
 }
 .status-card.first-run .status-btn[data-s="active"] .status-icon { width: 30px; height: 30px; color: var(--ok); }
+/* The Active button carries two labels: the compact "Active" used in the normal
+   row, and a "Press to be Online" call-to-action shown only as the big first-run
+   button. CSS swaps them so the same control reads correctly in both states. */
+.sb-biglabel { display: none; }
+.status-card.first-run .status-btn[data-s="active"] .sb-label { display: none; }
+.status-card.first-run .status-btn[data-s="active"] .sb-biglabel { display: inline; text-align: center; line-height: 1.25; letter-spacing: .04em; }
 @keyframes bigActivePulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0), 0 0 16px 0 rgba(34,197,94,.22); transform: scale(1); }
   50%      { box-shadow: 0 0 0 6px rgba(34,197,94,.10), 0 0 30px 3px rgba(34,197,94,.42); transform: scale(1.015); }
@@ -571,6 +581,91 @@ a{color:inherit;text-decoration:none}
   .status-card.first-run .status-btn[data-s="active"] { animation: none; }
   .status-card.revealing .status-btn { animation: none; }
 }
+
+/* ── Customer Agreement (full-screen signature flow) ───────────────────────── */
+.agreement-view{
+  position:fixed;inset:0;z-index:400;background:var(--bg);
+  display:flex;flex-direction:column;
+  padding-top:env(safe-area-inset-top,0px);
+  animation:agreementIn .22s cubic-bezier(.2,.7,.3,1.1) both;
+}
+.agreement-view[hidden]{display:none}
+@keyframes agreementIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.agreement-header{
+  flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:14px 16px;background:var(--surface);border-bottom:1px solid var(--border);
+}
+.agreement-title{font-size:16px;font-weight:800;letter-spacing:.02em;color:var(--ink)}
+.agreement-cancel{
+  flex-shrink:0;background:transparent;border:1px solid var(--border);border-radius:6px;
+  color:var(--ink);font:inherit;font-size:13px;font-weight:600;padding:7px 16px;cursor:pointer;
+  transition:border-color .15s ease,color .15s ease;
+}
+.agreement-cancel:hover{border-color:var(--danger);color:var(--danger)}
+.agreement-cancel:active{transform:scale(.97)}
+.agreement-scroll{
+  flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:18px 18px 8px;max-width:640px;width:100%;margin:0 auto;
+}
+.agreement-text{
+  white-space:pre-wrap;font-size:14.5px;line-height:1.7;color:var(--ink);
+  letter-spacing:.005em;
+}
+.agreement-scrollhint{
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  margin:18px 0 6px;padding:10px;font-size:12.5px;font-weight:600;color:var(--cyan);
+  border:1px dashed rgba(39,224,245,.3);border-radius:8px;background:var(--cyan-dim);
+}
+.agreement-scrollhint svg{width:15px;height:15px;animation:hintBob 1.6s ease-in-out infinite}
+.agreement-scrollhint[hidden]{display:none}
+@keyframes hintBob{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
+@media(prefers-reduced-motion:reduce){.agreement-scrollhint svg{animation:none}}
+
+.agreement-sign{
+  flex-shrink:0;background:var(--surface);border-top:1px solid var(--border);
+  padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));
+  max-width:640px;width:100%;margin:0 auto;position:relative;
+}
+.agreement-sign-body{transition:opacity .2s ease}
+.agreement-sign.is-locked .agreement-sign-body{opacity:.32;pointer-events:none;filter:grayscale(.4)}
+.agreement-sign-lock{
+  display:none;font-size:12.5px;font-weight:700;letter-spacing:.04em;color:var(--warn);
+  text-align:center;margin-bottom:10px;
+}
+.agreement-sign.is-locked .agreement-sign-lock{display:block}
+.sigpad-label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--cyan);margin-bottom:8px;opacity:.7}
+.sigpad-wrap{
+  position:relative;background:#fff;
+  border:1.5px solid rgba(39,224,245,.45);border-radius:10px;
+  box-shadow:0 0 0 3px rgba(39,224,245,.08),0 6px 20px rgba(0,0,0,.5);
+  overflow:hidden;
+}
+.sigpad{display:block;width:100%;height:170px;touch-action:none;cursor:crosshair}
+.sigpad-baseline{position:absolute;left:14px;right:14px;bottom:34px;border-bottom:1.5px dashed #b8bcc3;pointer-events:none}
+.sigpad-x{position:absolute;left:16px;bottom:26px;color:#999ea6;font-size:15px;font-weight:700;pointer-events:none}
+.sigpad-clear{
+  position:absolute;top:8px;right:8px;background:rgba(0,0,0,.07);border:1px solid rgba(0,0,0,.15);
+  border-radius:6px;color:#2a2d32;font:inherit;font-size:12px;font-weight:600;padding:5px 11px;cursor:pointer;
+  transition:background .12s ease;
+}
+.sigpad-clear:hover{background:rgba(0,0,0,.14)}
+.sigpad-clear:active{transform:scale(.96)}
+.agreement-accept{
+  width:100%;margin-top:14px;padding:15px;border:none;border-radius:10px;
+  background:var(--cyan);color:#0f0f10;font:inherit;font-size:16px;font-weight:800;cursor:pointer;
+  transition:opacity .15s ease,transform .1s ease;
+}
+.agreement-accept:hover:not(:disabled){opacity:.92}
+.agreement-accept:active:not(:disabled){transform:scale(.98)}
+.agreement-accept:disabled{opacity:.4;cursor:not-allowed}
+
+/* ── View Agreement (read-only proof modal — also used inside the slide/job view) ── */
+.signed-pill{
+  display:inline-flex;align-items:center;gap:5px;margin-bottom:12px;
+  background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:var(--ok);
+  font-size:11.5px;font-weight:700;letter-spacing:.03em;padding:4px 10px;border-radius:99px;
+}
+.signed-pill svg{width:13px;height:13px}
 </style>
 </head>
 <body>
@@ -647,7 +742,7 @@ a{color:inherit;text-decoration:none}
     <div class="card status-card" id="statusCard">
       <div class="card-title">My Status</div>
       <div class="status-grid">
-        <button class="status-btn" data-s="active"><svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>Active</button>
+        <button class="status-btn" data-s="active"><svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg><span class="sb-label">Active</span><span class="sb-biglabel">Press to be Online</span></button>
         <button class="status-btn" data-s="away"><svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Away</button>
         <button class="status-btn" data-s="busy"><svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 12h6"/></svg>Busy</button>
         <button class="status-btn" data-s="meet"><svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>Meeting</button>
@@ -699,8 +794,13 @@ a{color:inherit;text-decoration:none}
         <div class="action-grid">
           <button id="assignSelfBtn" class="action-btn btn-assign">Assign to Me</button>
 
-          <!-- Finish — opens the pricing popup; confirming it enables Slide + Cancel -->
-          <button id="finishBtn" class="action-btn btn-finish" hidden>Finish</button>
+          <!-- Get Signature — opens the Customer Agreement on an assigned job
+               (before the customer signs). Signing advances the job to in-progress. -->
+          <button id="getSignatureBtn" class="action-btn btn-get-sig" hidden>Get Signature</button>
+
+          <!-- Complete Job — appears once the agreement is signed; opens the
+               pricing popup (confirming it enables Slide to Complete + Cancel) -->
+          <button id="completeJobBtn" class="action-btn btn-finish" hidden>Complete Job</button>
 
           <!-- Slide to Complete (replaces the old Complete button) -->
           <div id="completeSlide" class="slide is-disabled" aria-disabled="true">
@@ -805,6 +905,37 @@ a{color:inherit;text-decoration:none}
   </div>
 </div>
 
+<!-- ==================== CUSTOMER AGREEMENT (full-screen) ==================== -->
+<!-- Opened by "Get Signature". The customer reads the agreement (the sign panel
+     stays locked until they scroll to the very bottom), then signs on the pad and
+     taps "I Accept" (enabled only after scroll-to-bottom AND a drawn signature). -->
+<div id="agreementView" class="agreement-view" hidden role="dialog" aria-modal="true" aria-labelledby="agreementTitle">
+  <header class="agreement-header">
+    <h2 class="agreement-title" id="agreementTitle">Customer Agreement</h2>
+    <button type="button" id="agreementCancel" class="agreement-cancel">Cancel</button>
+  </header>
+  <div id="agreementScroll" class="agreement-scroll">
+    <div id="agreementText" class="agreement-text"></div>
+    <div class="agreement-scrollhint" id="agreementScrollHint">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
+      Scroll down to read the full agreement
+    </div>
+  </div>
+  <div class="agreement-sign is-locked" id="agreementSign">
+    <div class="agreement-sign-lock" id="agreementSignLock">Read to the end of the agreement to sign.</div>
+    <div class="agreement-sign-body">
+      <div class="sigpad-label">Customer signature</div>
+      <div class="sigpad-wrap">
+        <canvas id="sigPad" class="sigpad" aria-label="Signature pad"></canvas>
+        <span class="sigpad-baseline" aria-hidden="true"></span>
+        <span class="sigpad-x" aria-hidden="true">✕</span>
+        <button type="button" id="sigClear" class="sigpad-clear">Clear</button>
+      </div>
+      <button type="button" id="agreementAccept" class="agreement-accept" disabled>I Accept</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast" class="toast"></div>
 
 <script src="config.js?v=1"></script>
@@ -863,8 +994,19 @@ a{color:inherit;text-decoration:none}
   var lookupHint  = document.getElementById('lookupHint');
   var jobCard     = document.getElementById('jobCard');
   var assignSelfBtn    = document.getElementById('assignSelfBtn');
-  var finishBtn        = document.getElementById('finishBtn');
+  var getSignatureBtn  = document.getElementById('getSignatureBtn');
+  var completeJobBtn   = document.getElementById('completeJobBtn');
   var actionGrid       = document.querySelector('.action-grid');
+  // Customer Agreement (full-screen signature flow)
+  var agreementView    = document.getElementById('agreementView');
+  var agreementScroll  = document.getElementById('agreementScroll');
+  var agreementTextEl  = document.getElementById('agreementText');
+  var agreementScrollHint = document.getElementById('agreementScrollHint');
+  var agreementSign    = document.getElementById('agreementSign');
+  var agreementAccept  = document.getElementById('agreementAccept');
+  var agreementCancel  = document.getElementById('agreementCancel');
+  var sigPad           = document.getElementById('sigPad');
+  var sigClear         = document.getElementById('sigClear');
   // Pricing popup (Finish flow)
   var priceModal   = document.getElementById('priceModal');
   var priceFee     = document.getElementById('priceFee');
@@ -1046,9 +1188,8 @@ a{color:inherit;text-decoration:none}
     }
   }
   async function syncShift() {
-    if (!shiftTimerEl) return;
     var res = await authFetch('/api/technicians/me/current-shift');
-    if (res.status === 401) { clearSession(); showLogin(); return; }
+    if (res.status === 401) { clearSession(); showLogin(); return res; }
     if (res.ok && res.data && res.data.shift) {
       var sh = res.data.shift;
       var startMs = sh.startTime ? new Date(sh.startTime).getTime()
@@ -1056,6 +1197,25 @@ a{color:inherit;text-decoration:none}
       setShift(startMs);
     } else {
       setShift(null);
+    }
+    return res;   // callers (load) also read res.data.status for the first-run decision
+  }
+
+  // On portal load, confirm the technician's REAL status from the server before
+  // deciding whether to show the big "Press to be Online" prompt. Previously the
+  // decision ran off the cached session status, so an already-active tech could
+  // briefly (or persistently, if the cache was stale) see the offline prompt.
+  async function syncStatusAndShift() {
+    var res = await syncShift();
+    var serverStatus = res && res.ok && res.data ? res.data.status : null;
+    if (serverStatus) {
+      var s = getSession();
+      if (s && s.technician) { s.technician.status = serverStatus; saveSession(s); }
+      setStatusUI(STATUS_RMAP[serverStatus] || serverStatus);
+      applyFirstRun(serverStatus);
+    } else {
+      // Backend unreachable — fall back to the cached status (degrade gracefully).
+      applyFirstRun((getTech() || {}).status || 'offline');
     }
   }
 
@@ -1221,8 +1381,11 @@ a{color:inherit;text-decoration:none}
     techNameEl.textContent = tech ? ((tech.firstName || '') + ' ' + (tech.lastName || '')).trim() : '';
     if (tech && tech.status) setStatusUI(STATUS_RMAP[tech.status] || tech.status);
     renderDaily();
-    syncShift();   // restore the live shift timer (survives reloads)
-    maybeShowFirstRun();   // big centered Active button when offline/unset
+    // Start neutral (normal status row, no big prompt) and confirm the real status
+    // with the server before deciding — so an already-active tech never sees the
+    // "Press to be Online" prompt flash in. syncStatusAndShift also restores the timer.
+    if (statusCard) statusCard.classList.remove('first-run');
+    syncStatusAndShift();
   }
 
   // ── Status UI ──
@@ -1230,15 +1393,12 @@ a{color:inherit;text-decoration:none}
     statusBtns.forEach(function (b) { b.classList.toggle('is-active', b.getAttribute('data-s') === btnKey); });
   }
 
-  // First-run: on the very first offline/unset load, show one big centered
-  // "Active" button. Tapping any status (only Active is visible) reveals the
+  // First-run: when the confirmed status is offline, show one big centered
+  // "Press to be Online" button. Tapping it (only Active is visible) reveals the
   // full row with a staggered animation and this never re-triggers afterward.
-  function maybeShowFirstRun() {
+  function applyFirstRun(status) {
     if (!statusCard) return;
-    var tech = getTech();
-    var st = tech && tech.status ? tech.status : 'offline';
-    if (st === 'offline') statusCard.classList.add('first-run');
-    else statusCard.classList.remove('first-run');
+    statusCard.classList.toggle('first-run', status === 'offline');
   }
   function exitFirstRun() {
     if (!statusCard || !statusCard.classList.contains('first-run')) return;
@@ -1309,7 +1469,8 @@ a{color:inherit;text-decoration:none}
     lookupHint.textContent = '';
     jobIdInput.value = '';
     confirmedServiceFee = null;       // clear any locked-in price
-    if (finishBtn) finishBtn.hidden = true;
+    if (getSignatureBtn) getSignatureBtn.hidden = true;
+    if (completeJobBtn) completeJobBtn.hidden = true;
     resetCancelPanel();
     slideReset(false);
   }
@@ -1387,12 +1548,20 @@ a{color:inherit;text-decoration:none}
     assignSelfBtn.hidden    = !canAssign;
     assignSelfBtn.disabled  = !canAssign;
 
-    // Finish flow: when the tech owns an open job, show "Finish" first. Cancel
-    // is always visible/enabled; Slide to Complete stays COMPLETELY HIDDEN until
-    // the price is confirmed in the popup (it only appears on confirm).
+    // Agreement → completion flow on an owned, open job:
+    //   not yet signed (assigned/approved) → "Get Signature" (opens the agreement)
+    //   signed (in-progress)               → "Complete Job" (opens the pricing popup)
+    // Cancel is always visible/enabled on an owned job. Slide to Complete stays
+    // COMPLETELY HIDDEN until the price is confirmed (it appears only on confirm).
     confirmedServiceFee = null;             // reset pricing on every (re)render
-    finishBtn.hidden    = !canAct;
-    finishBtn.disabled  = !canAct;
+    var signed       = !!job.agreementSignedAt || job.status === 'in-progress';
+    var canSign      = canAct && !signed && (job.status === 'assigned' || job.status === 'approved');
+    var canComplete  = canAct && signed;
+
+    getSignatureBtn.hidden   = !canSign;
+    getSignatureBtn.disabled = !canSign;
+    completeJobBtn.hidden     = !canComplete;
+    completeJobBtn.disabled   = !canComplete;
 
     cancelTriggerBtn.hidden   = !canAct;
     cancelTriggerBtn.disabled = !canAct;    // Cancel is always available on an owned job
@@ -1461,7 +1630,7 @@ a{color:inherit;text-decoration:none}
     priceModal.classList.remove('is-open');
     setTimeout(function () { if (!priceModal.classList.contains('is-open')) priceModal.hidden = true; }, 200);
   }
-  if (finishBtn) finishBtn.addEventListener('click', openPriceModal);
+  if (completeJobBtn) completeJobBtn.addEventListener('click', openPriceModal);
   priceFee.addEventListener('input', recalcPrice);
   priceClose.addEventListener('click', closePriceModal);
   priceModal.addEventListener('click', function (e) { if (e.target === priceModal) closePriceModal(); });
@@ -1472,11 +1641,157 @@ a{color:inherit;text-decoration:none}
     if (!isFinite(fee) || fee < 0) { priceErr.textContent = 'Enter a valid service fee.'; priceErr.hidden = false; priceFee.focus(); return; }
     if (fee > 1000000) { priceErr.textContent = 'That service fee is too large.'; priceErr.hidden = false; return; }
     confirmedServiceFee = Math.round(fee * 100) / 100;
-    finishBtn.hidden = true;                 // Finish disappears
+    completeJobBtn.hidden = true;            // Complete Job disappears
     slideEl.hidden = false;                  // Slide to Complete now APPEARS (was hidden until this point)…
     setSlideEnabled(true);                   // …and becomes active (Cancel was already enabled)
     closePriceModal();
     toast('Price locked — slide to complete', 'ok');
+  });
+
+  // ── Customer Agreement → signature ───────────────────────────────────────
+  // "Get Signature" opens a full-screen agreement. The sign panel stays locked
+  // until the customer scrolls to the very bottom; "I Accept" enables only once
+  // they've scrolled AND drawn a signature. Submitting advances the job to
+  // in-progress, after which the job view shows "Complete Job" instead.
+  var AGREEMENT_FALLBACK =
+    'SERVICE AUTHORIZATION & PAYMENT AGREEMENT\n\n' +
+    'By signing below, I authorize the locksmith to perform the requested service ' +
+    'at the address provided. I confirm that I am the owner, or have the owner’s ' +
+    'authorization to request this service.\n\n' +
+    'I agree to pay the quoted service fee plus applicable taxes (Ontario HST) upon ' +
+    'completion. An after-hours surcharge applies to services performed overnight. ' +
+    'Payment is due at the time of service.\n\n' +
+    'My electronic signature below was collected on the technician’s device and ' +
+    'constitutes my consent to the above terms.';
+  var agreementTextCache = null;
+  var sigCtx = null, sigW = 0, sigH = 0, sigDrawing = false, hasSignature = false, sigReachedBottom = false;
+
+  async function loadAgreementText() {
+    if (agreementTextCache) { agreementTextEl.textContent = agreementTextCache; return; }
+    agreementTextEl.textContent = 'Loading agreement…';
+    var res = await authFetch('/api/dispatch/agreement-template');
+    agreementTextCache = (res && res.ok && res.data && res.data.text) ? res.data.text : AGREEMENT_FALLBACK;
+    agreementTextEl.textContent = agreementTextCache;
+  }
+
+  function initSigPad() {
+    if (!sigPad) return;
+    var rect = sigPad.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    sigW = Math.max(1, Math.round(rect.width));
+    sigH = Math.max(1, Math.round(rect.height || 170));
+    sigPad.width = sigW * dpr;
+    sigPad.height = sigH * dpr;
+    sigCtx = sigPad.getContext('2d');
+    sigCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    sigCtx.fillStyle = '#ffffff';
+    sigCtx.fillRect(0, 0, sigW, sigH);           // white "paper" so the saved PNG reads anywhere
+    sigCtx.lineWidth = 2.4;
+    sigCtx.lineCap = 'round';
+    sigCtx.lineJoin = 'round';
+    sigCtx.strokeStyle = '#0f0f10';
+    hasSignature = false;
+  }
+  function clearSig() {
+    if (!sigCtx) return;
+    sigCtx.fillStyle = '#ffffff';
+    sigCtx.fillRect(0, 0, sigW, sigH);
+    hasSignature = false;
+    updateAcceptState();
+  }
+  function sigPoint(e) {
+    var rect = sigPad.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+  function sigDown(e) {
+    if (!sigCtx || agreementSign.classList.contains('is-locked')) return;
+    e.preventDefault();
+    sigDrawing = true;
+    var p = sigPoint(e);
+    sigCtx.beginPath();
+    sigCtx.moveTo(p.x, p.y);
+    try { sigPad.setPointerCapture(e.pointerId); } catch (err) {}
+  }
+  function sigMove(e) {
+    if (!sigDrawing) return;
+    e.preventDefault();
+    var p = sigPoint(e);
+    sigCtx.lineTo(p.x, p.y);
+    sigCtx.stroke();
+    if (!hasSignature) { hasSignature = true; updateAcceptState(); }
+  }
+  function sigEnd() { sigDrawing = false; }
+  if (sigPad) {
+    sigPad.addEventListener('pointerdown', sigDown);
+    sigPad.addEventListener('pointermove', sigMove);
+    sigPad.addEventListener('pointerup', sigEnd);
+    sigPad.addEventListener('pointercancel', sigEnd);
+    sigPad.addEventListener('pointerleave', sigEnd);
+  }
+  if (sigClear) sigClear.addEventListener('click', clearSig);
+
+  function updateAcceptState() {
+    if (agreementAccept) agreementAccept.disabled = !(sigReachedBottom && hasSignature);
+  }
+  function unlockSign() {
+    if (sigReachedBottom) return;
+    sigReachedBottom = true;
+    agreementSign.classList.remove('is-locked');
+    if (agreementScrollHint) agreementScrollHint.hidden = true;
+    updateAcceptState();
+  }
+  function onAgreementScroll() {
+    if (!agreementScroll) return;
+    if (agreementScroll.scrollTop + agreementScroll.clientHeight >= agreementScroll.scrollHeight - 8) unlockSign();
+  }
+  if (agreementScroll) agreementScroll.addEventListener('scroll', onAgreementScroll, { passive: true });
+
+  async function openAgreement() {
+    if (!currentJob || !agreementView) return;
+    sigReachedBottom = false; hasSignature = false; sigDrawing = false;
+    agreementSign.classList.add('is-locked');
+    if (agreementScrollHint) agreementScrollHint.hidden = false;
+    if (agreementAccept) { agreementAccept.disabled = true; agreementAccept.textContent = 'I Accept'; }
+    agreementView.hidden = false;
+    await loadAgreementText();
+    requestAnimationFrame(function () {
+      initSigPad();
+      if (agreementScroll) agreementScroll.scrollTop = 0;
+      // Short agreement that fits without scrolling → nothing to scroll, unlock now.
+      if (agreementScroll && agreementScroll.scrollHeight <= agreementScroll.clientHeight + 8) unlockSign();
+    });
+  }
+  function closeAgreement() {
+    if (agreementView) agreementView.hidden = true;
+    sigDrawing = false;
+  }
+  if (getSignatureBtn) getSignatureBtn.addEventListener('click', openAgreement);
+  if (agreementCancel) agreementCancel.addEventListener('click', closeAgreement);
+
+  if (agreementAccept) agreementAccept.addEventListener('click', async function () {
+    if (agreementAccept.disabled || !currentJob || !hasSignature) return;
+    var id = currentJob._id || currentJob.id;
+    var dataUrl;
+    try { dataUrl = sigPad.toDataURL('image/png'); }
+    catch (e) { toast('Could not read the signature — try again.', 'err'); return; }
+    agreementAccept.disabled = true; agreementAccept.textContent = 'Signing…';
+    var res = await authFetch('/api/dispatch/' + id + '/sign-agreement', { method: 'PATCH', json: { signature: dataUrl } });
+    if (res.status === 401) { clearSession(); showLogin(); return; }
+    if (res.ok) {
+      var signedAt = (res.data && res.data.agreementSignedAt) || new Date().toISOString();
+      currentJob = Object.assign({}, currentJob, res.data || {}, { status: 'in-progress', agreementSignedAt: signedAt });
+      closeAgreement();
+      toast('Agreement signed ✓', 'ok');
+      renderJobCard(currentJob);     // now shows "Complete Job"
+      loadMyJobs(true);
+    } else {
+      agreementAccept.disabled = false; agreementAccept.textContent = 'I Accept';
+      toast((res.data && res.data.message) || 'Could not submit the signature.', 'err');
+    }
+  });
+  // Esc closes the agreement (Cancel stays available throughout the flow).
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && agreementView && !agreementView.hidden) closeAgreement();
   });
 
   // ── Complete (Slide to Complete) ─────────────────────────────────────────

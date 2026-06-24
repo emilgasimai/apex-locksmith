@@ -15,7 +15,7 @@
 <title>Aston Dispatch</title>
 <!-- Apply the saved theme before first paint to avoid a flash of the wrong theme. -->
 <script>try{var t=localStorage.getItem('aston_dispatch_theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}</script>
-<link rel="stylesheet" href="dispatch.css?v=16"/>
+<link rel="stylesheet" href="dispatch.css?v=17"/>
 </head>
 <body>
 
@@ -173,6 +173,17 @@
   </div>
 </div>
 
+<!-- Signed Customer Agreement viewer — opened from a job card's "View signed agreement" -->
+<div id="agrModal" class="modal-overlay" hidden>
+  <div class="modal-box agr-box" role="dialog" aria-modal="true" aria-labelledby="agrTitle">
+    <div class="cust-head">
+      <h3 id="agrTitle" class="cust-title">Signed Agreement</h3>
+      <button id="agrClose" type="button" class="icon-btn" aria-label="Close">&times;</button>
+    </div>
+    <div id="agrBody" class="agr-body"><div class="cust-loading">Loading…</div></div>
+  </div>
+</div>
+
 <!-- New Call modal -->
 <div id="callModal" class="modal-overlay" hidden>
   <div class="modal-box call-box" role="dialog" aria-modal="true" aria-labelledby="callTitle">
@@ -226,6 +237,6 @@
 </div>
 
 <script src="config.js?v=1" defer></script>
-<script src="js/dispatch.js?v=15" defer></script>
+<script src="js/dispatch.js?v=16" defer></script>
 </body>
 </html>
