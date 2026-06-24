@@ -623,6 +623,18 @@ a{color:inherit;text-decoration:none}
   padding:20px 18px calc(28px + env(safe-area-inset-bottom,0px));
   max-width:640px;width:100%;margin:0 auto;
 }
+.agreement-doc-head{
+  margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid var(--border);text-align:center;
+}
+.agreement-doc-head[hidden]{display:none}
+.agreement-doc-company{
+  font-size:26px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--cyan);line-height:1.1;
+}
+.agreement-doc-subtitle{
+  margin-top:5px;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);line-height:1.4;
+}
 .agreement-text{
   white-space:pre-wrap;font-size:14.5px;line-height:1.72;color:var(--ink);letter-spacing:.005em;
 }
@@ -944,6 +956,7 @@ body.agreement-open{overflow:hidden}
   </header>
 
   <div id="agreementScroll" class="agreement-scroll">
+    <div id="agreementDocHead" class="agreement-doc-head" hidden></div>
     <div id="agreementText" class="agreement-text"></div>
 
     <!-- Signature section — part of the scrolling document, not a glued bottom bar. -->
@@ -1032,6 +1045,7 @@ body.agreement-open{overflow:hidden}
   var agreementView    = document.getElementById('agreementView');
   var agreementScroll  = document.getElementById('agreementScroll');
   var agreementTextEl  = document.getElementById('agreementText');
+  var agreementDocHead = document.getElementById('agreementDocHead');
   var agreementScrollHint = document.getElementById('agreementScrollHint');
   var agreementSign    = document.getElementById('agreementSign');
   var agreementAccept  = document.getElementById('agreementAccept');
@@ -1736,12 +1750,38 @@ body.agreement-open{overflow:hidden}
   // the exported PNG, so the signature reads on any background it's later shown on.
   var SIG_BG = '#141417', SIG_INK = '#eef2f6';
 
+  function renderAgreementText(text) {
+    // Extract the first two lines (company name + subtitle) and display them
+    // in a styled doc-header block; the numbered body text goes below.
+    var lines = text.split('\n');
+    var company = '', subtitle = '', bodyStart = 0;
+    if (lines[0] && !lines[0].match(/^\d+\./)) {
+      company = lines[0].trim();
+      bodyStart = 1;
+      if (lines[1] && !lines[1].match(/^\d+\./) && lines[1].trim()) {
+        subtitle = lines[1].trim();
+        bodyStart = 2;
+      }
+    }
+    if (company && agreementDocHead) {
+      agreementDocHead.innerHTML =
+        '<div class="agreement-doc-company">' + company + '</div>' +
+        (subtitle ? '<div class="agreement-doc-subtitle">' + subtitle + '</div>' : '');
+      agreementDocHead.hidden = false;
+      // Skip leading blank lines after the header
+      while (bodyStart < lines.length && !lines[bodyStart].trim()) bodyStart++;
+      agreementTextEl.textContent = lines.slice(bodyStart).join('\n');
+    } else {
+      if (agreementDocHead) agreementDocHead.hidden = true;
+      agreementTextEl.textContent = text;
+    }
+  }
   async function loadAgreementText() {
-    if (agreementTextCache) { agreementTextEl.textContent = agreementTextCache; return; }
+    if (agreementTextCache) { renderAgreementText(agreementTextCache); return; }
     agreementTextEl.textContent = 'Loading agreement…';
     var res = await authFetch('/api/dispatch/agreement-template');
     agreementTextCache = (res && res.ok && res.data && res.data.text) ? res.data.text : AGREEMENT_FALLBACK;
-    agreementTextEl.textContent = agreementTextCache;
+    renderAgreementText(agreementTextCache);
   }
 
   function initSigPad() {
