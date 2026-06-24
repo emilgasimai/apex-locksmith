@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- sitemap.xml — Aston Locksmith.
+     Single-page site (one indexable public URL — the homepage; section links
+     are in-page #anchors). The /admin, /dispatch and /tech apps are private and
+     excluded (also Disallowed in robots.txt).
+     ⚠️ When the custom domain is connected, update the <loc> below AND the
+        Sitemap line in robots.txt AND baseUrl in site-config.js. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://apex-locksmith.vercel.app/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>

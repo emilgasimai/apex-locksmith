@@ -1,0 +1,18 @@
+# robots.txt — Aston Locksmith
+# NOTE: the Sitemap URL below uses the base domain. When the custom domain is
+# connected, update this line AND <loc> in sitemap.xml AND baseUrl in
+# site-config.js (static files can't read JavaScript).
+
+User-agent: *
+Allow: /
+
+# Private / staff-only apps — keep out of the index.
+# (Vercel cleanUrls serves both the clean path and the .html path, so block both.)
+Disallow: /admin
+Disallow: /admin.html
+Disallow: /dispatch
+Disallow: /dispatch.html
+Disallow: /tech
+Disallow: /tech.html
+
+Sitemap: https://apex-locksmith.vercel.app/sitemap.xml

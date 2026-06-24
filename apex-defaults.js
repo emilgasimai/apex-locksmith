@@ -56,17 +56,26 @@
       { id: 'r3', name: 'PRIYA S.', rating: 5, date: '1 month ago', text: 'Used them for our coffee shop — master key system across four doors plus a safe combination change. Took maybe 90 minutes. Receipt was exactly the quote.' }
     ],
 
-    // ── Business info (single source for phone / email / address / hours) ──
-    business: {
-      phoneTel: '+14372495464',       // used in tel:/sms: hrefs (E.164-ish)
-      phoneDisplay: '(437) 249-5464', // visible text
-      whatsapp: '14372495464',        // digits only, for wa.me
-      email: 'dispatch@astonlocksmith.co',
-      addressLine1: '123 Queen St W',
-      addressLine2: 'Toronto, ON M5V 1A1',
-      hoursDispatch: '24/7',
-      hoursShop: 'Mon–Sat 8a–6p'
-    },
+    // ── Business info ──────────────────────────────────────────────────────
+    //   Derived from site-config.js (window.SITE_CONFIG) — THE single source of
+    //   truth — so phone/email/hours stay in sync with the SEO/schema output.
+    //   Falls back to literals if site-config.js failed to load. The admin
+    //   "Business Info" panel can still override these at runtime.
+    business: (function () {
+      var S = window.SITE_CONFIG || {};
+      var p = S.phone || {};
+      var h = S.hours || {};
+      return {
+        phoneTel:     p.tel     || '+14372495464',       // tel:/sms: hrefs (E.164)
+        phoneDisplay: p.display || '(437) 249-5464',     // visible text
+        whatsapp:     p.whatsapp || '14372495464',       // digits only, for wa.me
+        email:        S.email   || 'dispatch@astonlocksmith.co',
+        addressLine1: '',                                 // no physical storefront
+        addressLine2: S.areaSummary || 'Toronto & the GTA',
+        hoursDispatch: h.dispatchLabel || '24/7',
+        hoursShop:     h.daysLabel     || 'Open 365 days a year'
+      };
+    })(),
 
     // ── Service finder (mirror of PLANS in app.js; categories are fixed) ──
     services: {

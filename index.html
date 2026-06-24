@@ -3,7 +3,30 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Aston Locksmith — Open. Fast. 24/7. Toronto | GTA</title>
+<!-- ── SEO: title + description below are NO-JS FALLBACKS. The authoritative
+     copy + all OG/Twitter/JSON-LD live in site-config.js → injected by seo.js. ── -->
+<title>Aston Locksmith — 24/7 Emergency Locksmith Toronto & GTA</title>
+<meta name="description" content="Aston Locksmith — fast, 24/7 mobile locksmith for Toronto &amp; the GTA. Emergency lockouts, car lockouts, rekeys, lock installation, commercial, automotive, safes and smart locks. Non-destructive entry, ~15-min response. Call (437) 249-5464."/>
+<meta name="robots" content="index, follow"/>
+<link rel="canonical" href="https://apex-locksmith.vercel.app/"/>
+<!-- ── Open Graph / Twitter: STATIC FALLBACKS for non-JS social scrapers
+     (Facebook, WhatsApp, iMessage, LinkedIn). seo.js re-derives these from
+     site-config.js for JS crawlers. Authoritative copy lives in site-config.js. ── -->
+<meta property="og:type" content="website"/>
+<meta property="og:site_name" content="Aston Locksmith"/>
+<meta property="og:title" content="Aston Locksmith — 24/7 Emergency Locksmith Toronto & GTA"/>
+<meta property="og:description" content="Fast, 24/7 mobile locksmith for Toronto &amp; the GTA. Emergency lockouts, car lockouts, rekeys, commercial, automotive, safes &amp; smart locks. Call (437) 249-5464."/>
+<meta property="og:url" content="https://apex-locksmith.vercel.app/"/>
+<meta property="og:image" content="https://apex-locksmith.vercel.app/brand_assets/withbg.webp"/>
+<meta property="og:locale" content="en_CA"/>
+<meta property="og:locale:alternate" content="fr_CA"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Aston Locksmith — 24/7 Emergency Locksmith Toronto & GTA"/>
+<meta name="twitter:description" content="Fast, 24/7 mobile locksmith for Toronto &amp; the GTA. Emergency lockouts, rekeys, automotive, safes &amp; smart locks."/>
+<meta name="twitter:image" content="https://apex-locksmith.vercel.app/brand_assets/withbg.webp"/>
+<!-- ⭐ Single source of truth + SEO injector — load FIRST, synchronously -->
+<script src="site-config.js?v=1"></script>
+<script src="seo.js?v=1"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
@@ -254,7 +277,7 @@
     <div class="flex gap-4 sm:gap-3 items-end">
       <div>
         <div class="font-mono t-cap" style="opacity:.6;">Triage</div>
-        <div class="font-display t-h2 uppercase mt-1">What's <span style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;">locked?</span></div>
+        <h2 class="font-display t-h2 uppercase mt-1">What's <span style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;">locked?</span></h2>
       </div>
     </div>
   </div>
@@ -349,7 +372,7 @@
     <div class="flex gap-4 sm:gap-3 items-end">
       <div>
         <div class="font-mono t-cap" style="opacity:.6;">Service catalogue</div>
-        <div class="font-display t-h2 uppercase mt-1">What <span style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;">we</span> do</div>
+        <h2 class="font-display t-h2 uppercase mt-1">What <span style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;">we</span> do</h2>
       </div>
     </div>
     <div class="hidden md:flex gap-2 shrink-0 pb-1 sec-head-ctrl">
@@ -508,7 +531,7 @@
     <div class="flex gap-4 sm:gap-3 items-end">
       <div>
         <div class="font-mono t-cap" style="opacity:.6;">Procedure</div>
-        <div class="font-display t-h2 uppercase mt-1">Three <span style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;">steps</span></div>
+        <h2 class="font-display t-h2 uppercase mt-1">Three <span style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;">steps</span></h2>
       </div>
     </div>
   </div>
@@ -543,7 +566,7 @@
       <div class="flex flex-row items-end gap-2 md:gap-3 pb-3 mb-6" style="border-bottom:3px solid #EDEDED;justify-content:center;text-align:center;">
         <div>
           <div class="font-mono t-cap" style="opacity:.6;">The shop</div>
-          <div class="font-display t-h2 uppercase mt-1">ON THE ROAD <span class="onroad-247" style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;position:relative;">24/7<span class="pulse-dot onroad-dot" aria-hidden="true"></span></span></div>
+          <h2 class="font-display t-h2 uppercase mt-1">ON THE ROAD <span class="onroad-247" style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;position:relative;">24/7<span class="pulse-dot onroad-dot" aria-hidden="true"></span></span></h2>
         </div>
       </div>
       <p class="font-body" style="font-size:clamp(15px,1.7vw,17px);line-height:1.55;margin:0 0 14px;">
@@ -570,7 +593,7 @@
       <div class="flex gap-4 sm:gap-3 items-end">
         <div>
           <div class="font-mono t-cap" style="opacity:.6;">Why us</div>
-          <div class="font-display t-h2 uppercase mt-1">Why <span class="aston-pulse" style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;">Aston</span><span class="aston-q" aria-hidden="true">?</span></div>
+          <h2 class="font-display t-h2 uppercase mt-1">Why <span class="aston-pulse" style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;">Aston</span><span class="aston-q" aria-hidden="true">?</span></h2>
         </div>
       </div>
     </div>
@@ -614,7 +637,7 @@
     <div class="flex flex-col md:flex-row gap-2 md:gap-3 items-center md:items-end">
       <div>
         <div class="font-mono t-cap" style="opacity:.6;">From our customers</div>
-        <div class="font-display t-h2 uppercase mt-1">What our <span style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;">customers</span> say</div>
+        <h2 class="font-display t-h2 uppercase mt-1">What our <span style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;">customers</span> say</h2>
       </div>
     </div>
     <!-- TODO: link to / embed real Google Reviews via Google Places API once live -->
@@ -674,7 +697,7 @@
     <div class="flex gap-4 sm:gap-3 items-end">
       <div>
         <div class="font-mono t-cap" style="opacity:.6;">Reach us</div>
-        <div class="font-display t-h2 uppercase mt-1">Pick up <span style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;">the phone</span>.</div>
+        <h2 class="font-display t-h2 uppercase mt-1">Pick up <span style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;">the phone</span>.</h2>
       </div>
     </div>
   </div>
@@ -828,11 +851,12 @@
     <!-- Service areas -->
     <div class="font-mono footer-areas" style="font-size:11px;letter-spacing:.16em;font-weight:600;text-transform:uppercase;color:#cdcdcd;line-height:1.7;margin-bottom:14px;">
       <span style="color:#27E0F5;font-weight:700;">SERVING:</span>
-      Downtown Toronto · North York · Scarborough · Etobicoke · Mississauga · Vaughan · Richmond Hill · Markham · Brampton · + All GTA Locations
+      <!-- Service-area list injected from site-config.js by seo.js -->
+      <span id="footerAreas">Downtown Toronto · North York · Scarborough · Etobicoke · Mississauga · Vaughan · Richmond Hill · Markham · Brampton · + All GTA Locations</span>
     </div>
     <!-- Meta row -->
     <div class="flex flex-wrap gap-3 justify-between items-center font-mono t-cap-sm pt-4" style="opacity:.7;font-weight:600;border-top:1px solid #3a3a3e;">
-      <span>© 2025 Aston Locksmith. ALL RIGHTS RESERVED.</span>
+      <span>© <span id="copyYear">2025</span> <span data-biz-name>Aston Locksmith</span>. ALL RIGHTS RESERVED.</span>
       <!-- TODO: re-add "LIC # — PENDING / number" once official license is obtained -->
       <span>TORONTO · GTA</span>
       <span>PRIVACY · TERMS · WARRANTY</span>
@@ -887,7 +911,7 @@
 </div>
 
 <script src="config.js?v=1" defer></script>
-<script src="apex-defaults.js?v=4" defer></script>
+<script src="apex-defaults.js?v=5" defer></script>
 <script src="content-patch.js?v=5" defer></script>
 <script src="app.js?v=13" defer></script>
 <script src="i18n.js?v=7" defer></script>
