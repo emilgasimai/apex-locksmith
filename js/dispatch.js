@@ -19,7 +19,7 @@
 
   /* ───────────── Config / constants ───────────── */
   var SESSION_KEY = 'aston_dispatch_session_v1';
-  var IDLE_MS     = 30 * 60 * 1000;  // 30-minute inactivity auto-logout
+  var IDLE_MS     = 4 * 60 * 60 * 1000;  // 4-hour inactivity auto-logout
   var REFRESH_MS  = 25 * 1000;       // job-queue auto-refresh
   var JOB_LIMIT   = 100;
   var THEME_KEY   = 'aston_dispatch_theme';   // localStorage — persists across sessions
@@ -296,11 +296,11 @@
 
   /* ───────────── session ───────────── */
   function getSession() {
-    try { var raw = sessionStorage.getItem(SESSION_KEY); return raw ? JSON.parse(raw) : null; }
+    try { var raw = localStorage.getItem(SESSION_KEY); return raw ? JSON.parse(raw) : null; }
     catch (e) { return null; }
   }
   function setSession(s) {
-    try { if (s) sessionStorage.setItem(SESSION_KEY, JSON.stringify(s)); else sessionStorage.removeItem(SESSION_KEY); }
+    try { if (s) localStorage.setItem(SESSION_KEY, JSON.stringify(s)); else localStorage.removeItem(SESSION_KEY); }
     catch (e) { /* storage blocked — non-fatal */ }
   }
   function clearSession() { setSession(null); }
@@ -313,15 +313,10 @@
   var EMBED = /[?&]embed=1(?:&|$)/.test(location.search);
   var ADMIN_SESSION_KEY = 'apex_admin_session_v1';
   function getAdminSession() {
-    try {
-      var raw = sessionStorage.getItem(ADMIN_SESSION_KEY);
-      // Same-origin iframe shares the parent's sessionStorage, but fall back to
-      // reading it through window.parent defensively.
-      if (!raw && window.parent && window.parent !== window) {
-        raw = window.parent.sessionStorage.getItem(ADMIN_SESSION_KEY);
-      }
-      return raw ? JSON.parse(raw) : null;
-    } catch (e) { return null; }
+    // Admin session now lives in localStorage (survives app close).
+    // localStorage is shared across all same-origin contexts, so no parent-frame fallback needed.
+    try { var raw = localStorage.getItem(ADMIN_SESSION_KEY); return raw ? JSON.parse(raw) : null; }
+    catch (e) { return null; }
   }
   function activeToken() {
     if (EMBED) { var a = getAdminSession(); return a && a.token; }

@@ -13,7 +13,7 @@
 (function () {
   'use strict';
 
-  const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30-minute inactivity window
+  const SESSION_TIMEOUT_MS = 4 * 60 * 60 * 1000; // 4-hour inactivity window
 
   // ── Elements ──
   const loginView   = document.getElementById('loginView');

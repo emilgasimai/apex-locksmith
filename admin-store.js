@@ -29,14 +29,14 @@
    working from the last-known state if the backend is down, and (b) the admin
    can keep editing locally — with a clear warning — until it comes back.
 
-   Session: JWT kept in memory + sessionStorage (NOT localStorage), so closing
-   the tab signs the admin out. A 401 from any call clears the session and
-   fires 'admin:unauthorized' (admin.js redirects to the login view).
+   Session: JWT kept in memory + localStorage (survives app close / background).
+   Expires after 4 hours of inactivity. A 401 from any call clears the session
+   and fires 'admin:unauthorized' (admin.js redirects to the login view).
    ============================================================================ */
 
 const AdminStore = (function () {
   const KEYS = {
-    session: 'apex_admin_session_v1',   // sessionStorage (JWT lives here)
+    session: 'apex_admin_session_v1',   // localStorage (JWT lives here)
     content: 'apex_admin_content_v1',
     carousel: 'apex_admin_carousel_v1',
     services: 'apex_admin_services_v1',
@@ -65,21 +65,30 @@ const AdminStore = (function () {
     try { window.dispatchEvent(new CustomEvent(name, { detail: detail })); } catch {}
   }
 
-  /* ── session (memory + sessionStorage) ── */
+  /* ── session (memory + localStorage, 4-hour expiry) ── */
+  const SESSION_MAX_MS = 4 * 60 * 60 * 1000; // 4 hours
   let memSession = null;
   function readSession() {
     if (memSession) return memSession;
     try {
-      const raw = sessionStorage.getItem(KEYS.session);
-      memSession = raw ? JSON.parse(raw) : null;
+      const raw = localStorage.getItem(KEYS.session);
+      const parsed = raw ? JSON.parse(raw) : null;
+      // Discard stale sessions on first read (boot check); isExpired in admin.js
+      // also catches this, but defence-in-depth for stale-token edge cases.
+      if (parsed && (Date.now() - (parsed.lastActivity || 0)) > SESSION_MAX_MS) {
+        localStorage.removeItem(KEYS.session);
+        memSession = null;
+        return null;
+      }
+      memSession = parsed;
     } catch { memSession = null; }
     return memSession;
   }
   function writeSession(s) {
     memSession = s;
     try {
-      if (s) sessionStorage.setItem(KEYS.session, JSON.stringify(s));
-      else sessionStorage.removeItem(KEYS.session);
+      if (s) localStorage.setItem(KEYS.session, JSON.stringify(s));
+      else localStorage.removeItem(KEYS.session);
     } catch {}
   }
 
