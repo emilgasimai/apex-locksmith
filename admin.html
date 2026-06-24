@@ -4,6 +4,13 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <meta name="robots" content="noindex,nofollow"/>
+<!-- iOS "Add to Home Screen": home-screen label + standalone web-app shell. -->
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Aston Admin"/>
+<link rel="apple-touch-icon" sizes="180x180" href="brand_assets/apple-touch-icon-admin.png"/>
+<link rel="icon" type="image/png" href="brand_assets/apple-touch-icon-admin.png"/>
 <title>Aston Admin</title>
 <link rel="stylesheet" href="admin.css?v=22"/>
 </head>
@@ -575,8 +582,8 @@
 <script src="apex-defaults.js?v=13"></script>
 <!-- Chart.js (admin analytics dashboard). Loaded before admin.js so window.Chart is ready; all chart code degrades gracefully if this fails to load. -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="admin-store.js?v=21"></script>
-<script src="admin.js?v=25"></script>
+<script src="admin-store.js?v=22"></script>
+<script src="admin.js?v=26"></script>
 </body>
 </html>
 

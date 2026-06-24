@@ -2047,16 +2047,28 @@
     if (!jobs.length) {
       html += '<div class="manager-empty">No completed or cancelled jobs yet.</div>';
     } else {
+      // Sorted newest-first by the backend. Each row carries the full itemized
+      // price breakdown; clicking one (when it has a jobId) deep-links into the
+      // dispatch board, which opens the same detail card as the Completed tab —
+      // handled by the shared drillBody delegate + openJobInDispatch().
       html += '<div class="drill-list">' + jobs.map(function (j) {
         const st = (j.status || '').toLowerCase();
-        return '<div class="drill-row">' +
+        const prio = j.priority || 'normal';
+        const hasJob = !!j.jobId;
+        return '<div class="drill-row drill-job' + (hasJob ? ' is-openable' : '') + '"' +
+            (hasJob ? ' data-jobid="' + attr(j.jobId) + '" role="button" tabindex="0" title="Open in dispatch board"' : '') + '>' +
             '<div class="drill-row-top">' +
               '<span class="drill-jobid">' + (j.jobId ? '#' + esc(j.jobId) : '—') + '</span>' +
               '<span class="drill-badge status-' + esc(st) + '">' + esc(DASH_STATUS_LABEL[j.status] || j.status || '—') + '</span>' +
-              (j.price != null ? '<span class="drill-price">' + esc(money(j.price)) + '</span>' : '') +
+              '<span class="drill-prio prio-' + esc(prio) + '">' + esc(prio) + '</span>' +
             '</div>' +
             '<div class="drill-customer">' + esc(j.customerName || 'Unknown') + '</div>' +
-            (j.completedAt ? '<div class="drill-meta"><span>' + esc(techFmtWhen(j.completedAt)) + '</span></div>' : '') +
+            '<div class="drill-meta">' +
+              (j.completedAt ? '<span>' + esc(techFmtWhen(j.completedAt)) + '</span>' : '') +
+              (j.serviceType ? '<span>' + esc(j.serviceType) + '</span>' : '') +
+              (j.phone ? '<span>' + esc(j.phone) + '</span>' : '') +
+            '</div>' +
+            priceBreakdownHtml(j) +
           '</div>';
       }).join('') + '</div>';
     }

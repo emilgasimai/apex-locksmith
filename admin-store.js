@@ -414,7 +414,11 @@ const AdminStore = (function () {
       return res.ok && res.data ? res.data : null;
     },
 
-    // GET /api/technicians/:id/jobs-history → { jobs:[{jobId,customerName,status,completedAt,price}] }, or null.
+    // GET /api/technicians/:id/jobs-history →
+    //   { jobs:[{ jobId, customerName, phone, serviceType, priority, status,
+    //             completedAt, serviceFee, taxAmount, nightFee, totalCharged, price }] }
+    // or null. The breakdown fields drive the inline itemized price; clicking a
+    // row deep-links into the dispatch board for the full detail card.
     async getTechnicianJobsHistory(id) {
       const res = await api('/api/technicians/' + encodeURIComponent(id) + '/jobs-history');
       return res.ok && res.data ? res.data : null;

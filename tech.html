@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="robots" content="noindex,nofollow"/>
 <meta name="theme-color" content="#0f0f10"/>
+<!-- iOS "Add to Home Screen": home-screen label + standalone web-app shell. -->
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Aston Tech"/>
+<link rel="apple-touch-icon" sizes="180x180" href="brand_assets/apple-touch-icon-tech.png"/>
+<link rel="icon" type="image/png" href="brand_assets/apple-touch-icon-tech.png"/>
 <title>Aston Tech Portal</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -33,6 +40,23 @@ a{color:inherit;text-decoration:none}
 .portal-view{min-height:100%;display:flex;flex-direction:column;padding:0;align-items:stretch}
 .portal-view[hidden]{display:none}
 [hidden]{display:none!important}
+
+/* ── Ambient drifting locksmith keys (page background) ──────────────────────
+   Pure-CSS, transform-only animation — GPU-composited, no JS/requestAnimationFrame
+   — so it stays cheap on the phones techs use in the field. Sits behind every
+   view; `contain` isolates its layout/paint so it never reflows the app. */
+.tech-bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;contain:layout paint style}
+.tech-bg-sym{position:absolute;color:var(--cyan);opacity:.055;will-change:transform;
+  animation:techBgDrift var(--dur,22s) ease-in-out infinite;animation-delay:var(--delay,0s)}
+.tech-bg-sym svg{width:100%;height:100%;display:block;fill:currentColor}
+@keyframes techBgDrift{
+  0%  {transform:translate(0,0) rotate(0deg)}
+  50% {transform:translate(var(--dx,16px),var(--dy,-20px)) rotate(var(--dr,24deg))}
+  100%{transform:translate(0,0) rotate(0deg)}
+}
+@media(prefers-reduced-motion:reduce){.tech-bg-sym{animation:none}}
+/* Foreground views sit above the ambient key layer. */
+#loginView,#portalView{position:relative;z-index:1}
 
 /* ── Login card ── */
 .login-card{
@@ -534,6 +558,26 @@ a{color:inherit;text-decoration:none}
 </style>
 </head>
 <body>
+
+<!-- ==================== AMBIENT KEY BACKGROUND ==================== -->
+<!-- Subtle, slowly-drifting locksmith glyphs. Pure CSS (transform/opacity only),
+     no JS — see .tech-bg in the stylesheet. Decorative; hidden from a11y tree. -->
+<div class="tech-bg" aria-hidden="true">
+  <span class="tech-bg-sym" style="left:6%;top:11%;width:40px;height:40px;--dx:18px;--dy:-22px;--dr:26deg;--dur:24s;--delay:-3s"><svg viewBox="0 0 24 24"><path d="M14 2a6 6 0 0 0-5.7 7.9L2 16.2V22h5.8l.6-.6V19h2v-2h2l1.2-1.2A6 6 0 1 0 14 2zm2.5 5.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg></span>
+  <span class="tech-bg-sym" style="left:23%;top:28%;width:26px;height:26px;--dx:-14px;--dy:-16px;--dr:-20deg;--dur:19s;--delay:-7s"><svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm3 8H9V7a3 3 0 0 1 6 0v3z"/></svg></span>
+  <span class="tech-bg-sym" style="left:41%;top:8%;width:34px;height:34px;opacity:.08;--dx:12px;--dy:-24px;--dr:18deg;--dur:27s;--delay:-12s"><svg viewBox="0 0 24 24"><path d="M22 6.5a5.5 5.5 0 0 1-7.4 5.2l-7.1 7.1a2.1 2.1 0 1 1-3-3l7.1-7.1A5.5 5.5 0 0 1 17 1.2L14 4.4l1.3 4 4 1.3 3.1-3.1z"/></svg></span>
+  <span class="tech-bg-sym" style="left:59%;top:22%;width:30px;height:30px;--dx:-20px;--dy:-14px;--dr:30deg;--dur:21s;--delay:-2s"><svg viewBox="0 0 24 24"><path d="M14 2a6 6 0 0 0-5.7 7.9L2 16.2V22h5.8l.6-.6V19h2v-2h2l1.2-1.2A6 6 0 1 0 14 2zm2.5 5.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg></span>
+  <span class="tech-bg-sym" style="left:79%;top:10%;width:46px;height:46px;--dx:16px;--dy:-18px;--dr:-16deg;--dur:26s;--delay:-9s"><svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm3 8H9V7a3 3 0 0 1 6 0v3z"/></svg></span>
+  <span class="tech-bg-sym" style="left:90%;top:33%;width:28px;height:28px;--dx:-12px;--dy:-20px;--dr:22deg;--dur:18s;--delay:-14s"><svg viewBox="0 0 24 24"><path d="M22 6.5a5.5 5.5 0 0 1-7.4 5.2l-7.1 7.1a2.1 2.1 0 1 1-3-3l7.1-7.1A5.5 5.5 0 0 1 17 1.2L14 4.4l1.3 4 4 1.3 3.1-3.1z"/></svg></span>
+  <span class="tech-bg-sym" style="left:9%;top:49%;width:30px;height:30px;--dx:18px;--dy:-16px;--dr:-24deg;--dur:23s;--delay:-5s"><svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm3 8H9V7a3 3 0 0 1 6 0v3z"/></svg></span>
+  <span class="tech-bg-sym" style="left:31%;top:63%;width:44px;height:44px;opacity:.075;--dx:-16px;--dy:-22px;--dr:20deg;--dur:28s;--delay:-11s"><svg viewBox="0 0 24 24"><path d="M14 2a6 6 0 0 0-5.7 7.9L2 16.2V22h5.8l.6-.6V19h2v-2h2l1.2-1.2A6 6 0 1 0 14 2zm2.5 5.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg></span>
+  <span class="tech-bg-sym" style="left:50%;top:47%;width:26px;height:26px;--dx:14px;--dy:-18px;--dr:-28deg;--dur:20s;--delay:-16s"><svg viewBox="0 0 24 24"><path d="M22 6.5a5.5 5.5 0 0 1-7.4 5.2l-7.1 7.1a2.1 2.1 0 1 1-3-3l7.1-7.1A5.5 5.5 0 0 1 17 1.2L14 4.4l1.3 4 4 1.3 3.1-3.1z"/></svg></span>
+  <span class="tech-bg-sym" style="left:68%;top:59%;width:36px;height:36px;--dx:-18px;--dy:-14px;--dr:16deg;--dur:25s;--delay:-4s"><svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm3 8H9V7a3 3 0 0 1 6 0v3z"/></svg></span>
+  <span class="tech-bg-sym" style="left:85%;top:69%;width:30px;height:30px;--dx:16px;--dy:-20px;--dr:-18deg;--dur:22s;--delay:-13s"><svg viewBox="0 0 24 24"><path d="M14 2a6 6 0 0 0-5.7 7.9L2 16.2V22h5.8l.6-.6V19h2v-2h2l1.2-1.2A6 6 0 1 0 14 2zm2.5 5.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg></span>
+  <span class="tech-bg-sym" style="left:14%;top:81%;width:38px;height:38px;--dx:-14px;--dy:-22px;--dr:24deg;--dur:26s;--delay:-8s"><svg viewBox="0 0 24 24"><path d="M22 6.5a5.5 5.5 0 0 1-7.4 5.2l-7.1 7.1a2.1 2.1 0 1 1-3-3l7.1-7.1A5.5 5.5 0 0 1 17 1.2L14 4.4l1.3 4 4 1.3 3.1-3.1z"/></svg></span>
+  <span class="tech-bg-sym" style="left:45%;top:87%;width:28px;height:28px;--dx:18px;--dy:-16px;--dr:-22deg;--dur:19s;--delay:-15s"><svg viewBox="0 0 24 24"><path d="M14 2a6 6 0 0 0-5.7 7.9L2 16.2V22h5.8l.6-.6V19h2v-2h2l1.2-1.2A6 6 0 1 0 14 2zm2.5 5.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg></span>
+  <span class="tech-bg-sym" style="left:73%;top:89%;width:42px;height:42px;--dx:-16px;--dy:-18px;--dr:28deg;--dur:27s;--delay:-6s"><svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm3 8H9V7a3 3 0 0 1 6 0v3z"/></svg></span>
+</div>
 
 <!-- ==================== LOGIN VIEW ==================== -->
 <div id="loginView" class="view">
@@ -1307,16 +1351,17 @@ a{color:inherit;text-decoration:none}
     assignSelfBtn.hidden    = !canAssign;
     assignSelfBtn.disabled  = !canAssign;
 
-    // Finish flow: when the tech owns an open job, show "Finish" first. Slide +
-    // Cancel are visible but DISABLED until the price is confirmed in the popup.
+    // Finish flow: when the tech owns an open job, show "Finish" first. Cancel
+    // is always visible/enabled; Slide to Complete stays COMPLETELY HIDDEN until
+    // the price is confirmed in the popup (it only appears on confirm).
     confirmedServiceFee = null;             // reset pricing on every (re)render
     finishBtn.hidden    = !canAct;
     finishBtn.disabled  = !canAct;
 
     cancelTriggerBtn.hidden   = !canAct;
     cancelTriggerBtn.disabled = !canAct;    // Cancel is always available on an owned job
-    slideEl.hidden            = !canAct;
-    setSlideEnabled(false);                 // only Slide to Complete is gated behind the price popup
+    slideEl.hidden            = true;       // hidden on every (re)render — revealed only after price confirm
+    setSlideEnabled(false);                 // and gated disabled until the price popup is confirmed
 
     // Collapse the whole action row when there is nothing to do (other tech / terminal)
     if (actionGrid) actionGrid.hidden = !(canAssign || canAct);
@@ -1392,7 +1437,8 @@ a{color:inherit;text-decoration:none}
     if (fee > 1000000) { priceErr.textContent = 'That service fee is too large.'; priceErr.hidden = false; return; }
     confirmedServiceFee = Math.round(fee * 100) / 100;
     finishBtn.hidden = true;                 // Finish disappears
-    setSlideEnabled(true);                   // Slide to Complete becomes active (Cancel was already enabled)
+    slideEl.hidden = false;                  // Slide to Complete now APPEARS (was hidden until this point)…
+    setSlideEnabled(true);                   // …and becomes active (Cancel was already enabled)
     closePriceModal();
     toast('Price locked — slide to complete', 'ok');
   });
