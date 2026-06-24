@@ -555,13 +555,13 @@ a{color:inherit;text-decoration:none}
   min-height: 104px;
   font-size: 16px;
   letter-spacing: .08em;
-  border-color: var(--ok);
+  border-color: transparent;
   color: var(--ink);
-  background: rgba(34,197,94,.12);
+  background: transparent;
 }
 .status-card.first-run .status-btn[data-s="active"] .status-icon {
-  width: 30px; height: 30px; color: var(--ok);
-  animation: iconPulse 2s ease-in-out infinite;
+  width: 30px; height: 30px; color: var(--cyan);
+  animation: iconPulse 1.2s ease-in-out infinite;
   transform-origin: center center;
 }
 /* The Active button carries two labels: the compact "Active" used in the normal
@@ -572,8 +572,8 @@ a{color:inherit;text-decoration:none}
 .status-card.first-run .status-btn[data-s="active"] .sb-biglabel { display: inline; text-align: center; line-height: 1.25; letter-spacing: .04em; color: var(--cyan); animation: onlineBlink 1.2s ease-in-out infinite; }
 @keyframes onlineBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 @keyframes iconPulse {
-  0%, 100% { transform: scale(1);    filter: drop-shadow(0 0 4px rgba(34,197,94,.35)); }
-  50%      { transform: scale(1.22); filter: drop-shadow(0 0 10px rgba(34,197,94,.75)); }
+  0%, 100% { transform: scale(1);    filter: drop-shadow(0 0 4px rgba(39,224,245,.4)); opacity: 1; }
+  50%      { transform: scale(1.2);  filter: drop-shadow(0 0 10px rgba(39,224,245,.8)); opacity: 0.6; }
 }
 @media (min-width: 441px) {
   /* tablet/desktop: span the full row; the timer sits on its own row below */
