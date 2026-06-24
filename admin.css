@@ -204,11 +204,13 @@ input:focus, textarea:focus {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px;
+  padding: env(safe-area-inset-top, 0px) 16px 0;
   background: var(--bg-2);
   border-bottom: 1px solid var(--line);
   position: relative;   /* establish stacking so the burger sits above the drawer */
   z-index: 70;
+  /* Stretch to cover the status-bar inset so the background fills behind the notch */
+  box-sizing: content-box;
 }
 .topbar-brand { font-weight: 800; letter-spacing: .04em; display: inline-flex; align-items: center; gap: 9px; }
 .topbar-brand .brand-aston { color: var(--accent); }
@@ -495,14 +497,14 @@ input:focus, textarea:focus {
   /* Block any horizontal scroll from off-canvas / overlay panels */
   .dash-view { overflow-x: hidden; }
 
-  .topbar { padding: 0 10px; }
+  .topbar { padding: env(safe-area-inset-top, 0px) 10px 0; }
   .topbar-burger { display: inline-flex; }
   .topbar-status { display: none; }   /* free up width; not essential on phones */
 
   /* Sidebar becomes an off-canvas slide-in drawer overlay.
      Off-screen when closed (visibility:hidden) so nothing is tappable. */
   .sidebar {
-    position: fixed; top: var(--topbar-h); left: 0; bottom: 0;
+    position: fixed; top: calc(var(--topbar-h) + env(safe-area-inset-top, 0px)); left: 0; bottom: 0;
     width: 270px; max-width: 84%;
     transform: translateX(-100%);
     visibility: hidden;
@@ -516,7 +518,7 @@ input:focus, textarea:focus {
   .sidebar.is-open { transform: translateX(0); visibility: visible; transition: transform .24s cubic-bezier(.22,.61,.36,1); }
   .nav-item { padding: 14px 18px; }   /* ≥44px tap target */
   .sidebar-backdrop {
-    display: block; position: fixed; inset: var(--topbar-h) 0 0 0;
+    display: block; position: fixed; inset: calc(var(--topbar-h) + env(safe-area-inset-top, 0px)) 0 0 0;
     background: rgba(0,0,0,.55);
     opacity: 0; pointer-events: none; transition: opacity .24s ease; z-index: 55;
   }

@@ -159,10 +159,11 @@ input:focus, select:focus {
   position: sticky; top: 0; z-index: 50;
   height: var(--topbar-h);
   display: flex; align-items: center; justify-content: space-between;
-  gap: 12px; padding: 0 16px;
+  gap: 12px; padding: env(safe-area-inset-top, 0px) 16px 0;
   background: rgba(11,18,19,.86);
   -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--line);
+  box-sizing: content-box;
 }
 .topbar::before {
   content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px;
@@ -854,7 +855,7 @@ body.is-embed .dash-main { max-width: none; }
 
 /* ── Mobile: keep the topbar logout from overflowing at ~390px (Part E) ── */
 @media (max-width: 480px) {
-  .topbar { padding: 0 12px; gap: 8px; }
+  .topbar { padding: env(safe-area-inset-top, 0px) 12px 0; gap: 8px; }
   .topbar-right { gap: 6px; }
   #logoutBtn { padding: 8px 11px; font-size: 12.5px; min-height: 40px; }
   .topbar-mark { font-size: 16px; }
