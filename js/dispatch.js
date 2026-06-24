@@ -573,8 +573,7 @@
         var tid = String(t._id || t.id);
         var nm = ((t.firstName || '') + ' ' + (t.lastName || '')).trim();
         var on = jobTechId ? (tid === jobTechId) : (!!assignedName && nm.toLowerCase() === assignedName);
-        var icon = TECH_STATUS_ICON[t.status] || '⚫';
-        var label = icon + ' ' + nm + (t.openJobCount > 0 ? ' (' + t.openJobCount + ' open)' : '');
+        var label = nm + (t.openJobCount > 0 ? ' (' + t.openJobCount + ' open)' : '');
         opts += '<option value="' + esc(tid) + '"' + (on ? ' selected' : '') + '>' + esc(label) + '</option>';
       });
       return { control: '<select class="tech-select" aria-label="Assign technician">' + opts + '</select>', note: '' };
@@ -1834,9 +1833,15 @@
     var sigImg = job.customerSignature
       ? '<img class="agr-sig-img" src="' + esc(job.customerSignature) + '" alt="Customer signature"/>'
       : '<div class="agr-sig-empty">No signature image on file.</div>';
+    var techHtml = job.assignedTo
+      ? '<span class="agr-meta-tech">' +
+          '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' +
+          esc(job.assignedTo) + '</span>'
+      : '';
     agrBody.innerHTML =
       '<div class="agr-meta">' +
         '<span class="agr-meta-name">' + esc(job.customerName || 'Customer') + '</span>' +
+        techHtml +
         '<span class="agr-meta-when">Signed ' + esc(when) + '</span>' +
       '</div>' +
       '<div class="agr-doc">' + esc(job.agreementText || 'No agreement text was captured.') + '</div>' +
