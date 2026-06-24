@@ -112,8 +112,11 @@ a{color:inherit;text-decoration:none}
 .portal-header{
   display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
   padding:14px 16px;background:var(--surface);border-bottom:1px solid var(--border);
-  position:sticky;top:env(safe-area-inset-top,0px);z-index:10;
+  position:sticky;top:0;z-index:10;
 }
+/* Safe-area gap on the portal view only (not login), so the fixed background
+   shows through above the header when added to home screen on iPhone. */
+.portal-view{padding-top:env(safe-area-inset-top,0px)}
 .portal-header-left{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0}
 .portal-title{font-size:15px;font-weight:800;letter-spacing:.04em;white-space:nowrap}
 .portal-title .brand-aston{color:var(--cyan)}
