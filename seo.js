@@ -67,6 +67,9 @@
   metaProp('og:url', homeUrl);
   metaProp('og:image', ogImg);
   metaProp('og:image:alt', C.name + ' — 24/7 locksmith, ' + (C.areaSummary || 'Toronto & GTA'));
+  if (C.seo && C.seo.ogImageType)   { metaProp('og:image:type', C.seo.ogImageType); }
+  if (C.seo && C.seo.ogImageWidth)  { metaProp('og:image:width', String(C.seo.ogImageWidth)); }
+  if (C.seo && C.seo.ogImageHeight) { metaProp('og:image:height', String(C.seo.ogImageHeight)); }
   if (C.seo && C.seo.locale) { metaProp('og:locale', C.seo.locale); }
   if (C.seo && C.seo.localeAlt) { metaProp('og:locale:alternate', C.seo.localeAlt); }
 

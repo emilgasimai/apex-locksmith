@@ -101,7 +101,11 @@
       title: 'Aston Locksmith — 24/7 Emergency Locksmith Toronto & GTA',
       description: 'Aston Locksmith — fast, 24/7 mobile locksmith for Toronto & the GTA. Emergency lockouts, car lockouts, rekeys, lock installation, commercial, automotive, safes and smart locks. Non-destructive entry, ~15-min response. Call (437) 249-5464.',
       keywords: 'locksmith Toronto, emergency locksmith Toronto, 24/7 locksmith GTA, car lockout Toronto, rekey Toronto, commercial locksmith, automotive locksmith, smart locks, safe opening',
-      ogImage: 'brand_assets/withbg.webp',   // resolved to an absolute URL by seo.js
+      // Dedicated 1200×630 social-share card (regenerate with `node make-og.mjs`).
+      ogImage: 'brand_assets/og-image.jpg',  // resolved to an absolute URL by seo.js
+      ogImageWidth: 1200,
+      ogImageHeight: 630,
+      ogImageType: 'image/jpeg',
       locale: 'en_CA',
       localeAlt: 'fr_CA'
     }

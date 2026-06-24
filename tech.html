@@ -49,12 +49,23 @@ a{color:inherit;text-decoration:none}
 .tech-bg-sym{position:absolute;color:var(--cyan);opacity:.055;will-change:transform;
   animation:techBgDrift var(--dur,22s) ease-in-out infinite;animation-delay:var(--delay,0s)}
 .tech-bg-sym svg{width:100%;height:100%;display:block;fill:currentColor}
+/* ~35% of the glyphs (those tagged .is-pulse) also breathe in opacity at a
+   normal cadence — drift (transform) and pulse (opacity) compose independently. */
+.tech-bg-sym.is-pulse{
+  will-change:transform,opacity;
+  animation:techBgDrift var(--dur,22s) ease-in-out infinite, techBgPulse var(--pdur,3.1s) ease-in-out infinite;
+  animation-delay:var(--delay,0s), var(--pdelay,0s);
+}
 @keyframes techBgDrift{
   0%  {transform:translate(0,0) rotate(0deg)}
   50% {transform:translate(var(--dx,16px),var(--dy,-20px)) rotate(var(--dr,24deg))}
   100%{transform:translate(0,0) rotate(0deg)}
 }
-@media(prefers-reduced-motion:reduce){.tech-bg-sym{animation:none}}
+@keyframes techBgPulse{
+  0%,100%{opacity:.035}
+  50%    {opacity:.16}
+}
+@media(prefers-reduced-motion:reduce){.tech-bg-sym,.tech-bg-sym.is-pulse{animation:none}}
 /* Foreground views sit above the ambient key layer. */
 #loginView,#portalView{position:relative;z-index:1}
 
@@ -563,20 +574,28 @@ a{color:inherit;text-decoration:none}
 <!-- Subtle, slowly-drifting locksmith glyphs. Pure CSS (transform/opacity only),
      no JS — see .tech-bg in the stylesheet. Decorative; hidden from a11y tree. -->
 <div class="tech-bg" aria-hidden="true">
-  <span class="tech-bg-sym" style="left:6%;top:11%;width:40px;height:40px;--dx:18px;--dy:-22px;--dr:26deg;--dur:24s;--delay:-3s"><svg viewBox="0 0 24 24"><path d="M14 2a6 6 0 0 0-5.7 7.9L2 16.2V22h5.8l.6-.6V19h2v-2h2l1.2-1.2A6 6 0 1 0 14 2zm2.5 5.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg></span>
-  <span class="tech-bg-sym" style="left:23%;top:28%;width:26px;height:26px;--dx:-14px;--dy:-16px;--dr:-20deg;--dur:19s;--delay:-7s"><svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm3 8H9V7a3 3 0 0 1 6 0v3z"/></svg></span>
-  <span class="tech-bg-sym" style="left:41%;top:8%;width:34px;height:34px;opacity:.08;--dx:12px;--dy:-24px;--dr:18deg;--dur:27s;--delay:-12s"><svg viewBox="0 0 24 24"><path d="M22 6.5a5.5 5.5 0 0 1-7.4 5.2l-7.1 7.1a2.1 2.1 0 1 1-3-3l7.1-7.1A5.5 5.5 0 0 1 17 1.2L14 4.4l1.3 4 4 1.3 3.1-3.1z"/></svg></span>
-  <span class="tech-bg-sym" style="left:59%;top:22%;width:30px;height:30px;--dx:-20px;--dy:-14px;--dr:30deg;--dur:21s;--delay:-2s"><svg viewBox="0 0 24 24"><path d="M14 2a6 6 0 0 0-5.7 7.9L2 16.2V22h5.8l.6-.6V19h2v-2h2l1.2-1.2A6 6 0 1 0 14 2zm2.5 5.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg></span>
-  <span class="tech-bg-sym" style="left:79%;top:10%;width:46px;height:46px;--dx:16px;--dy:-18px;--dr:-16deg;--dur:26s;--delay:-9s"><svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm3 8H9V7a3 3 0 0 1 6 0v3z"/></svg></span>
-  <span class="tech-bg-sym" style="left:90%;top:33%;width:28px;height:28px;--dx:-12px;--dy:-20px;--dr:22deg;--dur:18s;--delay:-14s"><svg viewBox="0 0 24 24"><path d="M22 6.5a5.5 5.5 0 0 1-7.4 5.2l-7.1 7.1a2.1 2.1 0 1 1-3-3l7.1-7.1A5.5 5.5 0 0 1 17 1.2L14 4.4l1.3 4 4 1.3 3.1-3.1z"/></svg></span>
-  <span class="tech-bg-sym" style="left:9%;top:49%;width:30px;height:30px;--dx:18px;--dy:-16px;--dr:-24deg;--dur:23s;--delay:-5s"><svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm3 8H9V7a3 3 0 0 1 6 0v3z"/></svg></span>
-  <span class="tech-bg-sym" style="left:31%;top:63%;width:44px;height:44px;opacity:.075;--dx:-16px;--dy:-22px;--dr:20deg;--dur:28s;--delay:-11s"><svg viewBox="0 0 24 24"><path d="M14 2a6 6 0 0 0-5.7 7.9L2 16.2V22h5.8l.6-.6V19h2v-2h2l1.2-1.2A6 6 0 1 0 14 2zm2.5 5.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg></span>
-  <span class="tech-bg-sym" style="left:50%;top:47%;width:26px;height:26px;--dx:14px;--dy:-18px;--dr:-28deg;--dur:20s;--delay:-16s"><svg viewBox="0 0 24 24"><path d="M22 6.5a5.5 5.5 0 0 1-7.4 5.2l-7.1 7.1a2.1 2.1 0 1 1-3-3l7.1-7.1A5.5 5.5 0 0 1 17 1.2L14 4.4l1.3 4 4 1.3 3.1-3.1z"/></svg></span>
-  <span class="tech-bg-sym" style="left:68%;top:59%;width:36px;height:36px;--dx:-18px;--dy:-14px;--dr:16deg;--dur:25s;--delay:-4s"><svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm3 8H9V7a3 3 0 0 1 6 0v3z"/></svg></span>
-  <span class="tech-bg-sym" style="left:85%;top:69%;width:30px;height:30px;--dx:16px;--dy:-20px;--dr:-18deg;--dur:22s;--delay:-13s"><svg viewBox="0 0 24 24"><path d="M14 2a6 6 0 0 0-5.7 7.9L2 16.2V22h5.8l.6-.6V19h2v-2h2l1.2-1.2A6 6 0 1 0 14 2zm2.5 5.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg></span>
-  <span class="tech-bg-sym" style="left:14%;top:81%;width:38px;height:38px;--dx:-14px;--dy:-22px;--dr:24deg;--dur:26s;--delay:-8s"><svg viewBox="0 0 24 24"><path d="M22 6.5a5.5 5.5 0 0 1-7.4 5.2l-7.1 7.1a2.1 2.1 0 1 1-3-3l7.1-7.1A5.5 5.5 0 0 1 17 1.2L14 4.4l1.3 4 4 1.3 3.1-3.1z"/></svg></span>
-  <span class="tech-bg-sym" style="left:45%;top:87%;width:28px;height:28px;--dx:18px;--dy:-16px;--dr:-22deg;--dur:19s;--delay:-15s"><svg viewBox="0 0 24 24"><path d="M14 2a6 6 0 0 0-5.7 7.9L2 16.2V22h5.8l.6-.6V19h2v-2h2l1.2-1.2A6 6 0 1 0 14 2zm2.5 5.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg></span>
-  <span class="tech-bg-sym" style="left:73%;top:89%;width:42px;height:42px;--dx:-16px;--dy:-18px;--dr:28deg;--dur:27s;--delay:-6s"><svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm3 8H9V7a3 3 0 0 1 6 0v3z"/></svg></span>
+  <span class="tech-bg-sym" style="left:5%;top:9%;width:38px;height:38px;--dx:18px;--dy:-22px;--dr:26deg;--dur:24s;--delay:-3s"><svg viewBox="0 0 24 24"><path d="M14 2a6 6 0 0 0-5.7 7.9L2 16.2V22h5.8l.6-.6V19h2v-2h2l1.2-1.2A6 6 0 1 0 14 2zm2.5 5.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg></span>
+  <span class="tech-bg-sym is-pulse" style="left:17%;top:22%;width:26px;height:26px;--dx:-14px;--dy:-16px;--dr:-20deg;--dur:19s;--delay:-7s;--pdur:3s;--pdelay:-1s"><svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm3 8H9V7a3 3 0 0 1 6 0v3z"/></svg></span>
+  <span class="tech-bg-sym" style="left:30%;top:7%;width:32px;height:32px;--dx:12px;--dy:-24px;--dr:18deg;--dur:27s;--delay:-12s"><svg viewBox="0 0 24 24"><path d="M22 6.5a5.5 5.5 0 0 1-7.4 5.2l-7.1 7.1a2.1 2.1 0 1 1-3-3l7.1-7.1A5.5 5.5 0 0 1 17 1.2L14 4.4l1.3 4 4 1.3 3.1-3.1z"/></svg></span>
+  <span class="tech-bg-sym is-pulse" style="left:42%;top:18%;width:28px;height:28px;--dx:-20px;--dy:-14px;--dr:30deg;--dur:21s;--delay:-2s;--pdur:3.4s;--pdelay:-2.2s"><svg viewBox="0 0 24 24"><path d="M14 2a6 6 0 0 0-5.7 7.9L2 16.2V22h5.8l.6-.6V19h2v-2h2l1.2-1.2A6 6 0 1 0 14 2zm2.5 5.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg></span>
+  <span class="tech-bg-sym" style="left:55%;top:10%;width:40px;height:40px;--dx:16px;--dy:-18px;--dr:-16deg;--dur:26s;--delay:-9s"><svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm3 8H9V7a3 3 0 0 1 6 0v3z"/></svg></span>
+  <span class="tech-bg-sym" style="left:67%;top:24%;width:26px;height:26px;--dx:-12px;--dy:-20px;--dr:22deg;--dur:18s;--delay:-14s"><svg viewBox="0 0 24 24"><path d="M22 6.5a5.5 5.5 0 0 1-7.4 5.2l-7.1 7.1a2.1 2.1 0 1 1-3-3l7.1-7.1A5.5 5.5 0 0 1 17 1.2L14 4.4l1.3 4 4 1.3 3.1-3.1z"/></svg></span>
+  <span class="tech-bg-sym is-pulse" style="left:80%;top:8%;width:44px;height:44px;--dx:14px;--dy:-18px;--dr:-12deg;--dur:25s;--delay:-6s;--pdur:2.8s;--pdelay:-0.6s"><svg viewBox="0 0 24 24"><path d="M14 2a6 6 0 0 0-5.7 7.9L2 16.2V22h5.8l.6-.6V19h2v-2h2l1.2-1.2A6 6 0 1 0 14 2zm2.5 5.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg></span>
+  <span class="tech-bg-sym" style="left:92%;top:20%;width:28px;height:28px;--dx:-12px;--dy:-20px;--dr:22deg;--dur:23s;--delay:-10s"><svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm3 8H9V7a3 3 0 0 1 6 0v3z"/></svg></span>
+  <span class="tech-bg-sym is-pulse" style="left:9%;top:38%;width:30px;height:30px;--dx:18px;--dy:-16px;--dr:-24deg;--dur:23s;--delay:-5s;--pdur:3.2s;--pdelay:-1.6s"><svg viewBox="0 0 24 24"><path d="M22 6.5a5.5 5.5 0 0 1-7.4 5.2l-7.1 7.1a2.1 2.1 0 1 1-3-3l7.1-7.1A5.5 5.5 0 0 1 17 1.2L14 4.4l1.3 4 4 1.3 3.1-3.1z"/></svg></span>
+  <span class="tech-bg-sym" style="left:22%;top:48%;width:26px;height:26px;--dx:-16px;--dy:-18px;--dr:16deg;--dur:20s;--delay:-16s"><svg viewBox="0 0 24 24"><path d="M14 2a6 6 0 0 0-5.7 7.9L2 16.2V22h5.8l.6-.6V19h2v-2h2l1.2-1.2A6 6 0 1 0 14 2zm2.5 5.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg></span>
+  <span class="tech-bg-sym" style="left:36%;top:40%;width:36px;height:36px;--dx:-18px;--dy:-14px;--dr:16deg;--dur:25s;--delay:-4s"><svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm3 8H9V7a3 3 0 0 1 6 0v3z"/></svg></span>
+  <span class="tech-bg-sym is-pulse" style="left:49%;top:52%;width:28px;height:28px;--dx:14px;--dy:-18px;--dr:-28deg;--dur:22s;--delay:-8s;--pdur:2.7s;--pdelay:-2.8s"><svg viewBox="0 0 24 24"><path d="M22 6.5a5.5 5.5 0 0 1-7.4 5.2l-7.1 7.1a2.1 2.1 0 1 1-3-3l7.1-7.1A5.5 5.5 0 0 1 17 1.2L14 4.4l1.3 4 4 1.3 3.1-3.1z"/></svg></span>
+  <span class="tech-bg-sym" style="left:62%;top:44%;width:30px;height:30px;--dx:16px;--dy:-20px;--dr:-18deg;--dur:24s;--delay:-13s"><svg viewBox="0 0 24 24"><path d="M14 2a6 6 0 0 0-5.7 7.9L2 16.2V22h5.8l.6-.6V19h2v-2h2l1.2-1.2A6 6 0 1 0 14 2zm2.5 5.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg></span>
+  <span class="tech-bg-sym is-pulse" style="left:75%;top:54%;width:42px;height:42px;--dx:-16px;--dy:-18px;--dr:20deg;--dur:28s;--delay:-11s;--pdur:3.6s;--pdelay:-0.3s"><svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm3 8H9V7a3 3 0 0 1 6 0v3z"/></svg></span>
+  <span class="tech-bg-sym" style="left:88%;top:46%;width:26px;height:26px;--dx:-14px;--dy:-16px;--dr:24deg;--dur:19s;--delay:-15s"><svg viewBox="0 0 24 24"><path d="M22 6.5a5.5 5.5 0 0 1-7.4 5.2l-7.1 7.1a2.1 2.1 0 1 1-3-3l7.1-7.1A5.5 5.5 0 0 1 17 1.2L14 4.4l1.3 4 4 1.3 3.1-3.1z"/></svg></span>
+  <span class="tech-bg-sym" style="left:6%;top:66%;width:34px;height:34px;--dx:16px;--dy:-22px;--dr:-20deg;--dur:26s;--delay:-7s"><svg viewBox="0 0 24 24"><path d="M14 2a6 6 0 0 0-5.7 7.9L2 16.2V22h5.8l.6-.6V19h2v-2h2l1.2-1.2A6 6 0 1 0 14 2zm2.5 5.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg></span>
+  <span class="tech-bg-sym is-pulse" style="left:19%;top:78%;width:28px;height:28px;--dx:-14px;--dy:-20px;--dr:24deg;--dur:21s;--delay:-9s;--pdur:3s;--pdelay:-1.9s"><svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm3 8H9V7a3 3 0 0 1 6 0v3z"/></svg></span>
+  <span class="tech-bg-sym" style="left:33%;top:70%;width:40px;height:40px;--dx:18px;--dy:-16px;--dr:-22deg;--dur:27s;--delay:-2s"><svg viewBox="0 0 24 24"><path d="M22 6.5a5.5 5.5 0 0 1-7.4 5.2l-7.1 7.1a2.1 2.1 0 1 1-3-3l7.1-7.1A5.5 5.5 0 0 1 17 1.2L14 4.4l1.3 4 4 1.3 3.1-3.1z"/></svg></span>
+  <span class="tech-bg-sym" style="left:47%;top:84%;width:26px;height:26px;--dx:-16px;--dy:-18px;--dr:28deg;--dur:20s;--delay:-6s"><svg viewBox="0 0 24 24"><path d="M14 2a6 6 0 0 0-5.7 7.9L2 16.2V22h5.8l.6-.6V19h2v-2h2l1.2-1.2A6 6 0 1 0 14 2zm2.5 5.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg></span>
+  <span class="tech-bg-sym is-pulse" style="left:60%;top:72%;width:32px;height:32px;--dx:16px;--dy:-20px;--dr:-16deg;--dur:23s;--delay:-12s;--pdur:2.9s;--pdelay:-2.4s"><svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm3 8H9V7a3 3 0 0 1 6 0v3z"/></svg></span>
+  <span class="tech-bg-sym" style="left:74%;top:88%;width:30px;height:30px;--dx:-18px;--dy:-14px;--dr:18deg;--dur:25s;--delay:-4s"><svg viewBox="0 0 24 24"><path d="M22 6.5a5.5 5.5 0 0 1-7.4 5.2l-7.1 7.1a2.1 2.1 0 1 1-3-3l7.1-7.1A5.5 5.5 0 0 1 17 1.2L14 4.4l1.3 4 4 1.3 3.1-3.1z"/></svg></span>
+  <span class="tech-bg-sym" style="left:87%;top:76%;width:44px;height:44px;--dx:14px;--dy:-22px;--dr:-24deg;--dur:28s;--delay:-10s"><svg viewBox="0 0 24 24"><path d="M14 2a6 6 0 0 0-5.7 7.9L2 16.2V22h5.8l.6-.6V19h2v-2h2l1.2-1.2A6 6 0 1 0 14 2zm2.5 5.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg></span>
 </div>
 
 <!-- ==================== LOGIN VIEW ==================== -->
