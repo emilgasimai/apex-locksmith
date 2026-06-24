@@ -263,8 +263,16 @@ a{color:inherit;text-decoration:none}
   transform:translateY(8px) scale(.98);transition:transform .2s cubic-bezier(.2,.7,.3,1.4);
 }
 .price-modal.is-open .price-box{transform:translateY(0) scale(1)}
-.price-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.price-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px}
+.price-head-titles{display:flex;flex-direction:column;gap:3px;min-width:0}
 .price-title{margin:0;font-size:17px;font-weight:800;letter-spacing:.01em;color:var(--ink)}
+.price-jobid{
+  display:inline-block;align-self:flex-start;padding:1px 8px;border-radius:999px;
+  background:var(--cyan-dim);border:1px solid rgba(39,224,245,.3);
+  color:var(--cyan);font-size:11px;font-weight:800;letter-spacing:.05em;
+  font-variant-numeric:tabular-nums;
+}
+.price-jobid[hidden]{display:none}
 .price-close{background:none;border:none;color:var(--muted);font-size:26px;line-height:1;cursor:pointer;padding:0 2px}
 .price-close:hover{color:var(--ink)}
 .price-field{display:block;margin-bottom:16px}
@@ -605,6 +613,13 @@ a{color:inherit;text-decoration:none}
 .agreement-eyebrow{
   font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--cyan);opacity:.85;
 }
+.agreement-jobid{
+  display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;
+  background:var(--cyan-dim);border:1px solid rgba(39,224,245,.3);
+  color:var(--cyan);font-size:10px;font-weight:800;letter-spacing:.06em;opacity:1;
+  font-variant-numeric:tabular-nums;
+}
+.agreement-jobid[hidden]{display:none}
 .agreement-title{font-size:16px;font-weight:800;letter-spacing:.04em;white-space:nowrap}
 .agreement-title .brand-aston{color:var(--cyan)}
 .agreement-title .brand-sub{color:var(--ink)}
@@ -919,7 +934,10 @@ body.agreement-open{overflow:hidden}
 <div id="priceModal" class="price-modal" hidden>
   <div class="price-box" role="dialog" aria-modal="true" aria-labelledby="priceTitle">
     <div class="price-head">
-      <h3 id="priceTitle" class="price-title">Finish &amp; price job</h3>
+      <div class="price-head-titles">
+        <h3 id="priceTitle" class="price-title">Finish &amp; price job</h3>
+        <span class="price-jobid" id="priceJobId" hidden></span>
+      </div>
       <button type="button" id="priceClose" class="price-close" aria-label="Close">&times;</button>
     </div>
     <label class="price-field">
@@ -949,7 +967,7 @@ body.agreement-open{overflow:hidden}
 <div id="agreementView" class="agreement-view" hidden role="dialog" aria-modal="true" aria-labelledby="agreementTitle">
   <header class="agreement-header">
     <div class="agreement-head-left">
-      <span class="agreement-eyebrow">Service Agreement</span>
+      <span class="agreement-eyebrow">Service Agreement <span class="agreement-jobid" id="agreementJobId" hidden></span></span>
       <h2 class="agreement-title" id="agreementTitle"><span class="brand-aston">Aston</span> <span class="brand-sub">Locksmith</span></h2>
     </div>
     <button type="button" id="agreementCancel" class="agreement-cancel">Cancel</button>
@@ -1046,6 +1064,7 @@ body.agreement-open{overflow:hidden}
   var agreementScroll  = document.getElementById('agreementScroll');
   var agreementTextEl  = document.getElementById('agreementText');
   var agreementDocHead = document.getElementById('agreementDocHead');
+  var agreementJobId   = document.getElementById('agreementJobId');
   var agreementScrollHint = document.getElementById('agreementScrollHint');
   var agreementSign    = document.getElementById('agreementSign');
   var agreementAccept  = document.getElementById('agreementAccept');
@@ -1061,6 +1080,7 @@ body.agreement-open{overflow:hidden}
   var priceErr     = document.getElementById('priceErr');
   var priceConfirm = document.getElementById('priceConfirm');
   var priceClose   = document.getElementById('priceClose');
+  var priceJobId   = document.getElementById('priceJobId');
   var confirmedServiceFee = null;   // set when the tech confirms the price; gates Slide + Cancel
   var slideEl    = document.getElementById('completeSlide');
   var slideFill  = document.getElementById('slideFill');
@@ -1275,6 +1295,7 @@ body.agreement-open{overflow:hidden}
 
   function switchTab(tab) {
     currentTab = tab;
+    resetStepOverlays();   // never carry a job's open price/agreement overlay across tabs
     portalTabs.forEach(function (b) {
       var on = b.getAttribute('data-tab') === tab;
       b.classList.toggle('is-active', on);
@@ -1541,7 +1562,20 @@ body.agreement-open{overflow:hidden}
     renderJobCard(res.data);
   }
 
+  // Hard-reset any in-flight step UI from a PREVIOUS job. Without this, a price
+  // popup / agreement overlay / armed slide left open for job A could bleed onto
+  // job B when the tech switches jobs — each job must start at its own step.
+  function resetStepOverlays() {
+    if (priceModal) { priceModal.classList.remove('is-open'); priceModal.hidden = true; }
+    if (priceJobId) { priceJobId.hidden = true; priceJobId.textContent = ''; }
+    if (agreementView && !agreementView.hidden) closeAgreement();
+    confirmedServiceFee = null;
+    if (slideEl) slideEl.hidden = true;
+    setSlideEnabled(false);
+  }
+
   function renderJobCard(job) {
+    resetStepOverlays();    // clear any leftover step UI from the previously-open job
     document.getElementById('jId').textContent = 'JOB #' + (job.jobId || '—');
 
     // Status badge
@@ -1663,6 +1697,11 @@ body.agreement-open{overflow:hidden}
     priceTotal.textContent = money2(fee + tax + night);
   }
   function openPriceModal() {
+    if (!currentJob) return;
+    if (priceJobId) {
+      priceJobId.textContent = 'JOB #' + (currentJob.jobId || '—');
+      priceJobId.hidden = false;
+    }
     priceErr.hidden = true;
     priceFee.value = (confirmedServiceFee != null ? confirmedServiceFee : '');
     recalcPrice();
@@ -1876,6 +1915,10 @@ body.agreement-open{overflow:hidden}
 
   async function openAgreement() {
     if (!currentJob || !agreementView) return;
+    if (agreementJobId) {
+      agreementJobId.textContent = '· JOB #' + (currentJob.jobId || '—');
+      agreementJobId.hidden = false;
+    }
     sigReachedBottom = false; hasSignature = false; sigDrawing = false;
     agreementSign.classList.add('is-locked');
     if (agreementScrollHint) agreementScrollHint.classList.remove('is-hidden');
