@@ -1423,8 +1423,9 @@ body.agreement-open{overflow:hidden}
       currentJob = job;
       jobIdInput.value = job.jobId || '';
       lookupHint.textContent = '';
-      renderJobCard(job);
+      renderJobCard(job);                  // instant render from the (freshly-loaded) list cache…
       switchTab('lookup');
+      refreshJobFromServer(job.jobId);     // …then re-derive the step from this job's LIVE backend status
       try { jobCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e2) {}
     });
   }
@@ -1560,6 +1561,20 @@ body.agreement-open{overflow:hidden}
     lookupHint.textContent = '';
     currentJob = res.data;
     renderJobCard(res.data);
+  }
+
+  // Re-fetch a job's authoritative state from the backend and re-render, so the
+  // displayed step (Get Signature vs Complete Job) is ALWAYS driven by THIS job's
+  // own live status — never by stale cached list data. Guarded so a slow response
+  // can't clobber a job the tech has since navigated away from.
+  async function refreshJobFromServer(jid) {
+    var clean = String(jid || '').replace(/\D/g, '');
+    if (clean.length !== 7) return;
+    var res = await authFetch('/api/dispatch/lookup/' + clean);
+    if (!res || !res.ok || !res.data) return;                          // keep the cached render on failure
+    if (!currentJob || String(currentJob.jobId) !== String(jid)) return; // tech already switched jobs
+    currentJob = res.data;
+    renderJobCard(res.data);                                           // authoritative — overrides any staleness
   }
 
   // Hard-reset any in-flight step UI from a PREVIOUS job. Without this, a price
