@@ -610,17 +610,25 @@ a{color:inherit;text-decoration:none}
   flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:12px;
   padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);
 }
-.agreement-head-left{display:flex;flex-direction:column;gap:1px;min-width:0}
+.agreement-head-left{display:flex;flex-direction:column;gap:8px;min-width:0}
+.agreement-eyebrow-group{display:flex;flex-direction:column;gap:5px}
 .agreement-eyebrow{
   font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--cyan);opacity:.85;
 }
+.agreement-chips{display:flex;flex-direction:row;gap:5px;flex-wrap:wrap}
 .agreement-jobid{
-  display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;
+  display:inline-block;padding:1px 7px;border-radius:999px;
   background:var(--cyan-dim);border:1px solid rgba(39,224,245,.3);
   color:var(--cyan);font-size:10px;font-weight:800;letter-spacing:.06em;opacity:1;
   font-variant-numeric:tabular-nums;
 }
 .agreement-jobid[hidden]{display:none}
+.agreement-techname{
+  display:inline-block;padding:1px 7px;border-radius:999px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);
+  color:var(--muted);font-size:10px;font-weight:600;letter-spacing:.04em;
+}
+.agreement-techname[hidden]{display:none}
 .agreement-title{font-size:16px;font-weight:800;letter-spacing:.04em;white-space:nowrap}
 .agreement-title .brand-aston{color:var(--cyan)}
 .agreement-title .brand-sub{color:var(--ink)}
@@ -969,7 +977,13 @@ body.agreement-open{overflow:hidden}
   <header class="agreement-header">
     <div class="agreement-head-left">
       <h2 class="agreement-title" id="agreementTitle"><span class="brand-aston">Aston</span> <span class="brand-sub">Locksmith</span></h2>
-      <span class="agreement-eyebrow">Service Agreement <span class="agreement-jobid" id="agreementJobId" hidden></span></span>
+      <div class="agreement-eyebrow-group">
+        <span class="agreement-eyebrow">Service Agreement</span>
+        <div class="agreement-chips">
+          <span class="agreement-jobid" id="agreementJobId" hidden></span>
+          <span class="agreement-techname" id="agreementTechName" hidden></span>
+        </div>
+      </div>
     </div>
     <button type="button" id="agreementCancel" class="agreement-cancel">Cancel</button>
   </header>
@@ -1066,6 +1080,7 @@ body.agreement-open{overflow:hidden}
   var agreementTextEl  = document.getElementById('agreementText');
   var agreementDocHead = document.getElementById('agreementDocHead');
   var agreementJobId   = document.getElementById('agreementJobId');
+  var agreementTechName = document.getElementById('agreementTechName');
   var agreementScrollHint = document.getElementById('agreementScrollHint');
   var agreementSign    = document.getElementById('agreementSign');
   var agreementAccept  = document.getElementById('agreementAccept');
@@ -1934,8 +1949,12 @@ body.agreement-open{overflow:hidden}
     if (agreementJobId) {
       var _t = getTech();
       var _tn = _t ? ((_t.firstName || '') + ' ' + (_t.lastName || '')).trim() : '';
-      agreementJobId.textContent = '· JOB #' + (currentJob.jobId || '—') + (_tn ? ' · ' + _tn : '');
+      agreementJobId.textContent = 'JOB #' + (currentJob.jobId || '—');
       agreementJobId.hidden = false;
+      if (agreementTechName) {
+        agreementTechName.textContent = _tn;
+        agreementTechName.hidden = !_tn;
+      }
     }
     sigReachedBottom = false; hasSignature = false; sigDrawing = false;
     agreementSign.classList.add('is-locked');
