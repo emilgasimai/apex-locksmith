@@ -584,18 +584,30 @@ a{color:inherit;text-decoration:none}
 
 /* ── Customer Agreement (full-screen signature flow) ───────────────────────── */
 .agreement-view{
-  position:fixed;inset:0;z-index:400;background:var(--bg);
+  position:fixed;inset:0;z-index:400;
+  height:100vh;height:100dvh;
+  background:
+    radial-gradient(130% 80% at 50% -10%, rgba(39,224,245,.06), transparent 58%),
+    var(--bg);
   display:flex;flex-direction:column;
   padding-top:env(safe-area-inset-top,0px);
   animation:agreementIn .22s cubic-bezier(.2,.7,.3,1.1) both;
 }
 .agreement-view[hidden]{display:none}
 @keyframes agreementIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* Header — matches the portal bar (surface, cyan brand mark, eyebrow label). */
 .agreement-header{
   flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:12px;
-  padding:14px 16px;background:var(--surface);border-bottom:1px solid var(--border);
+  padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);
 }
-.agreement-title{font-size:16px;font-weight:800;letter-spacing:.02em;color:var(--ink)}
+.agreement-head-left{display:flex;flex-direction:column;gap:1px;min-width:0}
+.agreement-eyebrow{
+  font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--cyan);opacity:.85;
+}
+.agreement-title{font-size:16px;font-weight:800;letter-spacing:.04em;white-space:nowrap}
+.agreement-title .brand-aston{color:var(--cyan)}
+.agreement-title .brand-sub{color:var(--ink)}
 .agreement-cancel{
   flex-shrink:0;background:transparent;border:1px solid var(--border);border-radius:6px;
   color:var(--ink);font:inherit;font-size:13px;font-weight:600;padding:7px 16px;cursor:pointer;
@@ -603,61 +615,72 @@ a{color:inherit;text-decoration:none}
 }
 .agreement-cancel:hover{border-color:var(--danger);color:var(--danger)}
 .agreement-cancel:active{transform:scale(.97)}
+
+/* Single scroll area holds BOTH the terms and the signature section. */
 .agreement-scroll{
   flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
-  padding:18px 18px 8px;max-width:640px;width:100%;margin:0 auto;
+  touch-action:pan-y;overscroll-behavior:contain;
+  padding:20px 18px calc(28px + env(safe-area-inset-bottom,0px));
+  max-width:640px;width:100%;margin:0 auto;
 }
 .agreement-text{
-  white-space:pre-wrap;font-size:14.5px;line-height:1.7;color:var(--ink);
-  letter-spacing:.005em;
+  white-space:pre-wrap;font-size:14.5px;line-height:1.72;color:var(--ink);letter-spacing:.005em;
 }
-.agreement-scrollhint{
-  display:flex;align-items:center;justify-content:center;gap:7px;
-  margin:18px 0 6px;padding:10px;font-size:12.5px;font-weight:600;color:var(--cyan);
-  border:1px dashed rgba(39,224,245,.3);border-radius:8px;background:var(--cyan-dim);
-}
-.agreement-scrollhint svg{width:15px;height:15px;animation:hintBob 1.6s ease-in-out infinite}
-.agreement-scrollhint[hidden]{display:none}
-@keyframes hintBob{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
-@media(prefers-reduced-motion:reduce){.agreement-scrollhint svg{animation:none}}
 
+/* Signature section — flows at the END of the document. */
 .agreement-sign{
-  flex-shrink:0;background:var(--surface);border-top:1px solid var(--border);
-  padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));
-  max-width:640px;width:100%;margin:0 auto;position:relative;
+  margin-top:26px;padding-top:22px;border-top:1px dashed var(--border);position:relative;
+  transition:opacity .25s ease,filter .25s ease;
 }
-.agreement-sign-body{transition:opacity .2s ease}
-.agreement-sign.is-locked .agreement-sign-body{opacity:.32;pointer-events:none;filter:grayscale(.4)}
-.agreement-sign-lock{
-  display:none;font-size:12.5px;font-weight:700;letter-spacing:.04em;color:var(--warn);
-  text-align:center;margin-bottom:10px;
+.agreement-sign.is-locked{opacity:.42;filter:grayscale(.5);pointer-events:none}
+.sigpad-label{
+  font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;
 }
-.agreement-sign.is-locked .agreement-sign-lock{display:block}
-.sigpad-label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--cyan);margin-bottom:8px;opacity:.7}
 .sigpad-wrap{
-  position:relative;background:#fff;
-  border:1.5px solid rgba(39,224,245,.45);border-radius:10px;
-  box-shadow:0 0 0 3px rgba(39,224,245,.08),0 6px 20px rgba(0,0,0,.5);
+  position:relative;
+  background:linear-gradient(180deg,rgba(255,255,255,.025),transparent),#141417;
+  border:1px solid var(--border);border-radius:12px;
+  box-shadow:inset 0 0 0 1px rgba(39,224,245,.05),0 8px 24px rgba(0,0,0,.45);
   overflow:hidden;
 }
-.sigpad{display:block;width:100%;height:170px;touch-action:none;cursor:crosshair}
-.sigpad-baseline{position:absolute;left:14px;right:14px;bottom:34px;border-bottom:1.5px dashed #b8bcc3;pointer-events:none}
-.sigpad-x{position:absolute;left:16px;bottom:26px;color:#999ea6;font-size:15px;font-weight:700;pointer-events:none}
+.sigpad{display:block;width:100%;height:180px;touch-action:none;cursor:crosshair}
+.sigpad-baseline{position:absolute;left:16px;right:16px;bottom:38px;border-bottom:1.5px dashed rgba(255,255,255,.16);pointer-events:none}
+.sigpad-x{position:absolute;left:18px;bottom:30px;color:rgba(255,255,255,.28);font-size:15px;font-weight:700;pointer-events:none}
 .sigpad-clear{
-  position:absolute;top:8px;right:8px;background:rgba(0,0,0,.07);border:1px solid rgba(0,0,0,.15);
-  border-radius:6px;color:#2a2d32;font:inherit;font-size:12px;font-weight:600;padding:5px 11px;cursor:pointer;
-  transition:background .12s ease;
+  position:absolute;top:9px;right:9px;background:rgba(255,255,255,.06);border:1px solid var(--border);
+  border-radius:6px;color:var(--ink);font:inherit;font-size:12px;font-weight:600;padding:5px 12px;cursor:pointer;
+  transition:background .12s ease,border-color .12s ease;
 }
-.sigpad-clear:hover{background:rgba(0,0,0,.14)}
+.sigpad-clear:hover{background:rgba(255,255,255,.1);border-color:rgba(39,224,245,.4)}
 .sigpad-clear:active{transform:scale(.96)}
 .agreement-accept{
-  width:100%;margin-top:14px;padding:15px;border:none;border-radius:10px;
-  background:var(--cyan);color:#0f0f10;font:inherit;font-size:16px;font-weight:800;cursor:pointer;
-  transition:opacity .15s ease,transform .1s ease;
+  width:100%;margin-top:16px;padding:16px;border:none;border-radius:12px;
+  background:var(--cyan);color:#0f0f10;font:inherit;font-size:16px;font-weight:800;letter-spacing:.01em;cursor:pointer;
+  box-shadow:0 6px 20px rgba(39,224,245,.22);
+  transition:opacity .15s ease,transform .1s ease,box-shadow .15s ease;
 }
-.agreement-accept:hover:not(:disabled){opacity:.92}
-.agreement-accept:active:not(:disabled){transform:scale(.98)}
-.agreement-accept:disabled{opacity:.4;cursor:not-allowed}
+.agreement-accept:hover:not(:disabled){opacity:.94}
+.agreement-accept:active:not(:disabled){transform:scale(.985)}
+.agreement-accept:disabled{opacity:.32;cursor:not-allowed;box-shadow:none}
+.agreement-fine{margin-top:12px;font-size:11.5px;line-height:1.55;color:var(--muted);text-align:center}
+
+/* Floating scroll cue — fades out once the signature section is reached. */
+.agreement-scrollcue{
+  position:absolute;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
+  display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:999px;
+  background:rgba(26,26,29,.92);border:1px solid rgba(39,224,245,.35);
+  color:var(--cyan);font:inherit;font-size:12.5px;font-weight:700;letter-spacing:.02em;cursor:pointer;
+  box-shadow:0 8px 24px rgba(0,0,0,.5);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  transition:opacity .25s ease,transform .25s ease;
+}
+.agreement-scrollcue svg{width:15px;height:15px;animation:hintBob 1.5s ease-in-out infinite}
+.agreement-scrollcue[hidden]{display:none}
+.agreement-scrollcue.is-hidden{opacity:0;transform:translateX(-50%) translateY(10px);pointer-events:none}
+@keyframes hintBob{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
+@media(prefers-reduced-motion:reduce){.agreement-scrollcue svg{animation:none}}
+
+/* Background scroll lock while the agreement overlay is open. */
+body.agreement-open{overflow:hidden}
 
 /* ── View Agreement (read-only proof modal — also used inside the slide/job view) ── */
 .signed-pill{
@@ -906,24 +929,25 @@ a{color:inherit;text-decoration:none}
 </div>
 
 <!-- ==================== CUSTOMER AGREEMENT (full-screen) ==================== -->
-<!-- Opened by "Get Signature". The customer reads the agreement (the sign panel
-     stays locked until they scroll to the very bottom), then signs on the pad and
-     taps "I Accept" (enabled only after scroll-to-bottom AND a drawn signature). -->
+<!-- Opened by "Get Signature". The agreement text and the signature section share a
+     SINGLE scroll area; the signature pad flows at the very END of the document, so
+     the customer must scroll through the terms to reach it. The pad unlocks once the
+     signature section scrolls into view, and "I Accept" enables only after a signature
+     is drawn. -->
 <div id="agreementView" class="agreement-view" hidden role="dialog" aria-modal="true" aria-labelledby="agreementTitle">
   <header class="agreement-header">
-    <h2 class="agreement-title" id="agreementTitle">Customer Agreement</h2>
+    <div class="agreement-head-left">
+      <span class="agreement-eyebrow">Service Agreement</span>
+      <h2 class="agreement-title" id="agreementTitle"><span class="brand-aston">Aston</span> <span class="brand-sub">Locksmith</span></h2>
+    </div>
     <button type="button" id="agreementCancel" class="agreement-cancel">Cancel</button>
   </header>
+
   <div id="agreementScroll" class="agreement-scroll">
     <div id="agreementText" class="agreement-text"></div>
-    <div class="agreement-scrollhint" id="agreementScrollHint">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
-      Scroll down to read the full agreement
-    </div>
-  </div>
-  <div class="agreement-sign is-locked" id="agreementSign">
-    <div class="agreement-sign-lock" id="agreementSignLock">Read to the end of the agreement to sign.</div>
-    <div class="agreement-sign-body">
+
+    <!-- Signature section — part of the scrolling document, not a glued bottom bar. -->
+    <section class="agreement-sign is-locked" id="agreementSign">
       <div class="sigpad-label">Customer signature</div>
       <div class="sigpad-wrap">
         <canvas id="sigPad" class="sigpad" aria-label="Signature pad"></canvas>
@@ -931,9 +955,16 @@ a{color:inherit;text-decoration:none}
         <span class="sigpad-x" aria-hidden="true">✕</span>
         <button type="button" id="sigClear" class="sigpad-clear">Clear</button>
       </div>
-      <button type="button" id="agreementAccept" class="agreement-accept" disabled>I Accept</button>
-    </div>
+      <button type="button" id="agreementAccept" class="agreement-accept" disabled>I Accept &amp; Sign</button>
+      <p class="agreement-fine">By tapping “I Accept &amp; Sign,” the customer agrees to the terms above. This electronic signature is collected on the technician’s device and has the same effect as a handwritten signature.</p>
+    </section>
   </div>
+
+  <!-- Floating cue: nudges the customer down to the signature and fades once reached. -->
+  <button type="button" class="agreement-scrollcue" id="agreementScrollHint" aria-label="Scroll to signature">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
+    <span>Scroll to sign</span>
+  </button>
 </div>
 
 <div id="toast" class="toast"></div>
@@ -1654,17 +1685,56 @@ a{color:inherit;text-decoration:none}
   // they've scrolled AND drawn a signature. Submitting advances the job to
   // in-progress, after which the job view shows "Complete Job" instead.
   var AGREEMENT_FALLBACK =
+    'ASTON LOCKSMITH\n' +
     'SERVICE AUTHORIZATION & PAYMENT AGREEMENT\n\n' +
-    'By signing below, I authorize the locksmith to perform the requested service ' +
-    'at the address provided. I confirm that I am the owner, or have the owner’s ' +
-    'authorization to request this service.\n\n' +
-    'I agree to pay the quoted service fee plus applicable taxes (Ontario HST) upon ' +
-    'completion. An after-hours surcharge applies to services performed overnight. ' +
-    'Payment is due at the time of service.\n\n' +
-    'My electronic signature below was collected on the technician’s device and ' +
-    'constitutes my consent to the above terms.';
+    '1. AUTHORIZATION TO PERFORM WORK\n' +
+    'By signing below, I authorize Aston Locksmith and its assigned technician to ' +
+    'perform the locksmith services requested at the service address provided. I confirm ' +
+    'that I am the lawful owner of the property, vehicle, or premises involved, or that I ' +
+    'am acting with the express authorization of the owner. I understand that I may be ' +
+    'asked to provide government-issued identification and proof of ownership or residency ' +
+    'before any work begins.\n\n' +
+    '2. SCOPE OF SERVICE\n' +
+    'The technician has explained the nature of the work to be performed and the method to ' +
+    'be used. I understand that certain services — including but not limited to lock ' +
+    'drilling, rekeying, or forced entry — may be destructive and may require the ' +
+    'replacement of locks, hardware, or related components at additional cost. I authorize ' +
+    'the technician to proceed using the method they reasonably determine to be appropriate ' +
+    'for the situation.\n\n' +
+    '3. PRICING & PAYMENT\n' +
+    'I agree to pay the quoted service fee, plus any parts, hardware, and applicable taxes ' +
+    '(Ontario HST), upon completion of the work. The quoted price covers the service ' +
+    'described to me by the technician; any additional work discovered during service will ' +
+    'be quoted and approved separately before it is carried out. An after-hours surcharge of ' +
+    '$49 applies to services performed between 9:00 PM and 6:00 AM (Toronto local time). ' +
+    'Payment is due in full at the time of service unless a written alternative has been ' +
+    'agreed in advance.\n\n' +
+    '4. WORKMANSHIP GUARANTEE\n' +
+    'All labour performed by Aston Locksmith is guaranteed for thirty (30) days against ' +
+    'defects in workmanship. This guarantee does not cover misuse, forced damage, tampering, ' +
+    'normal wear and tear, or faults in customer-supplied parts. Manufacturer warranties, ' +
+    'where applicable, apply to hardware supplied by Aston Locksmith.\n\n' +
+    '5. LIMITATION OF LIABILITY\n' +
+    'Aston Locksmith exercises reasonable care in performing all services. To the fullest ' +
+    'extent permitted by law, Aston Locksmith is not liable for pre-existing damage, for ' +
+    'faults in locks or hardware not installed by us, or for indirect or consequential ' +
+    'losses arising from the service. Our total liability for any claim shall not exceed the ' +
+    'amount paid for the service giving rise to that claim.\n\n' +
+    '6. RIGHT TO DECLINE SERVICE\n' +
+    'Aston Locksmith reserves the right to decline or discontinue service at any time if the ' +
+    'technician cannot reasonably verify ownership or authorization, if proceeding would be ' +
+    'unlawful, or if conditions at the site present a risk to the safety of any person.\n\n' +
+    '7. CONSENT & ELECTRONIC SIGNATURE\n' +
+    'This agreement is entered into at the time and place of service. My electronic signature ' +
+    'below was collected on the technician’s mobile device and has the same legal effect as a ' +
+    'handwritten signature. By signing, I confirm that I have read, understood, and agree to ' +
+    'the terms set out above.';
   var agreementTextCache = null;
   var sigCtx = null, sigW = 0, sigH = 0, sigDrawing = false, hasSignature = false, sigReachedBottom = false;
+  var signObserver = null;
+  // Signature canvas is themed dark (matches the portal); the dark fill is baked into
+  // the exported PNG, so the signature reads on any background it's later shown on.
+  var SIG_BG = '#141417', SIG_INK = '#eef2f6';
 
   async function loadAgreementText() {
     if (agreementTextCache) { agreementTextEl.textContent = agreementTextCache; return; }
@@ -1684,18 +1754,19 @@ a{color:inherit;text-decoration:none}
     sigPad.height = sigH * dpr;
     sigCtx = sigPad.getContext('2d');
     sigCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    sigCtx.fillStyle = '#ffffff';
-    sigCtx.fillRect(0, 0, sigW, sigH);           // white "paper" so the saved PNG reads anywhere
-    sigCtx.lineWidth = 2.4;
+    sigCtx.fillStyle = SIG_BG;
+    sigCtx.fillRect(0, 0, sigW, sigH);           // dark "paper" baked into the PNG so it reads anywhere
+    sigCtx.lineWidth = 2.6;
     sigCtx.lineCap = 'round';
     sigCtx.lineJoin = 'round';
-    sigCtx.strokeStyle = '#0f0f10';
+    sigCtx.strokeStyle = SIG_INK;
     hasSignature = false;
   }
   function clearSig() {
     if (!sigCtx) return;
-    sigCtx.fillStyle = '#ffffff';
+    sigCtx.fillStyle = SIG_BG;
     sigCtx.fillRect(0, 0, sigW, sigH);
+    sigCtx.strokeStyle = SIG_INK;
     hasSignature = false;
     updateAcceptState();
   }
@@ -1733,36 +1804,57 @@ a{color:inherit;text-decoration:none}
   function updateAcceptState() {
     if (agreementAccept) agreementAccept.disabled = !(sigReachedBottom && hasSignature);
   }
+  // Unlock the signature pad once the customer has scrolled the terms and the
+  // signature section has come into view (it sits at the very end of the document).
   function unlockSign() {
     if (sigReachedBottom) return;
     sigReachedBottom = true;
     agreementSign.classList.remove('is-locked');
-    if (agreementScrollHint) agreementScrollHint.hidden = true;
+    if (agreementScrollHint) agreementScrollHint.classList.add('is-hidden');
     updateAcceptState();
   }
   function onAgreementScroll() {
     if (!agreementScroll) return;
-    if (agreementScroll.scrollTop + agreementScroll.clientHeight >= agreementScroll.scrollHeight - 8) unlockSign();
+    // Reaching the bottom of the document is a reliable cross-browser unlock signal.
+    if (agreementScroll.scrollTop + agreementScroll.clientHeight >= agreementScroll.scrollHeight - 24) unlockSign();
   }
   if (agreementScroll) agreementScroll.addEventListener('scroll', onAgreementScroll, { passive: true });
+  // Tapping the floating cue jumps straight to the signature section.
+  if (agreementScrollHint) agreementScrollHint.addEventListener('click', function () {
+    if (agreementSign) agreementSign.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+  // Primary unlock: fire as soon as the signature section scrolls into view. This
+  // also covers short agreements that fit on screen without any scrolling.
+  function watchSignVisibility() {
+    if (signObserver) { signObserver.disconnect(); signObserver = null; }
+    if (!('IntersectionObserver' in window) || !agreementSign || !agreementScroll) return;
+    signObserver = new IntersectionObserver(function (entries) {
+      if (entries[0] && entries[0].isIntersecting) unlockSign();
+    }, { root: agreementScroll, threshold: 0.3 });
+    signObserver.observe(agreementSign);
+  }
 
   async function openAgreement() {
     if (!currentJob || !agreementView) return;
     sigReachedBottom = false; hasSignature = false; sigDrawing = false;
     agreementSign.classList.add('is-locked');
-    if (agreementScrollHint) agreementScrollHint.hidden = false;
-    if (agreementAccept) { agreementAccept.disabled = true; agreementAccept.textContent = 'I Accept'; }
+    if (agreementScrollHint) agreementScrollHint.classList.remove('is-hidden');
+    if (agreementAccept) { agreementAccept.disabled = true; agreementAccept.textContent = 'I Accept & Sign'; }
     agreementView.hidden = false;
+    document.body.classList.add('agreement-open');   // lock the background from scrolling
     await loadAgreementText();
     requestAnimationFrame(function () {
       initSigPad();
       if (agreementScroll) agreementScroll.scrollTop = 0;
-      // Short agreement that fits without scrolling → nothing to scroll, unlock now.
+      watchSignVisibility();
+      // Fallback for short agreements (no IntersectionObserver / already-visible).
       if (agreementScroll && agreementScroll.scrollHeight <= agreementScroll.clientHeight + 8) unlockSign();
     });
   }
   function closeAgreement() {
     if (agreementView) agreementView.hidden = true;
+    document.body.classList.remove('agreement-open');
+    if (signObserver) { signObserver.disconnect(); signObserver = null; }
     sigDrawing = false;
   }
   if (getSignatureBtn) getSignatureBtn.addEventListener('click', openAgreement);
@@ -1785,7 +1877,7 @@ a{color:inherit;text-decoration:none}
       renderJobCard(currentJob);     // now shows "Complete Job"
       loadMyJobs(true);
     } else {
-      agreementAccept.disabled = false; agreementAccept.textContent = 'I Accept';
+      agreementAccept.disabled = false; agreementAccept.textContent = 'I Accept & Sign';
       toast((res.data && res.data.message) || 'Could not submit the signature.', 'err');
     }
   });

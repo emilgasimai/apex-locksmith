@@ -691,7 +691,7 @@ body.is-embed .dash-main { max-width: none; }
   max-height: 42vh; overflow-y: auto; }
 .agr-sig-wrap { margin-top: 14px; }
 .agr-sig-label { display: block; font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted-2); margin-bottom: 6px; }
-.agr-sig-box { background: #fff; border: 1px solid var(--line-soft); border-radius: 7px; padding: 8px; display: flex; justify-content: center; }
+.agr-sig-box { background: #141417; border: 1px solid var(--line-soft); border-radius: 7px; padding: 8px; display: flex; justify-content: center; }
 .agr-sig-img { max-width: 100%; height: auto; display: block; }
 .agr-sig-empty { color: #8a8f98; font-size: 12px; padding: 18px 0; }
 
