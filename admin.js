@@ -288,52 +288,6 @@
     dispatchBadgeTimer = setInterval(pollDispatchBadge, 30000);
   }
 
-  /* ── TEMPORARY — remove before launch ──
-     QA test-job tools shown above the embedded dispatch board. They call the
-     admin-only backend endpoints with the admin JWT, then reload the iframe so
-     the seeded/cleared jobs show up immediately. */
-  function reloadDispatchFrame() {
-    const f = document.getElementById('dispatchFrame');
-    if (!f) return;
-    f.src = '/dispatch.html?embed=1';
-    dispatchFrameLoaded = true;
-  }
-  async function runTestTool(btn, path, method) {
-    const s = await AdminStore.getSession();
-    const orig = btn.textContent;
-    btn.disabled = true; btn.textContent = 'Working…';
-    try {
-      const res = await window.apiFetch(path, { method: method, token: s && s.token, timeout: 40000 });
-      btn.disabled = false; btn.textContent = orig;
-      return res;
-    } catch (err) {
-      btn.disabled = false; btn.textContent = orig;
-      return { ok: false, status: 0, data: null };
-    }
-  }
-  const genTestJobsBtn = document.getElementById('genTestJobsBtn');
-  const clearTestJobsBtn = document.getElementById('clearTestJobsBtn');
-  if (genTestJobsBtn) {
-    genTestJobsBtn.addEventListener('click', async function () {
-      try {
-        const res = await runTestTool(genTestJobsBtn, '/api/dispatch/generate-test-jobs', 'POST');
-        if (res.ok) { showToast((res.data && res.data.message) || 'Test jobs generated'); reloadDispatchFrame(); }
-        else { showToast((res.data && res.data.message) || 'Could not generate test jobs (check console)'); console.error('generate-test-jobs failed', res); }
-      } catch (err) { console.error('generate-test-jobs error', err); showToast('Error: ' + (err && err.message || 'unknown')); }
-    });
-  }
-  if (clearTestJobsBtn) {
-    clearTestJobsBtn.addEventListener('click', async function () {
-      if (!confirm('Delete ALL test jobs (every "TEST — " job)? This cannot be undone.')) return;
-      try {
-        const res = await runTestTool(clearTestJobsBtn, '/api/dispatch/test-jobs', 'DELETE');
-        if (res.ok) { showToast((res.data && res.data.message) || 'Test jobs cleared'); reloadDispatchFrame(); }
-        else { showToast((res.data && res.data.message) || 'Could not clear test jobs'); console.error('clear-test-jobs failed', res); }
-      } catch (err) { console.error('clear-test-jobs error', err); showToast('Error: ' + (err && err.message || 'unknown')); }
-    });
-  }
-  /* ── /TEMPORARY ── */
-
   /* ========================================================================
      5. CONTENT EDITOR
      ===================================================================== */
