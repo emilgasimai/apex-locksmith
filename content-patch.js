@@ -102,6 +102,9 @@
     }
     return out;
   }
+  function toNameCase(s) {
+    return (s || '').replace(/\b\w+/g, function(w) { return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(); });
+  }
   function renderReview(r) {
     return '' +
       '<article class="review-card flex flex-col p-5" style="background:#242427;border:2px solid #EDEDED;">' +
@@ -110,7 +113,7 @@
           '<span class="font-mono t-cap-sm" style="color:#9a9a9a;">' + esc(r.date || '') + '</span>' +
         '</div>' +
         '<p class="font-body mt-3.5 flex-1" style="font-size:15px;line-height:1.55;text-wrap:pretty;">&ldquo;' + esc(r.text || '') + '&rdquo;</p>' +
-        '<div class="font-display uppercase mt-3 pt-2.5" style="font-size:16px;letter-spacing:.03em;border-top:1px solid #3a3a3e;">' + esc(r.name || '') + '</div>' +
+        '<div class="font-display mt-3 pt-2.5" style="font-size:16px;letter-spacing:.03em;border-top:1px solid #3a3a3e;text-transform:none;">' + esc(toNameCase(r.name)) + '</div>' +
       '</article>';
   }
   function renderReviews(list) {

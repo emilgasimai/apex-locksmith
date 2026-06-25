@@ -1110,8 +1110,9 @@ scrollBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 's
     window.apiFetch('/api/reviews').then((res) => {
       const items = res.ok && res.data && (res.data.items || res.data.reviews || (Array.isArray(res.data) ? res.data : null));
       if (!items || !items.length) return;                    // fallback: keep current cards
+      const toTitleCase = (s) => (s || '').replace(/\b\w+/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
       const mapped = items.map((r) => ({
-        name: r.name || '',
+        name: toTitleCase(r.name),
         rating: r.rating || 5,
         text: r.text || '',
         date: r.date || (r.createdAt ? shortDate(r.createdAt) : '')
