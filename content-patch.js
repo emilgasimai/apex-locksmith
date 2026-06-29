@@ -107,7 +107,7 @@
   }
   function renderReview(r) {
     return '' +
-      '<article class="review-card flex flex-col p-5" style="background:#242427;border:2px solid #EDEDED;">' +
+      '<article class="review-card u-card flex flex-col p-5" style="background:#242427;">' +
         '<div class="flex items-center">' +
           '<span class="inline-flex gap-0.5" style="color:#27E0F5;">' + starsHtml(r.rating) + '</span>' +
         '</div>' +

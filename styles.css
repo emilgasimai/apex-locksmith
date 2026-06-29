@@ -74,7 +74,13 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
 }
 .svc-bg-overlay{
   position:absolute;inset:0;z-index:1;pointer-events:none;
-  background:rgba(0,0,0,0.75);
+  /* Tone matched to the site background (#1A1A1A = rgb 26,26,26) so the section
+     no longer reads as a near-black "black box". The concrete grain stays faintly
+     visible through the 0.80 tint; top/bottom edges fade to solid #1A1A1A so the
+     band blends seamlessly into the neighbouring sections. */
+  background:
+    linear-gradient(180deg,#1A1A1A 0%, rgba(26,26,26,0) 13%, rgba(26,26,26,0) 87%, #1A1A1A 100%),
+    rgba(26,26,26,0.80);
 }
 .svc-content-wrap{position:relative;z-index:2;}
 
@@ -546,6 +552,17 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
 
 /* No-rounded — brutalist */
 *{border-radius:0 !important}
+
+/* ── Unified content-card surface ──────────────────────────────────────────
+   ONE card family across the page: soft low-contrast border + the same rounded
+   corners as the "Why Aston" / Three-Steps badges. Bright cyan (#27E0F5) and
+   bright white (#EDEDED) borders are reserved for buttons / interactive accents,
+   never static content boxes. The !important beats the brutalist radius reset
+   above and any inline border colour on the boxes themselves. */
+.u-card{
+  border:2px solid #2a2a2e !important;
+  border-radius:18px !important;
+}
 
 /* Section divider */
 .section-divider{border-top:3px solid #EDEDED;}

@@ -31,9 +31,12 @@
 <meta name="twitter:image:alt" content="Aston Locksmith — 24/7 emergency locksmith, Toronto &amp; the GTA"/>
 <!-- Favicon / home-screen icon — unlocked padlock brand mark. SVG for modern
      browsers, PNG fallback for older ones (Safari < 16). -->
-<link rel="icon" type="image/svg+xml" href="brand_assets/favicon.svg"/>
-<link rel="apple-touch-icon" sizes="180x180" href="brand_assets/apple-touch-icon.png"/>
-<link rel="icon" type="image/png" href="brand_assets/apple-touch-icon.png"/>
+<!-- Favicon — root-absolute so it resolves on every URL. /favicon.ico (multi-size,
+     PNG-in-ICO) satisfies the automatic browser tab request; SVG for modern
+     browsers; apple-touch-icon for iOS home screen. -->
+<link rel="icon" href="/favicon.ico" sizes="32x32"/>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" sizes="180x180" href="/brand_assets/apple-touch-icon.png"/>
 <!-- ⭐ Single source of truth + SEO injector — load FIRST, synchronously -->
 <script src="site-config.js?v=2"></script>
 <script src="seo.js?v=2"></script>
@@ -42,7 +45,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="tailwind.css"/>
 <link rel="stylesheet" id="leafletCss" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" media="print" onload="this.media='all'" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-<link rel="stylesheet" href="styles.css?v=31"/>
+<link rel="stylesheet" href="styles.css?v=32"/>
 </head>
 <body class="bg-bg text-ink">
 
@@ -295,7 +298,7 @@
   </div>
   <div class="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-5">
     <!-- Finder card -->
-    <div style="background:#242427;border:2px solid #EDEDED;">
+    <div class="u-card" style="background:#242427;overflow:hidden;">
       <div class="flex justify-between items-center px-4 sm:px-5 py-3" style="background:#1A1A1A;color:#27E0F5;border-bottom:2px solid #27E0F5;">
         <div class="font-display uppercase" style="font-size:18px;letter-spacing:.04em;color:#27E0F5;">SERVICE FINDER</div>
         <div class="font-mono t-cap-sm" style="opacity:.7;color:#9a9a9a;">STEP 1 OF 1</div>
@@ -341,7 +344,7 @@
           </button>
         </div>
         <!-- Service list (replaces dispatch plan) -->
-        <div class="service-list-box" style="margin-top:22px;padding:18px 20px;background:#1A1A1A;border:2px solid #27E0F5;position:relative;">
+        <div class="service-list-box u-card" style="margin-top:22px;padding:18px 20px;background:#242427;position:relative;overflow:hidden;">
           <div class="caution-stripe" style="position:absolute;top:0;left:0;right:0;height:4px;"></div>
           <div class="pt-1.5 mb-3">
             <div class="font-mono t-cap-sm" style="color:#27E0F5;">▸ WHAT WE DO HERE</div>
@@ -655,7 +658,7 @@
     <!-- TODO: link to / embed real Google Reviews via Google Places API once live -->
   </div>
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="reviewGrid">
-    <article class="review-card flex flex-col p-5" style="background:#242427;border:2px solid #EDEDED;">
+    <article class="review-card u-card flex flex-col p-5" style="background:#242427;">
       <div class="flex justify-between items-center">
         <span class="inline-flex gap-0.5" style="color:#27E0F5;">
           <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
@@ -668,7 +671,7 @@
       <p class="font-body mt-3.5 flex-1" style="font-size:15px;line-height:1.55;text-wrap:pretty;">"Got locked out at 11pm with my dog inside. Tech was at my door in 14 minutes flat and had me back in within 5 more. Clean job, no damage to the lock, fair price. Saved as a contact."</p>
       <div class="font-display mt-3 pt-2.5" style="font-size:16px;letter-spacing:.03em;border-top:1px solid #3a3a3e;text-transform:none;">Dana R.</div>
     </article>
-    <article class="review-card flex flex-col p-5" style="background:#242427;border:2px solid #EDEDED;">
+    <article class="review-card u-card flex flex-col p-5" style="background:#242427;">
       <div class="flex justify-between items-center">
         <span class="inline-flex gap-0.5" style="color:#27E0F5;">
           <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
@@ -681,7 +684,7 @@
       <p class="font-body mt-3.5 flex-1" style="font-size:15px;line-height:1.55;text-wrap:pretty;">"Had Aston rekey the whole house after closing. Marcus walked through every door and recommended swapping two deadbolts that were past their service life. No upsell pressure. Two-year warranty on the work."</p>
       <div class="font-display mt-3 pt-2.5" style="font-size:16px;letter-spacing:.03em;border-top:1px solid #3a3a3e;text-transform:none;">Eli K.</div>
     </article>
-    <article class="review-card flex flex-col p-5" style="background:#242427;border:2px solid #EDEDED;">
+    <article class="review-card u-card flex flex-col p-5" style="background:#242427;">
       <div class="flex justify-between items-center">
         <span class="inline-flex gap-0.5" style="color:#27E0F5;">
           <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
@@ -719,21 +722,21 @@
         <span class="font-body mt-2" style="font-size:14px;">Real human · 24 hours · 365 days</span>
       </a>
       <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div class="p-4" style="background:#242427;border:2px solid #EDEDED;">
+        <div class="u-card p-4" style="background:#242427;">
           <span class="hazard" style="color:#EDEDED;">HOURS</span>
           <div class="font-body mt-2.5" style="font-size:14px;line-height:1.7;">Dispatch: <strong data-biz-hours-dispatch data-content-key="hours-dispatch">24/7</strong><br/>Open 365 days a year</div>
         </div>
         <!-- Shop / walk-in address removed (Group 3): no physical storefront. Replaced with the payments block. -->
-        <div class="p-4" style="background:#242427;border:2px solid #EDEDED;">
+        <div class="u-card p-4" style="background:#242427;">
           <span class="hazard" style="color:#EDEDED;">PAYMENTS</span>
           <div class="font-body mt-2.5" style="font-size:13px;line-height:1.5;">All Payments Accepted<br/><span style="color:#9a9a9a;font-size:12px;">Apple Pay, Google Pay, tap to pay · Visa, Mastercard, Amex, debit</span></div>
         </div>
-        <div class="p-4" style="background:#242427;border:2px solid #EDEDED;">
+        <div class="u-card p-4" style="background:#242427;">
           <span class="hazard" style="color:#EDEDED;">EMAIL</span>
           <div class="font-body mt-2.5" style="font-size:14px;line-height:1.7;"><span data-biz-email data-content-key="email">dispatch@astonlocksmith.co</span></div>
         </div>
         <!-- TODO: re-add CREDENTIALS card (License # · Bonded · Insured · ALOA) once official license is obtained -->
-        <div class="p-4" style="background:#242427;border:2px solid #EDEDED;">
+        <div class="u-card p-4" style="background:#242427;">
           <span class="hazard" style="color:#EDEDED;">AREA</span>
           <div class="font-body mt-2.5" style="font-size:13px;line-height:1.55;">Toronto &amp; GTA<br/>24/7 mobile dispatch</div>
         </div>
@@ -837,7 +840,7 @@
 </button>
 
 <!-- ───── BOTTOM CTA ───── -->
-<section class="relative" style="background:#0f0f10;color:#EDEDED;border-top:3px solid #27E0F5;">
+<section class="relative" style="background:#000000;color:#EDEDED;border-top:3px solid #27E0F5;">
   <div class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-14 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 lg:gap-10">
     <div class="flex-1 min-w-0">
       <span class="hazard" style="color:#27E0F5;border-color:#27E0F5;background:transparent;">IF YOU'RE LOCKED OUT</span>
