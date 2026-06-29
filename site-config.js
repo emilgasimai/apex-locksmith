@@ -40,7 +40,7 @@
     email: 'dispatch@astonlocksmith.co',
 
     /* ── WEB (changeable: update sitemap.xml + robots.txt too on domain change) ── */
-    baseUrl: 'https://apex-locksmith.vercel.app',   // NO trailing slash
+    baseUrl: 'https://astonlocksmith.ca',   // NO trailing slash
 
     /* ── LOCATION ──────────────────────────────────────────────────────────────
        Mobile locksmith — NO physical storefront. We deliberately omit a street

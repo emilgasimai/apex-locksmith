@@ -15,4 +15,4 @@ Disallow: /dispatch.html
 Disallow: /tech
 Disallow: /tech.html
 
-Sitemap: https://apex-locksmith.vercel.app/sitemap.xml
+Sitemap: https://astonlocksmith.ca/sitemap.xml

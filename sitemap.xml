@@ -7,7 +7,7 @@
         Sitemap line in robots.txt AND baseUrl in site-config.js. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://apex-locksmith.vercel.app/</loc>
+    <loc>https://astonlocksmith.ca/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
