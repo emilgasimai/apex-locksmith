@@ -29,6 +29,11 @@
 <meta name="twitter:description" content="Fast, 24/7 mobile locksmith for Toronto &amp; the GTA. Emergency lockouts, rekeys, automotive, safes &amp; smart locks."/>
 <meta name="twitter:image" content="https://astonlocksmith.ca/brand_assets/og-image.jpg"/>
 <meta name="twitter:image:alt" content="Aston Locksmith — 24/7 emergency locksmith, Toronto &amp; the GTA"/>
+<!-- Favicon / home-screen icon — unlocked padlock brand mark. SVG for modern
+     browsers, PNG fallback for older ones (Safari < 16). -->
+<link rel="icon" type="image/svg+xml" href="brand_assets/favicon.svg"/>
+<link rel="apple-touch-icon" sizes="180x180" href="brand_assets/apple-touch-icon.png"/>
+<link rel="icon" type="image/png" href="brand_assets/apple-touch-icon.png"/>
 <!-- ⭐ Single source of truth + SEO injector — load FIRST, synchronously -->
 <script src="site-config.js?v=2"></script>
 <script src="seo.js?v=2"></script>
@@ -37,7 +42,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="tailwind.css"/>
 <link rel="stylesheet" id="leafletCss" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" media="print" onload="this.media='all'" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-<link rel="stylesheet" href="styles.css?v=30"/>
+<link rel="stylesheet" href="styles.css?v=31"/>
 </head>
 <body class="bg-bg text-ink">
 
@@ -659,7 +664,6 @@
           <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
           <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
         </span>
-        <span class="font-mono t-cap-sm" style="color:#9a9a9a;">2 weeks ago</span>
       </div>
       <p class="font-body mt-3.5 flex-1" style="font-size:15px;line-height:1.55;text-wrap:pretty;">"Got locked out at 11pm with my dog inside. Tech was at my door in 14 minutes flat and had me back in within 5 more. Clean job, no damage to the lock, fair price. Saved as a contact."</p>
       <div class="font-display mt-3 pt-2.5" style="font-size:16px;letter-spacing:.03em;border-top:1px solid #3a3a3e;text-transform:none;">Dana R.</div>
@@ -673,7 +677,6 @@
           <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
           <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
         </span>
-        <span class="font-mono t-cap-sm" style="color:#9a9a9a;">1 month ago</span>
       </div>
       <p class="font-body mt-3.5 flex-1" style="font-size:15px;line-height:1.55;text-wrap:pretty;">"Had Aston rekey the whole house after closing. Marcus walked through every door and recommended swapping two deadbolts that were past their service life. No upsell pressure. Two-year warranty on the work."</p>
       <div class="font-display mt-3 pt-2.5" style="font-size:16px;letter-spacing:.03em;border-top:1px solid #3a3a3e;text-transform:none;">Eli K.</div>
@@ -687,7 +690,6 @@
           <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
           <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 3l2.6 6.1 6.4.6-4.8 4.4 1.4 6.4L12 17.3 6.4 20.5 7.8 14 3 9.7l6.4-.6z" fill="currentColor"/></svg>
         </span>
-        <span class="font-mono t-cap-sm" style="color:#9a9a9a;">1 month ago</span>
       </div>
       <p class="font-body mt-3.5 flex-1" style="font-size:15px;line-height:1.55;text-wrap:pretty;">"Used them for our coffee shop — master key system across four doors plus a safe combination change. Took maybe 90 minutes. Receipt was exactly the quote."</p>
       <div class="font-display mt-3 pt-2.5" style="font-size:16px;letter-spacing:.03em;border-top:1px solid #3a3a3e;text-transform:none;">Priya S.</div>
@@ -863,10 +865,12 @@
     </div>
     <!-- Meta row -->
     <div class="flex flex-wrap gap-3 justify-between items-center font-mono t-cap-sm pt-4" style="opacity:.7;font-weight:600;border-top:1px solid #3a3a3e;">
-      <span>© <span id="copyYear">2025</span> <span data-biz-name>Aston Locksmith</span>. ALL RIGHTS RESERVED.</span>
+      <!-- Year auto-updates each load via seo.js (#copyYear ← current year); the
+           static value is a no-JS fallback, kept current. -->
+      <span>© <span id="copyYear">2026</span> <span data-biz-name>Aston Locksmith</span>. ALL RIGHTS RESERVED.</span>
       <!-- TODO: re-add "LIC # — PENDING / number" once official license is obtained -->
       <span>TORONTO · GTA</span>
-      <span>PRIVACY · TERMS · WARRANTY</span>
+      <span class="footer-legal"><a href="legal.html#privacy">PRIVACY</a> · <a href="legal.html#terms">TERMS</a> · <a href="legal.html#warranty">WARRANTY</a></span>
     </div>
   </div>
 </footer>

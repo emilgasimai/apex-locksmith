@@ -565,9 +565,7 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
   position:relative;
   overflow:hidden;
   border-radius:18px !important; /* match .why-card badge boxes */
-  background:
-    radial-gradient(150px 120px at 100% 0%, rgba(39,224,245,.16), rgba(39,224,245,0) 70%),
-    linear-gradient(180deg,#27272b 0%, #1e1e21 100%);
+  background: linear-gradient(180deg,#27272b 0%, #1e1e21 100%);
   border:2px solid #34343a;
   box-shadow:
     0 2px 4px rgba(0,0,0,.4),
@@ -1230,3 +1228,22 @@ body.lang-switching{ opacity:0; }
   .lang-slider{ transition:none; }
 }
 
+
+/* ── Footer legal links (Privacy · Terms · Warranty) ────────────────────────
+   Inline mono links in the footer meta row. Cyan on hover/focus, animated
+   underline (transform only) so they read as clickable without shouting. */
+.footer-legal a{
+  color:inherit; text-decoration:none; position:relative;
+  transition:color .18s cubic-bezier(.2,.7,.3,1);
+  outline:none;
+}
+.footer-legal a::after{
+  content:""; position:absolute; left:0; right:0; bottom:-2px; height:1.5px;
+  background:#27E0F5; transform:scaleX(0); transform-origin:left center;
+  transition:transform .22s cubic-bezier(.2,.7,.3,1);
+}
+.footer-legal a:hover,
+.footer-legal a:focus-visible{ color:#27E0F5; }
+.footer-legal a:hover::after,
+.footer-legal a:focus-visible::after{ transform:scaleX(1); }
+.footer-legal a:active{ opacity:.8; }
