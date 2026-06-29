@@ -69,7 +69,7 @@
         phoneTel:     p.tel     || '+14372495464',       // tel:/sms: hrefs (E.164)
         phoneDisplay: p.display || '(437) 249-5464',     // visible text
         whatsapp:     p.whatsapp || '14372495464',       // digits only, for wa.me
-        email:        S.email   || 'dispatch@astonlocksmith.co',
+        email:        S.email   || 'dispatch@astonlocksmith.ca',
         addressLine1: '',                                 // no physical storefront
         addressLine2: S.areaSummary || 'Toronto & the GTA',
         hoursDispatch: h.dispatchLabel || '24/7',

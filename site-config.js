@@ -37,7 +37,7 @@
       display: '(437) 249-5464',     // human-visible text
       whatsapp: '14372495464'        // digits only, for wa.me links
     },
-    email: 'dispatch@astonlocksmith.co',
+    email: 'dispatch@astonlocksmith.ca',
 
     /* ── WEB (changeable: update sitemap.xml + robots.txt too on domain change) ── */
     baseUrl: 'https://astonlocksmith.ca',   // NO trailing slash
