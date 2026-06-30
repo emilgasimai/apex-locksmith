@@ -294,6 +294,14 @@ a{color:inherit;text-decoration:none}
 .price-confirm:active{transform:scale(.98)}
 .price-note{margin:12px 0 0;font-size:11.5px;line-height:1.5;color:var(--muted-2,var(--muted));text-align:center}
 
+/* Payment method segmented control — same surface/border/cyan tokens as the
+   price input + job-id pill, so it matches the popup rather than adding a pattern. */
+.pay-seg{display:flex;gap:8px}
+.pay-opt{flex:1;padding:12px 6px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;color:var(--muted);font:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:border-color .15s,color .15s,background .15s}
+.pay-opt:hover{border-color:#55555a;color:var(--ink)}
+.pay-opt.is-active{border-color:var(--cyan);color:var(--cyan);background:var(--cyan-dim)}
+.pay-opt:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+
 /* ── Receipt popup (post-completion) — reuses the .price-modal / .price-box shell ── */
 .price-title-ico{display:inline-flex;align-items:center;gap:9px}
 .price-title-ico svg{width:19px;height:19px;color:var(--cyan);flex:none}
@@ -981,6 +989,14 @@ body.agreement-open{overflow:hidden}
       <div class="price-row" id="priceNightRow" hidden><span>Night fee · after-hours</span><span id="priceNight">$49.00</span></div>
       <div class="price-row price-total"><span>Total</span><span id="priceTotal">$0.00</span></div>
     </div>
+    <div class="price-field" style="margin-top:16px;">
+      <span class="price-field-label">Payment method</span>
+      <div class="pay-seg" id="paySeg" role="group" aria-label="Payment method">
+        <button type="button" class="pay-opt" data-pay="cash">Cash</button>
+        <button type="button" class="pay-opt" data-pay="card">Card</button>
+        <button type="button" class="pay-opt" data-pay="e-transfer">E-Transfer</button>
+      </div>
+    </div>
     <div class="price-err" id="priceErr" hidden></div>
     <button type="button" id="priceConfirm" class="price-confirm">Confirm price</button>
     <p class="price-note">Confirming locks in the price and enables <b>Slide to Complete</b>. The job isn't finished until you slide. Night fee &amp; tax are finalised on the server.</p>
@@ -1172,6 +1188,7 @@ body.agreement-open{overflow:hidden}
   var receiptSending = false;
   var receiptDoneTimer = null;
   var confirmedServiceFee = null;   // set when the tech confirms the price; gates Slide + Cancel
+  var confirmedPayment = null;      // 'cash' | 'card' | 'e-transfer' — required to confirm + sent on complete
   var slideEl    = document.getElementById('completeSlide');
   var slideFill  = document.getElementById('slideFill');
   var slideSymbols = document.getElementById('slideSymbols');
@@ -1626,6 +1643,7 @@ body.agreement-open{overflow:hidden}
     lookupHint.textContent = '';
     jobIdInput.value = '';
     confirmedServiceFee = null;       // clear any locked-in price
+    clearPayment();                   // clear any chosen payment method
     if (getSignatureBtn) getSignatureBtn.hidden = true;
     if (completeJobBtn) completeJobBtn.hidden = true;
     resetCancelPanel();
@@ -1675,6 +1693,7 @@ body.agreement-open{overflow:hidden}
     if (priceJobId) { priceJobId.hidden = true; priceJobId.textContent = ''; }
     if (agreementView && !agreementView.hidden) closeAgreement();
     confirmedServiceFee = null;
+    clearPayment();
     if (slideEl) slideEl.hidden = true;
     setSlideEnabled(false);
   }
@@ -1738,6 +1757,7 @@ body.agreement-open{overflow:hidden}
     // Cancel is always visible/enabled on an owned job. Slide to Complete stays
     // COMPLETELY HIDDEN until the price is confirmed (it appears only on confirm).
     confirmedServiceFee = null;             // reset pricing on every (re)render
+    clearPayment();
     var signed       = !!job.agreementSignedAt || job.status === 'in-progress';
     var canSign      = canAct && !signed && (job.status === 'assigned' || job.status === 'approved');
     var canComplete  = canAct && signed;
@@ -1888,10 +1908,28 @@ body.agreement-open{overflow:hidden}
     document.addEventListener('keydown', function (e) { if (!receiptModal.hidden && e.key === 'Escape') closeReceiptModal(); });
   }
   priceFee.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); priceConfirm.click(); } });
+
+  // ── Payment method selector ──
+  var payOpts = priceModal ? priceModal.querySelectorAll('.pay-opt') : [];
+  function setPayment(method) {
+    confirmedPayment = method || null;
+    for (var i = 0; i < payOpts.length; i++) {
+      payOpts[i].classList.toggle('is-active', payOpts[i].getAttribute('data-pay') === method);
+    }
+  }
+  function clearPayment() { setPayment(null); }
+  for (var pi = 0; pi < payOpts.length; pi++) {
+    payOpts[pi].addEventListener('click', function () {
+      setPayment(this.getAttribute('data-pay'));
+      if (priceErr && !priceErr.hidden) priceErr.hidden = true;   // clear the "select a method" error on pick
+    });
+  }
+
   priceConfirm.addEventListener('click', function () {
     var fee = parseFloat(priceFee.value);
     if (!isFinite(fee) || fee < 0) { priceErr.textContent = 'Enter a valid service fee.'; priceErr.hidden = false; priceFee.focus(); return; }
     if (fee > 1000000) { priceErr.textContent = 'That service fee is too large.'; priceErr.hidden = false; return; }
+    if (!confirmedPayment) { priceErr.textContent = 'Select a payment method.'; priceErr.hidden = false; return; }
     confirmedServiceFee = Math.round(fee * 100) / 100;
     completeJobBtn.hidden = true;            // Complete Job disappears
     slideEl.hidden = false;                  // Slide to Complete now APPEARS (was hidden until this point)…
@@ -2248,13 +2286,13 @@ body.agreement-open{overflow:hidden}
 
   async function fireComplete() {
     if (!currentJob) { slideReset(true); return; }
-    if (confirmedServiceFee == null) {        // safety net — Slide shouldn't be active without a price
+    if (confirmedServiceFee == null || !confirmedPayment) {   // safety net — Slide shouldn't be active without price + payment
       slideReset(true);
       toast('Tap Finish to set the price first.', 'err');
       return;
     }
     var id = currentJob._id || currentJob.id;
-    var res = await authFetch('/api/dispatch/' + id + '/complete', { method: 'PATCH', json: { serviceFee: confirmedServiceFee } });
+    var res = await authFetch('/api/dispatch/' + id + '/complete', { method: 'PATCH', json: { serviceFee: confirmedServiceFee, paymentMethod: confirmedPayment } });
     if (res.status === 401) { clearSession(); showLogin(); return; }
     if (res.ok) {
       // Capture the completed job before resetJobArea() clears currentJob — the
