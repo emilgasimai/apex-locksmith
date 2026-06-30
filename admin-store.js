@@ -530,6 +530,36 @@ const AdminStore = (function () {
       }
     },
 
+    // GET /api/technicians/:id/jobs-export?from=&to= → PDF download. Returns
+    // { ok, blob, filename } on success. Raw fetch (not apiFetch) — the body is a
+    // PDF, not JSON. Mirrors exportCsv. from/to are optional ISO date strings.
+    async exportTechnicianJobsPdf(id, from, to) {
+      const s = readSession();
+      const params = new URLSearchParams();
+      if (from) params.set('from', from);
+      if (to) params.set('to', to);
+      const qs = params.toString();
+      try {
+        const res = await fetch(window.API_BASE_URL + '/api/technicians/' + id + '/jobs-export' + (qs ? '?' + qs : ''), {
+          headers: s && s.token ? { Authorization: 'Bearer ' + s.token } : {},
+        });
+        if (res.status === 401) { writeSession(null); emit('admin:unauthorized', {}); return { ok: false, status: 401 }; }
+        if (!res.ok) {
+          let message = 'Export failed';
+          try { const j = await res.json(); if (j && j.message) message = j.message; } catch (e) {}
+          return { ok: false, status: res.status, message: message };
+        }
+        const blob = await res.blob();
+        const cd = res.headers.get('Content-Disposition') || '';
+        const m = /filename="?([^";]+)"?/.exec(cd);
+        const filename = m ? m[1] : 'tech-report.pdf';
+        return { ok: true, blob: blob, filename: filename };
+      } catch (e) {
+        markOffline();
+        return { ok: false, status: 0, message: 'Network error — could not reach the server.' };
+      }
+    },
+
     /* ───────────── IMAGE UPLOAD ───────────── */
     // POST /api/upload (multipart) → { url }. Falls back to ok:false so the
     // caller can keep the base64 data-URL behaviour with a warning.

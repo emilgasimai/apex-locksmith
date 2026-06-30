@@ -1979,6 +1979,60 @@
     return d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ', ' +
       d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
   }
+  // Date-range filter state for the "Jobs handled" list + PDF export. Holds the
+  // open technician's id and the full (unfiltered) jobs list so the date inputs
+  // can re-filter without re-fetching.
+  let techDetailId = null;
+  let techDetailJobsAll = [];
+
+  // Renders just the jobs list (empty-state or rows). Split out of renderTechDetail
+  // so the date filter can re-render it in place without rebuilding the whole view.
+  function renderTechJobsList(jobs, filtered) {
+    if (!jobs.length) {
+      return '<div class="manager-empty">' +
+        (filtered ? 'No completed jobs in this date range.' : 'No completed or cancelled jobs yet.') +
+        '</div>';
+    }
+    return '<div class="drill-list">' + jobs.map(function (j) {
+      const st = (j.status || '').toLowerCase();
+      const prio = j.priority || 'normal';
+      const hasJob = !!j.jobId;
+      return '<div class="drill-row drill-job' + (hasJob ? ' is-openable' : '') + '"' +
+          (hasJob ? ' data-jobid="' + attr(j.jobId) + '" role="button" tabindex="0" title="Open in dispatch board"' : '') + '>' +
+          '<div class="drill-row-top">' +
+            '<span class="drill-jobid">' + (j.jobId ? '#' + esc(j.jobId) : '—') + '</span>' +
+            '<span class="drill-badge status-' + esc(st) + '">' + esc(DASH_STATUS_LABEL[j.status] || j.status || '—') + '</span>' +
+            '<span class="drill-prio prio-' + esc(prio) + '">' + esc(prio) + '</span>' +
+          '</div>' +
+          '<div class="drill-customer">' + esc(j.customerName || 'Unknown') + '</div>' +
+          '<div class="drill-meta">' +
+            (j.completedAt ? '<span>' + esc(techFmtWhen(j.completedAt)) + '</span>' : '') +
+            (j.serviceType ? '<span>' + esc(j.serviceType) + '</span>' : '') +
+            (j.phone ? '<span>' + esc(j.phone) + '</span>' : '') +
+          '</div>' +
+          priceBreakdownHtml(j) +
+        '</div>';
+    }).join('') + '</div>';
+  }
+
+  // A job is in range when its completion time falls within [from 00:00, to 23:59:59]
+  // in UTC — the same bounds we send to the PDF endpoint, so the on-screen list and
+  // the exported PDF always contain the same jobs. Cancelled jobs (no completedAt)
+  // drop out once a range is active.
+  function techJobsInRange(jobs, from, to) {
+    if (!from && !to) return jobs.slice();
+    const fromTs = from ? Date.parse(from) : null;                       // UTC midnight
+    const toTs   = to   ? Date.parse(to + 'T23:59:59.999Z') : null;      // end of to-day, UTC
+    return jobs.filter(function (j) {
+      if (!j.completedAt) return false;
+      const t = Date.parse(j.completedAt);
+      if (isNaN(t)) return false;
+      if (fromTs != null && t < fromTs) return false;
+      if (toTs   != null && t > toTs)   return false;
+      return true;
+    });
+  }
+
   function renderTechDetail(shiftsData, jobsData) {
     const summary = (shiftsData && shiftsData.summary) || {};
     const shifts  = (shiftsData && shiftsData.shifts) || [];
@@ -2006,38 +2060,73 @@
       }).join('') + '</div>';
     }
 
+    // Jobs handled — with a From/To date filter + PDF export. The filter narrows
+    // both this list and the export. Rows are sorted newest-first by the backend;
+    // each carries the full itemized price breakdown and (when it has a jobId)
+    // deep-links into the dispatch board via the shared drillBody delegate.
     html += '<h4 class="tech-sec-title">Jobs handled</h4>';
-    if (!jobs.length) {
-      html += '<div class="manager-empty">No completed or cancelled jobs yet.</div>';
-    } else {
-      // Sorted newest-first by the backend. Each row carries the full itemized
-      // price breakdown; clicking one (when it has a jobId) deep-links into the
-      // dispatch board, which opens the same detail card as the Completed tab —
-      // handled by the shared drillBody delegate + openJobInDispatch().
-      html += '<div class="drill-list">' + jobs.map(function (j) {
-        const st = (j.status || '').toLowerCase();
-        const prio = j.priority || 'normal';
-        const hasJob = !!j.jobId;
-        return '<div class="drill-row drill-job' + (hasJob ? ' is-openable' : '') + '"' +
-            (hasJob ? ' data-jobid="' + attr(j.jobId) + '" role="button" tabindex="0" title="Open in dispatch board"' : '') + '>' +
-            '<div class="drill-row-top">' +
-              '<span class="drill-jobid">' + (j.jobId ? '#' + esc(j.jobId) : '—') + '</span>' +
-              '<span class="drill-badge status-' + esc(st) + '">' + esc(DASH_STATUS_LABEL[j.status] || j.status || '—') + '</span>' +
-              '<span class="drill-prio prio-' + esc(prio) + '">' + esc(prio) + '</span>' +
-            '</div>' +
-            '<div class="drill-customer">' + esc(j.customerName || 'Unknown') + '</div>' +
-            '<div class="drill-meta">' +
-              (j.completedAt ? '<span>' + esc(techFmtWhen(j.completedAt)) + '</span>' : '') +
-              (j.serviceType ? '<span>' + esc(j.serviceType) + '</span>' : '') +
-              (j.phone ? '<span>' + esc(j.phone) + '</span>' : '') +
-            '</div>' +
-            priceBreakdownHtml(j) +
-          '</div>';
-      }).join('') + '</div>';
-    }
+    html +=
+      '<div class="tech-jobs-tools">' +
+        '<label class="field tech-date"><span class="field-label">From</span><input type="date" id="techJobsFrom"/></label>' +
+        '<label class="field tech-date"><span class="field-label">To</span><input type="date" id="techJobsTo"/></label>' +
+        '<button type="button" id="techExportPdf" class="btn btn-sm tech-export-btn">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v11m0 0l-4-4m4 4l4-4M5 21h14"/></svg>' +
+          '<span class="tech-export-label">Export PDF</span>' +
+        '</button>' +
+      '</div>';
+    html += '<div id="techJobsList">' + renderTechJobsList(jobs, false) + '</div>';
     return html;
   }
+
+  // Wire the date filter + PDF export inside the freshly-rendered tech detail.
+  function wireTechJobsTools() {
+    const fromEl = document.getElementById('techJobsFrom');
+    const toEl   = document.getElementById('techJobsTo');
+    const listEl = document.getElementById('techJobsList');
+    const btn    = document.getElementById('techExportPdf');
+    if (!listEl) return;
+
+    function applyFilter() {
+      const from = fromEl ? fromEl.value : '';
+      const to   = toEl ? toEl.value : '';
+      const filtered = techJobsInRange(techDetailJobsAll, from, to);
+      listEl.innerHTML = renderTechJobsList(filtered, !!(from || to));
+    }
+    if (fromEl) fromEl.addEventListener('change', applyFilter);
+    if (toEl)   toEl.addEventListener('change', applyFilter);
+
+    if (btn) {
+      btn.addEventListener('click', async function () {
+        if (btn.disabled || !techDetailId) return;
+        const from = fromEl ? fromEl.value : '';
+        const to   = toEl ? toEl.value : '';
+        // Inclusive of the whole "to" day, in UTC — matches techJobsInRange so the
+        // PDF and the on-screen list cover the same jobs.
+        const toParam = to ? to + 'T23:59:59.999Z' : '';
+        const label = btn.querySelector('.tech-export-label');
+        const original = label ? label.textContent : 'Export PDF';
+        btn.disabled = true;
+        if (label) label.textContent = 'Generating…';
+        const res = await AdminStore.exportTechnicianJobsPdf(techDetailId, from, toParam);
+        btn.disabled = false;
+        if (label) label.textContent = original;
+        if (res && res.ok && res.blob) {
+          const url = URL.createObjectURL(res.blob);
+          const a = document.createElement('a');
+          a.href = url; a.download = res.filename || 'tech-report.pdf';
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        } else if (res && res.status === 401) {
+          showToast('Session expired — sign in again');
+        } else {
+          showToast((res && res.message) || 'Couldn’t export PDF — try again');
+        }
+      });
+    }
+  }
   async function openTechDetail(id, name) {
+    techDetailId = id;
+    techDetailJobsAll = [];
     drillTitle.textContent = name || 'Technician';
     drillSub.textContent = 'Shifts & job history';
     drillBody.innerHTML = '<div class="aston-loading"><span class="aston-spinner"></span>Loading…</div>';
@@ -2050,7 +2139,9 @@
       drillBody.innerHTML = '<div class="manager-empty">Backend unreachable — couldn’t load this technician.</div>';
       return;
     }
+    techDetailJobsAll = (jobsData && jobsData.jobs) || [];
     drillBody.innerHTML = renderTechDetail(shiftsData, jobsData);
+    wireTechJobsTools();
   }
 
   function showTcErr(msg) { tcErr.textContent = msg; tcErr.hidden = false; }

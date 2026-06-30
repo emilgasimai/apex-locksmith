@@ -1230,6 +1230,14 @@ input:focus, textarea:focus {
 .tech-shift-dur { margin-left: auto; font-family: var(--mono); font-size: 13px; font-weight: 800; color: var(--ink); }
 .tech-shift-dur.is-ongoing { color: var(--accent); }
 
+/* Jobs-handled toolbar: From/To date filter + PDF export (utility action). */
+.tech-jobs-tools { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; margin: 0 0 10px; }
+.tech-jobs-tools .tech-date { margin: 0; flex: 1 1 120px; min-width: 110px; }
+.tech-jobs-tools .tech-export-btn { margin-left: auto; align-self: flex-end; white-space: nowrap; }
+@media (max-width: 560px) {
+  .tech-jobs-tools .tech-export-btn { margin-left: 0; flex: 1 1 100%; justify-content: center; }
+}
+
 /* Itemized charge breakdown — drill-down job rows + revenue view */
 .price-breakdown { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: 4px; }
 .pb-row { display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; color: var(--muted); }

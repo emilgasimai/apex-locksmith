@@ -294,6 +294,18 @@ a{color:inherit;text-decoration:none}
 .price-confirm:active{transform:scale(.98)}
 .price-note{margin:12px 0 0;font-size:11.5px;line-height:1.5;color:var(--muted-2,var(--muted));text-align:center}
 
+/* ── Receipt popup (post-completion) — reuses the .price-modal / .price-box shell ── */
+.price-title-ico{display:inline-flex;align-items:center;gap:9px}
+.price-title-ico svg{width:19px;height:19px;color:var(--cyan);flex:none}
+.receipt-sms-note{margin:-4px 0 16px;font-size:12px;color:var(--muted);opacity:.65;display:flex;align-items:center;gap:7px}
+.receipt-sms-note svg{width:13px;height:13px;flex:none}
+.receipt-actions{display:flex;gap:10px}
+.receipt-actions .btn{flex:1}
+/* Email is text, not a price amount — calm it down from the price input's big bold numerals. */
+#receiptEmail{font-size:16px;font-weight:600;padding:13px 0}
+.receipt-done{display:flex;align-items:center;justify-content:center;gap:9px;padding:8px 0 2px;color:var(--cyan);font-weight:800;font-size:15px}
+.receipt-done svg{width:20px;height:20px;flex:none}
+
 /* ════════ Unified Aston loader (identical across admin / dispatch / tech) ════════ */
 .aston-spinner{
   display:inline-block;vertical-align:middle;flex:none;
@@ -975,6 +987,47 @@ body.agreement-open{overflow:hidden}
   </div>
 </div>
 
+<!-- Receipt popup — shown after a job is completed; emails the customer their receipt -->
+<div id="receiptModal" class="price-modal" hidden>
+  <div class="price-box" role="dialog" aria-modal="true" aria-labelledby="receiptTitle">
+    <div class="price-head">
+      <div class="price-head-titles">
+        <h3 id="receiptTitle" class="price-title">
+          <span class="price-title-ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+            Send Receipt?
+          </span>
+        </h3>
+        <span class="price-jobid" id="receiptJobId" hidden></span>
+      </div>
+      <button type="button" id="receiptClose" class="price-close" aria-label="Close">&times;</button>
+    </div>
+
+    <div id="receiptBody">
+      <label class="price-field">
+        <span class="price-field-label">Customer email <span style="font-weight:600;text-transform:none;letter-spacing:0;opacity:.7;">· optional</span></span>
+        <div class="price-input-wrap">
+          <input id="receiptEmail" type="email" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Customer email address" autocomplete="off"/>
+        </div>
+      </label>
+      <p class="receipt-sms-note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        SMS receipt coming soon
+      </p>
+      <div class="price-err" id="receiptErr" hidden></div>
+      <div class="receipt-actions">
+        <button type="button" id="receiptSkip" class="btn btn-ghost">Skip</button>
+        <button type="button" id="receiptSend" class="btn btn-primary" disabled>Send Receipt</button>
+      </div>
+    </div>
+
+    <div id="receiptSuccess" class="receipt-done" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
+      Receipt sent!
+    </div>
+  </div>
+</div>
+
 <!-- ==================== CUSTOMER AGREEMENT (full-screen) ==================== -->
 <!-- Opened by "Get Signature". The agreement text and the signature section share a
      SINGLE scroll area; the signature pad flows at the very END of the document, so
@@ -1105,6 +1158,19 @@ body.agreement-open{overflow:hidden}
   var priceConfirm = document.getElementById('priceConfirm');
   var priceClose   = document.getElementById('priceClose');
   var priceJobId   = document.getElementById('priceJobId');
+  // Receipt popup (post-completion)
+  var receiptModal   = document.getElementById('receiptModal');
+  var receiptBody    = document.getElementById('receiptBody');
+  var receiptSuccess = document.getElementById('receiptSuccess');
+  var receiptEmail   = document.getElementById('receiptEmail');
+  var receiptErr     = document.getElementById('receiptErr');
+  var receiptSend    = document.getElementById('receiptSend');
+  var receiptSkip    = document.getElementById('receiptSkip');
+  var receiptClose   = document.getElementById('receiptClose');
+  var receiptJobId   = document.getElementById('receiptJobId');
+  var receiptJob     = null;   // the just-completed job (id + jobId) the popup is sending for
+  var receiptSending = false;
+  var receiptDoneTimer = null;
   var confirmedServiceFee = null;   // set when the tech confirms the price; gates Slide + Cancel
   var slideEl    = document.getElementById('completeSlide');
   var slideFill  = document.getElementById('slideFill');
@@ -1758,6 +1824,69 @@ body.agreement-open{overflow:hidden}
   priceClose.addEventListener('click', closePriceModal);
   priceModal.addEventListener('click', function (e) { if (e.target === priceModal) closePriceModal(); });
   document.addEventListener('keydown', function (e) { if (!priceModal.hidden && e.key === 'Escape') closePriceModal(); });
+
+  // ── Receipt popup (post-completion) ──
+  var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  function receiptValid() { return EMAIL_RE.test((receiptEmail.value || '').trim()); }
+  function syncReceiptSend() { receiptSend.disabled = receiptSending || !receiptValid(); }
+
+  function openReceiptModal(job) {
+    if (!job || !receiptModal) return;
+    receiptJob = job;
+    if (receiptDoneTimer) { clearTimeout(receiptDoneTimer); receiptDoneTimer = null; }
+    receiptSending = false;
+    receiptBody.hidden = false;            // back to the form state (in case it was left on success)
+    receiptSuccess.hidden = true;
+    receiptErr.hidden = true;
+    receiptEmail.value = (job.customerEmail || '').trim();   // prefill any email already on file
+    receiptSend.innerHTML = 'Send Receipt';
+    if (receiptJobId) {
+      receiptJobId.textContent = 'JOB #' + (job.jobId || '—');
+      receiptJobId.hidden = false;
+    }
+    syncReceiptSend();
+    receiptModal.hidden = false;
+    void receiptModal.offsetWidth;
+    receiptModal.classList.add('is-open');
+    setTimeout(function () { try { receiptEmail.focus(); } catch (e) {} }, 60);
+  }
+  function closeReceiptModal() {
+    if (receiptDoneTimer) { clearTimeout(receiptDoneTimer); receiptDoneTimer = null; }
+    receiptModal.classList.remove('is-open');
+    setTimeout(function () { if (!receiptModal.classList.contains('is-open')) receiptModal.hidden = true; }, 200);
+    // The job area was already reset on completion — we're back on the lookup view.
+    if (jobIdInput) { try { jobIdInput.focus(); } catch (e) {} }
+  }
+  async function sendReceipt() {
+    if (receiptSending || !receiptValid() || !receiptJob) return;
+    var id = receiptJob._id || receiptJob.id;
+    if (!id) { toast('Missing job reference.', 'err'); return; }
+    receiptSending = true;
+    receiptErr.hidden = true;
+    receiptSend.disabled = true;
+    receiptSend.innerHTML = '<span class="aston-spinner aston-spinner-sm" style="border-color:rgba(15,15,16,.25);border-top-color:#0f0f10"></span> Sending…';
+    var res = await authFetch('/api/dispatch/' + id + '/send-receipt', { method: 'POST', json: { email: (receiptEmail.value || '').trim() } });
+    if (res.status === 401) { clearSession(); showLogin(); return; }
+    if (res.ok) {
+      receiptBody.hidden = true;           // swap to the success state, auto-close after 2s
+      receiptSuccess.hidden = false;
+      receiptDoneTimer = setTimeout(closeReceiptModal, 2000);
+    } else {
+      receiptSending = false;
+      receiptSend.innerHTML = 'Send Receipt';
+      syncReceiptSend();
+      toast('Couldn’t send receipt — try again', 'err');
+    }
+  }
+  if (receiptModal) {
+    receiptEmail.addEventListener('input', syncReceiptSend);
+    receiptEmail.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !receiptSend.disabled) { e.preventDefault(); sendReceipt(); } });
+    receiptSend.addEventListener('click', sendReceipt);
+    receiptSkip.addEventListener('click', closeReceiptModal);
+    receiptClose.addEventListener('click', closeReceiptModal);
+    receiptModal.addEventListener('click', function (e) { if (e.target === receiptModal) closeReceiptModal(); });
+    document.addEventListener('keydown', function (e) { if (!receiptModal.hidden && e.key === 'Escape') closeReceiptModal(); });
+  }
   priceFee.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); priceConfirm.click(); } });
   priceConfirm.addEventListener('click', function () {
     var fee = parseFloat(priceFee.value);
@@ -2128,6 +2257,9 @@ body.agreement-open{overflow:hidden}
     var res = await authFetch('/api/dispatch/' + id + '/complete', { method: 'PATCH', json: { serviceFee: confirmedServiceFee } });
     if (res.status === 401) { clearSession(); showLogin(); return; }
     if (res.ok) {
+      // Capture the completed job before resetJobArea() clears currentJob — the
+      // receipt popup needs its _id (and any email already on file).
+      var completedJob = currentJob;
       playCompleteSound();              // 0) satisfying chime + haptic buzz
       hapticComplete();
       bumpDaily();
@@ -2135,7 +2267,8 @@ body.agreement-open{overflow:hidden}
       toast('Job completed!', 'ok');
       loadMyJobs(true);   // completed job drops out of My Jobs
       setTimeout(playCompleteFx, 360);  // 2) THEN the centre complete sign
-      setTimeout(function () { hideCompleteFx(); resetJobArea(); if (jobIdInput) jobIdInput.focus(); }, 1500);
+      // 3) After the celebration, reset to lookup and prompt to send the receipt.
+      setTimeout(function () { hideCompleteFx(); resetJobArea(); openReceiptModal(completedJob); }, 1500);
     } else {
       slideReset(true);   // snap back so the tech can retry
       toast((res.data && res.data.message) || 'Could not complete job.', 'err');
