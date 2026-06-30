@@ -1,6 +1,14 @@
 ﻿*{box-sizing:border-box}
 html,body{margin:0;padding:0;background:#1A1A1A;color:#EDEDED;font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:clip;overflow-wrap:break-word}
 
+/* ── Custom scrollbar — dark track, neon-cyan thumb on hover (site-wide) ── */
+html{scrollbar-width:thin;scrollbar-color:#3a3a3e transparent}
+::-webkit-scrollbar{width:12px;height:12px}
+::-webkit-scrollbar-track{background:#141416}
+::-webkit-scrollbar-thumb{background:#3a3a3e;border-radius:7px;border:2px solid #141416;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:#27E0F5;box-shadow:0 0 8px rgba(39,224,245,.5)}
+::-webkit-scrollbar-corner{background:#141416}
+
 /* ── Navigation font (industrial control-panel feel) ── */
 .nav-link{font-family:'Space Grotesk',sans-serif;color:#EDEDED;}
 

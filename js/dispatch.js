@@ -33,6 +33,7 @@
   };
   var STATUS_ORDER = ['pending-review', 'approved', 'assigned', 'in-progress', 'completed', 'cancelled'];
   var TERMINAL = { completed: 1, cancelled: 1 }; // sorted to the bottom of the live queue
+  var PAYMENT_LABEL = { cash: 'Cash', card: 'Card', 'e-transfer': 'E-Transfer' };
 
   // Top-level views. Each tab owns a set of statuses; the queue is grouped by
   // these client-side (the working set is fetched once, unfiltered, into the
@@ -587,6 +588,47 @@
   // Assign / status / price controls shared by job cards AND note cards.
   // Clear button only shows when there's a price to clear.
   // Unassign button only shows when a job is currently assigned.
+  // Payment status tag — shown beside the priority/status badges. Green when the
+  // payment has cleared, orange while a card/e-transfer is still pending.
+  function paymentTagHtml(job) {
+    if (job.paymentStatus === 'paid') return '<span class="badge pay-tag pay-paid">' + BI_CHECK + 'Paid</span>';
+    if (job.paymentStatus === 'pending') return '<span class="badge pay-tag pay-pending">' + BI_CLOCK + 'Pending Payment</span>';
+    return '';
+  }
+
+  // Cancellation-fee tag — only on cancelled jobs that carry a fee. Red until the
+  // fee is collected, green once marked paid.
+  function cancellationFeeTagHtml(job) {
+    if (job.status !== 'cancelled' || job.cancellationFee == null) return '';
+    var amt = fmtMoney(job.cancellationFee);
+    return job.cancellationFeePaid
+      ? '<span class="badge fee-tag fee-paid">Fee ' + amt + ' · Paid</span>'
+      : '<span class="badge fee-tag fee-unpaid">Fee ' + amt + ' · Unpaid</span>';
+  }
+
+  // Payment method + Mark Paid control — for jobs with a recorded payment
+  // (completed). Item 6: the method (Cash/Card/E-Transfer) shows near the price.
+  function paymentInfoHtml(job) {
+    var method = PAYMENT_LABEL[job.paymentMethod] || '';
+    var markPaid = job.paymentStatus === 'pending'
+      ? '<button type="button" class="btn btn-ghost btn-sm btn-mark-paid">Mark Paid</button>'
+      : '';
+    if (!method && !markPaid) return '';
+    var methodHtml = method
+      ? '<span class="pay-info"><span class="pay-info-label">Payment</span><span class="pay-info-method">' + esc(method) + '</span></span>'
+      : '<span></span>';
+    return '<div class="pay-info-row">' + methodHtml + markPaid + '</div>';
+  }
+
+  // Mark-Fee-Paid control for unpaid cancellation fees (staff collect the fee).
+  function cancellationFeeControlHtml(job) {
+    if (job.status !== 'cancelled' || job.cancellationFee == null || job.cancellationFeePaid) return '';
+    return '<div class="fee-control-row">' +
+      '<span class="fee-control-label">Cancellation fee ' + fmtMoney(job.cancellationFee) + ' · unpaid</span>' +
+      '<button type="button" class="btn btn-ghost btn-sm btn-mark-fee-paid">Mark Fee Paid</button>' +
+    '</div>';
+  }
+
   function jobControlsHtml(job, status) {
     var a = assignControlHtml(job);
     var clearBtn = job.price != null
@@ -611,6 +653,8 @@
           '<button type="button" class="btn btn-ghost btn-price">Save</button>' +
           clearBtn +
         '</div>' +
+        paymentInfoHtml(job) +
+        cancellationFeeControlHtml(job) +
       '</div>';
   }
 
@@ -722,6 +766,8 @@
           '<span class="badge prio prio-' + prio + '">' + (PRIO_BADGE_ICON[prio] || '') + PRIORITY_LABEL[prio] + '</span>' +
           '<span class="badge status status-' + status + '" data-status-badge>' + (STATUS_BADGE_ICON[status] || '') + STATUS_LABEL[status] + '</span>' +
           assignTag +
+          paymentTagHtml(job) +
+          cancellationFeeTagHtml(job) +
         '</div>' +
         '<div class="job-top-right">' +
           jobIdHtml +
@@ -736,11 +782,14 @@
       addrHtml +
       postalHtml +
       etaHtml +
-      '<div class="job-service">' + svcHtml + descBlock + '</div>' +
-      '<div class="job-ai editable-block" data-edit="aiSummary" data-type="textarea" data-label="AI summary" data-value="' + esc(job.aiSummary || '') + '" data-placeholder="No AI summary yet — click to add one.">' +
-        '<span class="job-ai-label">' + aiLabelIcon + 'AI Summary' + (job.aiSuggestedPriority ? '<span class="ai-prio"> · suggests ' + esc(PRIORITY_LABEL[job.aiSuggestedPriority] || job.aiSuggestedPriority) + '</span>' : '') + '</span>' +
-        '<button type="button" class="ed-pencil ed-pencil-corner" aria-label="Edit AI summary">' + pencilSvg() + '</button>' +
-        '<p class="ed-val' + (!(job.aiSummary && job.aiSummary.trim()) ? ' is-empty' : '') + '" data-val>' + esc(!(job.aiSummary && job.aiSummary.trim()) ? 'No AI summary yet — click to add one.' : job.aiSummary) + '</p>' +
+      // Details section: service type + raw customer message + the AI summary,
+      // consolidated into one block so there aren't two separate text areas.
+      '<div class="job-service">' + svcHtml + descBlock +
+        '<div class="job-ai editable-block" data-edit="aiSummary" data-type="textarea" data-label="AI summary" data-value="' + esc(job.aiSummary || '') + '" data-placeholder="No AI summary yet — click to add one.">' +
+          '<span class="job-ai-label">' + aiLabelIcon + 'AI Summary' + (job.aiSuggestedPriority ? '<span class="ai-prio"> · suggests ' + esc(PRIORITY_LABEL[job.aiSuggestedPriority] || job.aiSuggestedPriority) + '</span>' : '') + '</span>' +
+          '<button type="button" class="ed-pencil ed-pencil-corner" aria-label="Edit AI summary">' + pencilSvg() + '</button>' +
+          '<p class="ed-val' + (!(job.aiSummary && job.aiSummary.trim()) ? ' is-empty' : '') + '" data-val>' + esc(!(job.aiSummary && job.aiSummary.trim()) ? 'No AI summary yet — click to add one.' : job.aiSummary) + '</p>' +
+        '</div>' +
       '</div>' +
       jobControlsHtml(job, status) +
       agreementProofHtml(job) +
@@ -1337,6 +1386,10 @@
     }
     var priceBtn = e.target.closest('.btn-price');
     if (priceBtn) { doSetPrice(priceBtn); return; }
+    var markPaidBtn = e.target.closest('.btn-mark-paid');
+    if (markPaidBtn) { doMarkPaid(markPaidBtn); return; }
+    var markFeePaidBtn = e.target.closest('.btn-mark-fee-paid');
+    if (markFeePaidBtn) { doMarkFeePaid(markFeePaidBtn); return; }
     var unassignBtn = e.target.closest('.btn-unassign');
     if (unassignBtn) { doUnassign(unassignBtn); return; }
     var noteToggle = e.target.closest('[data-notes-toggle]');
@@ -1672,6 +1725,41 @@
           btn.disabled = false;
           toast((res.data && res.data.message) || 'Could not restore the job.', 'err');
         } else { btn.disabled = false; }
+      });
+  }
+
+  // Mark a pending card/e-transfer payment as settled. Reconciles the returned
+  // job doc so the badge flips Paid and the Mark Paid button disappears.
+  function doMarkPaid(btn) {
+    var card = btn.closest('[data-id]'); if (!card) return;
+    var id = card.getAttribute('data-id');
+    btn.disabled = true; var label = btn.textContent; btn.textContent = '…';
+    authedFetch('/api/dispatch/' + id + '/mark-paid', { method: 'PATCH' })
+      .then(function (res) {
+        if (res.ok) {
+          reconcileJob(res.data);
+          toast('Payment marked paid', 'ok');
+        } else if (res.status !== 401) {
+          btn.disabled = false; btn.textContent = label;
+          toast((res.data && res.data.message) || 'Could not mark paid.', 'err');
+        } else { btn.disabled = false; btn.textContent = label; }
+      });
+  }
+
+  // Record that a cancelled job's cancellation fee has been collected.
+  function doMarkFeePaid(btn) {
+    var card = btn.closest('[data-id]'); if (!card) return;
+    var id = card.getAttribute('data-id');
+    btn.disabled = true; var label = btn.textContent; btn.textContent = '…';
+    authedFetch('/api/dispatch/' + id + '/cancellation-fee-paid', { method: 'PATCH' })
+      .then(function (res) {
+        if (res.ok) {
+          reconcileJob(res.data);
+          toast('Cancellation fee marked paid', 'ok');
+        } else if (res.status !== 401) {
+          btn.disabled = false; btn.textContent = label;
+          toast((res.data && res.data.message) || 'Could not mark the fee paid.', 'err');
+        } else { btn.disabled = false; btn.textContent = label; }
       });
   }
 

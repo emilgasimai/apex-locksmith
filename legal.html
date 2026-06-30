@@ -24,6 +24,13 @@
     --cyan:#27E0F5; --border:#2a2a2e; --hairline:#232327;
   }
   html{scroll-behavior:smooth}
+  /* Custom scrollbar — dark track, neon-cyan thumb on hover (site-wide). */
+  html{scrollbar-width:thin;scrollbar-color:#3a3a3e transparent}
+  ::-webkit-scrollbar{width:12px;height:12px}
+  ::-webkit-scrollbar-track{background:#141416}
+  ::-webkit-scrollbar-thumb{background:#3a3a3e;border-radius:7px;border:2px solid #141416;background-clip:padding-box}
+  ::-webkit-scrollbar-thumb:hover{background:#27E0F5;box-shadow:0 0 8px rgba(39,224,245,.5)}
+  ::-webkit-scrollbar-corner{background:#141416}
   body{
     background:
       radial-gradient(1100px 520px at 18% -8%, rgba(39,224,245,.06), transparent 60%),
