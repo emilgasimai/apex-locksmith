@@ -43,16 +43,19 @@
     baseUrl: 'https://astonlocksmith.ca',   // NO trailing slash
 
     /* ── LOCATION ──────────────────────────────────────────────────────────────
-       Mobile locksmith — NO physical storefront. We deliberately omit a street
-       address (none exists) and describe the business at city level + service
-       area. Truthful structured data only. ──────────────────────────────────── */
+       Mobile locksmith — NO public storefront / walk-ins. The registered business
+       address below is emitted in the LocalBusiness JSON-LD for Google verification
+       ONLY; it is intentionally NOT shown on the public page (no "visit us here").
+       Service is otherwise described at city level + service area. ─────────────── */
     address: {
-      locality: 'Toronto',
+      street: '12 Kinsdale Blvd',
+      locality: 'Etobicoke',
       region: 'ON',                  // ISO 2-letter for schema addressRegion
       regionName: 'Ontario',
+      postalCode: 'M8Y 1T9',
       country: 'CA'
     },
-    geo: { lat: 43.6532, lng: -79.3832 },   // Toronto city centre
+    geo: { lat: 43.6532, lng: -79.3832 },   // Toronto city centre (service-area anchor)
 
     /* Cities explicitly served (drives footer list + schema areaServed). */
     areasServed: [

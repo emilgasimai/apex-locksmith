@@ -95,8 +95,10 @@
     'foundingDate': C.foundingDate,
     'address': {
       '@type': 'PostalAddress',
+      'streetAddress': C.address && C.address.street,
       'addressLocality': C.address && C.address.locality,
       'addressRegion': C.address && C.address.region,
+      'postalCode': C.address && C.address.postalCode,
       'addressCountry': C.address && C.address.country
     },
     'geo': {

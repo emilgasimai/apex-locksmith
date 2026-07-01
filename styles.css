@@ -40,6 +40,9 @@ html{scrollbar-width:thin;scrollbar-color:#3a3a3e transparent}
   font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;
   letter-spacing:.22em;text-transform:uppercase;line-height:1;
 }
+/* Info-box header icon: larger cyan glyph anchored to the card's top-right corner. */
+.box-card{position:relative}
+.box-hd-ico{position:absolute;top:14px;right:14px;width:28px;height:28px;color:#27E0F5;opacity:.9}
 
 /* Interactive states */
 a, button { transition: transform .15s cubic-bezier(.2,.7,.3,1.4), background-color .15s ease, color .15s ease, border-color .15s ease, opacity .15s ease; }

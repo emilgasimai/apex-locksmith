@@ -38,14 +38,14 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
 <link rel="apple-touch-icon" sizes="180x180" href="/brand_assets/apple-touch-icon.png"/>
 <!-- ⭐ Single source of truth + SEO injector — load FIRST, synchronously -->
-<script src="site-config.js?v=2"></script>
-<script src="seo.js?v=2"></script>
+<script src="site-config.js?v=3"></script>
+<script src="seo.js?v=3"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="tailwind.css"/>
 <link rel="stylesheet" id="leafletCss" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" media="print" onload="this.media='all'" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-<link rel="stylesheet" href="styles.css?v=33"/>
+<link rel="stylesheet" href="styles.css?v=35"/>
 </head>
 <body class="bg-bg text-ink">
 
@@ -722,23 +722,23 @@
         <span class="font-body mt-2" style="font-size:14px;">Real human · 24 hours · 365 days</span>
       </a>
       <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div class="u-card p-4" style="background:#242427;">
-          <span class="hazard" style="color:#EDEDED;">HOURS</span>
-          <div class="font-body mt-2.5" style="font-size:14px;line-height:1.7;">Dispatch: <strong data-biz-hours-dispatch data-content-key="hours-dispatch">24/7</strong><br/>Open 365 days a year</div>
+        <div class="u-card box-card p-4" style="background:#242427;">
+          <svg class="box-hd-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 7V12L10.5 14.5M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="hazard" style="color:#EDEDED;">HOURS</span>
+          <div class="font-body mt-2.5" style="font-size:14px;line-height:1.7;">Open <strong data-biz-hours-dispatch data-content-key="hours-dispatch">24/7</strong> · 365 days</div>
         </div>
         <!-- Shop / walk-in address removed (Group 3): no physical storefront. Replaced with the payments block. -->
-        <div class="u-card p-4" style="background:#242427;">
-          <span class="hazard" style="color:#EDEDED;">PAYMENTS</span>
-          <div class="font-body mt-2.5" style="font-size:13px;line-height:1.5;">All Payments Accepted<br/><span style="color:#9a9a9a;font-size:12px;">Apple Pay, Google Pay, tap to pay · Visa, Mastercard, Amex, debit</span></div>
+        <div class="u-card box-card p-4" style="background:#242427;">
+          <svg class="box-hd-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 9H21M7 15H9M6.2 19H17.8C18.9201 19 19.4802 19 19.908 18.782C20.2843 18.5903 20.5903 18.2843 20.782 17.908C21 17.4802 21 16.9201 21 15.8V8.2C21 7.0799 21 6.51984 20.782 6.09202C20.5903 5.71569 20.2843 5.40973 19.908 5.21799C19.4802 5 18.9201 5 17.8 5H6.2C5.0799 5 4.51984 5 4.09202 5.21799C3.71569 5.40973 3.40973 5.71569 3.21799 6.09202C3 6.51984 3 7.07989 3 8.2V15.8C3 16.9201 3 17.4802 3.21799 17.908C3.40973 18.2843 3.71569 18.5903 4.09202 18.782C4.51984 19 5.07989 19 6.2 19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="hazard" style="color:#EDEDED;">PAYMENTS</span>
+          <div class="font-body mt-2.5" style="font-size:13px;line-height:1.5;">All Payments Accepted<br/><span style="color:#9a9a9a;font-size:12px;">Apple Pay · Google Pay · Tap · Visa · Mastercard · Amex · Debit</span></div>
         </div>
-        <div class="u-card p-4" style="background:#242427;">
-          <span class="hazard" style="color:#EDEDED;">EMAIL</span>
+        <div class="u-card box-card p-4" style="background:#242427;">
+          <svg class="box-hd-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7.00005L10.2 11.65C11.2667 12.45 12.7333 12.45 13.8 11.65L20 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="hazard" style="color:#EDEDED;">EMAIL</span>
           <div class="font-body mt-2.5" style="font-size:14px;line-height:1.7;"><span data-biz-email data-content-key="email">dispatch@astonlocksmith.ca</span></div>
         </div>
         <!-- TODO: re-add CREDENTIALS card (License # · Bonded · Insured · ALOA) once official license is obtained -->
-        <div class="u-card p-4" style="background:#242427;">
-          <span class="hazard" style="color:#EDEDED;">AREA</span>
-          <div class="font-body mt-2.5" style="font-size:13px;line-height:1.55;">Toronto &amp; GTA<br/>24/7 mobile dispatch</div>
+        <div class="u-card box-card p-4" style="background:#242427;">
+          <svg class="box-hd-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 16.0156C19.2447 16.5445 20 17.2392 20 18C20 19.6568 16.4183 21 12 21C7.58172 21 4 19.6568 4 18C4 17.2392 4.75527 16.5445 6 16.0156" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/><path d="M17 8.44444C17 11.5372 12 17 12 17C12 17 7 11.5372 7 8.44444C7 5.35165 9.23858 3 12 3C14.7614 3 17 5.35165 17 8.44444Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/><circle cx="12" cy="8" r="1" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/></svg><span class="hazard" style="color:#EDEDED;">AREA</span>
+          <div class="font-body mt-2.5" style="font-size:13px;line-height:1.55;">Toronto &amp; GTA</div>
         </div>
       </div>
       <!-- wa.me/SMS fallback uses the real dispatch number; content-patch.js overrides from business info when available -->
