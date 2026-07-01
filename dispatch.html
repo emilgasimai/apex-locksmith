@@ -16,7 +16,7 @@
 <title>Aston Dispatch</title>
 <!-- Apply the saved theme before first paint to avoid a flash of the wrong theme. -->
 <script>try{var t=localStorage.getItem('aston_dispatch_theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}</script>
-<link rel="stylesheet" href="dispatch.css?v=20"/>
+<link rel="stylesheet" href="dispatch.css?v=21"/>
 </head>
 <body>
 
@@ -113,25 +113,23 @@
         <button type="button" class="af-pill" data-af="assigned" aria-pressed="false">Assigned</button>
         <button type="button" class="af-pill" data-af="unassigned" aria-pressed="false">Unassigned</button>
         <button type="button" class="af-pill" data-af="in-progress" aria-pressed="false">In Progress</button>
-        <button type="button" class="af-pill" data-af="pending-review" aria-pressed="false">Pending Review</button>
+        <button type="button" class="af-pill" data-af="pending" aria-pressed="false">Pending</button>
       </div>
-      <div class="filter-group" id="statusFilterGroup" hidden>
-        <span class="field-label">Status</span>
-        <select id="filterStatus" aria-label="Filter by status">
-          <option value="">All active</option>
-          <option value="pending-review">Pending Review</option>
-          <option value="approved">Approved</option>
-          <option value="assigned">Assigned</option>
-          <option value="in-progress">In Progress</option>
-        </select>
+      <!-- Unified date filter — applies to EVERY tab (active by createdAt, completed by
+           completedAt, cancelled by cancelledAt, calls/notes by createdAt, archive by
+           deletedAt). Default: Today. "Custom" reveals the From/To inputs below. -->
+      <div class="date-preset-group" id="datePresetGroup" role="group" aria-label="Filter by date range">
+        <button type="button" class="date-preset is-active" data-range="today" aria-pressed="true">Today</button>
+        <button type="button" class="date-preset" data-range="week" aria-pressed="false">Week</button>
+        <button type="button" class="date-preset" data-range="month" aria-pressed="false">Month</button>
+        <button type="button" class="date-preset" data-range="custom" aria-pressed="false">Custom</button>
       </div>
-      <!-- Date range for Completed / Cancelled tabs. -->
+      <!-- Custom date range — only visible when "Custom" is the selected preset. -->
       <div class="filter-group date-range-group" id="dateRangeGroup" hidden>
         <span class="field-label">From</span>
         <input id="dateFrom" type="date" aria-label="From date"/>
         <span class="field-label">To</span>
         <input id="dateTo" type="date" aria-label="To date"/>
-        <button type="button" id="dateClear" class="btn btn-ghost btn-date-clear">Clear</button>
       </div>
       <div class="filter-group" id="priorityFilterGroup">
         <span class="field-label">Priority</span>
@@ -143,7 +141,6 @@
           <option value="low">Low</option>
         </select>
       </div>
-      <button type="button" id="unassignedToggle" class="btn btn-ghost unassigned-toggle" hidden aria-pressed="false">Unassigned</button>
       <button type="button" id="newCallBtn" class="btn btn-primary new-call-btn" hidden>+ New Call</button>
       <div class="filter-spacer"></div>
       <div class="refresh-meta">
@@ -238,6 +235,6 @@
 </div>
 
 <script src="config.js?v=1" defer></script>
-<script src="js/dispatch.js?v=18" defer></script>
+<script src="js/dispatch.js?v=19" defer></script>
 </body>
 </html>

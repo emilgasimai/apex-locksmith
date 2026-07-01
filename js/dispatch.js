@@ -64,9 +64,10 @@
     searchResults: [],   // results while searchActive
     tab: 'active',       // active | completed | cancelled | calls | notes | archive
     unassignedOnly: false, // legacy; superseded by activeFilter on active tab
-    activeFilter: 'all', // all|assigned|unassigned|pending-review|in-progress (active tab)
-    dateFrom: '',        // date range filter for completed/cancelled tabs
-    dateTo: '',
+    activeFilter: 'all', // all|assigned|unassigned|pending|in-progress (active tab)
+    datePreset: 'today', // today|week|month|custom — the unified date filter (ALL tabs)
+    dateFrom: '',        // custom-range start (only used when datePreset === 'custom')
+    dateTo: '',          // custom-range end   (only used when datePreset === 'custom')
     total: 0,            // total jobs in working set from last fetch (for pagination indicator)
     expanded: {},        // { [jobId]: true } open history panels (survive re-render)
     origExpanded: {},    // { [noteId]: true } open "View original" panels (survive re-render)
@@ -184,6 +185,13 @@
   var BI_TRASH = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>';
   var BI_RESTORE = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 4v6h6M3.51 15a9 9 0 1 0 .49-4.95"/></svg>';
   var BI_NOTE = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>';
+  // Gear (parts & materials) + money (customer deposit) — for the parts/deposit chips.
+  var BI_GEAR = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+  var BI_MONEY = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M14.6 9.2A2.3 2.3 0 0 0 12.4 8h-.9a1.9 1.9 0 0 0 0 3.8h1.1a1.9 1.9 0 0 1 0 3.8h-1a2.3 2.3 0 0 1-2.2-1.2"/></svg>';
+
+  // Tooltip helper — turns a description into the attributes a badge needs for the
+  // hover/tap speech-bubble (see .badge[data-tip] in dispatch.css). Empty → nothing.
+  function tip(text) { return text ? ' data-tip="' + esc(text) + '" tabindex="0"' : ''; }
 
   // Source → icon map
   var SOURCE_ICON = { call: BI_PHONE, note: BI_MESSAGE, manual: BI_PENCIL };
@@ -544,6 +552,63 @@
   // active jobs; otherwise an unassigned terminal job just shows nothing.
   var TECH_STATUS_ICON = { active: '🟢', away: '🟡', busy: '🟠', meeting: '🟣', offline: '⚫' };
   var TECH_STATUS_COLOR = { active: '#22c55e', away: '#eab308', busy: '#f97316', meeting: '#a855f7', offline: '#6b7280' };
+  var TECH_STATUS_LABEL = { active: 'Active', away: 'Away', busy: 'Busy', meeting: 'In a meeting', offline: 'Offline' };
+
+  /* ── Unified date filter (all tabs) ─────────────────────────────────────────
+     Each tab measures a job by a different timestamp: active/calls/notes by when
+     it was created, completed by when it was completed, cancelled by when it was
+     cancelled, archive by when it was deleted. The completed/cancelled times come
+     from the statusHistory entry (not updatedAt), so an old job finished today is
+     dated today. */
+  function histTime(job, status) {
+    var h = job.statusHistory || [];
+    for (var i = h.length - 1; i >= 0; i--) { if (h[i].status === status && h[i].timestamp) return h[i].timestamp; }
+    return null;
+  }
+  function jobDateForTab(job, tab) {
+    if (tab === 'completed') return histTime(job, 'completed') || job.updatedAt || job.createdAt;
+    if (tab === 'cancelled') return histTime(job, 'cancelled') || job.updatedAt || job.createdAt;
+    if (tab === 'archive')   return job.deletedAt || job.updatedAt || job.createdAt;
+    return job.createdAt; // active, calls, notes
+  }
+  // Current preset → { from, to } in epoch-ms, or null when unbounded ('all').
+  function dateWindow() {
+    var preset = state.datePreset;
+    var now = Date.now();
+    if (preset === 'custom') {
+      return {
+        from: state.dateFrom ? new Date(state.dateFrom).getTime() : 0,
+        to:   state.dateTo ? new Date(state.dateTo).getTime() + 86400000 : Infinity
+      };
+    }
+    if (preset === 'today') { var d = new Date(); d.setHours(0, 0, 0, 0); return { from: d.getTime(), to: Infinity }; }
+    if (preset === 'week')  return { from: now - 7 * 86400000, to: Infinity };
+    if (preset === 'month') return { from: now - 30 * 86400000, to: Infinity };
+    return null; // 'all'
+  }
+  function passesDate(job, tab) {
+    var w = dateWindow();
+    if (!w) return true;
+    var t = new Date(jobDateForTab(job, tab) || 0).getTime();
+    return t >= w.from && t <= w.to;
+  }
+
+  // Cancellation reason for a cancelled job — the note on its last 'cancelled'
+  // statusHistory entry (staff/tech record a reason on cancel).
+  function cancelReason(job) {
+    var h = job.statusHistory || [];
+    for (var i = h.length - 1; i >= 0; i--) { if (h[i].status === 'cancelled' && h[i].note) return h[i].note; }
+    return '';
+  }
+  // Current work status of the tech assigned to a job (for the tech-name tooltip).
+  function techStatusFor(job) {
+    if (!job.technicianId) return '';
+    var jtid = String(job.technicianId);
+    for (var i = 0; i < technicians.length; i++) {
+      if (String(technicians[i]._id || technicians[i].id) === jtid) return technicians[i].status || '';
+    }
+    return '';
+  }
 
   function assignTagHtml(job, showUnassigned) {
     if (job.assignedTo) {
@@ -557,9 +622,11 @@
           dot = '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:' + col + ';margin-right:4px;vertical-align:middle;flex-shrink:0"></span>';
         }
       }
-      return '<span class="badge assigned-tag" data-assign-tag>' + ICON_PERSON + dot + esc(job.assignedTo) + '</span>';
+      var tst = techStatusFor(job);
+      var techTip = tst ? (TECH_STATUS_LABEL[tst] || tst) : '';
+      return '<span class="badge assigned-tag" data-assign-tag' + tip(techTip) + '>' + ICON_PERSON + dot + esc(job.assignedTo) + '</span>';
     }
-    return showUnassigned ? '<span class="badge unassigned-tag" data-assign-tag>Unassigned</span>' : '<span data-assign-tag hidden></span>';
+    return showUnassigned ? '<span class="badge unassigned-tag" data-assign-tag' + tip('No technician assigned yet') + '>Unassigned</span>' : '<span data-assign-tag hidden></span>';
   }
 
   // Assign control — a technician dropdown when any exist, else the legacy
@@ -591,9 +658,23 @@
   // Payment status tag — shown beside the priority/status badges. Green when the
   // payment has cleared, orange while a card/e-transfer is still pending.
   function paymentTagHtml(job) {
-    if (job.paymentStatus === 'paid') return '<span class="badge pay-tag pay-paid">' + BI_CHECK + 'Paid</span>';
-    if (job.paymentStatus === 'pending') return '<span class="badge pay-tag pay-pending">' + BI_CLOCK + 'Pending Payment</span>';
+    var method = PAYMENT_LABEL[job.paymentMethod] || '';
+    if (job.paymentStatus === 'paid')
+      return '<span class="badge pay-tag pay-paid"' + tip('Paid' + (method ? ' · ' + method : '')) + '>' + BI_CHECK + 'Paid</span>';
+    if (job.paymentStatus === 'pending')
+      return '<span class="badge pay-tag pay-pending"' + tip('Awaiting' + (method ? ' · ' + method : '')) + '>' + BI_CLOCK + 'Pending Payment</span>';
     return '';
+  }
+
+  // Parts-cost + deposit chips — shown alongside the priority/status badges when
+  // a technician has recorded either. Gear = parts & materials; money = deposit.
+  function partsDepositTagsHtml(job) {
+    var out = '';
+    if (job.partsCost != null && Number(job.partsCost) > 0)
+      out += '<span class="badge parts-tag"' + tip('Parts & Materials: ' + fmtMoney(job.partsCost)) + '>' + BI_GEAR + fmtMoney(job.partsCost) + '</span>';
+    if (job.depositAmount != null && Number(job.depositAmount) > 0)
+      out += '<span class="badge deposit-tag"' + tip('Deposit received: ' + fmtMoney(job.depositAmount)) + '>' + BI_MONEY + fmtMoney(job.depositAmount) + '</span>';
+    return out;
   }
 
   // Cancellation-fee tag — only on cancelled jobs that carry a fee. Red until the
@@ -610,14 +691,17 @@
   // (completed). Item 6: the method (Cash/Card/E-Transfer) shows near the price.
   function paymentInfoHtml(job) {
     var method = PAYMENT_LABEL[job.paymentMethod] || '';
-    var markPaid = job.paymentStatus === 'pending'
-      ? '<button type="button" class="btn btn-ghost btn-sm btn-mark-paid">Mark Paid</button>'
-      : '';
-    if (!method && !markPaid) return '';
+    // pending → offer "Mark Paid"; paid → offer a subtle "Mark Unpaid" to reverse.
+    var payBtn = '';
+    if (job.paymentStatus === 'pending')
+      payBtn = '<button type="button" class="btn btn-ghost btn-sm btn-mark-paid">Mark Paid</button>';
+    else if (job.paymentStatus === 'paid')
+      payBtn = '<button type="button" class="btn btn-ghost btn-sm btn-mark-unpaid" title="Reverse this payment back to pending">Mark Unpaid</button>';
+    if (!method && !payBtn) return '';
     var methodHtml = method
       ? '<span class="pay-info"><span class="pay-info-label">Payment</span><span class="pay-info-method">' + esc(method) + '</span></span>'
       : '<span></span>';
-    return '<div class="pay-info-row">' + methodHtml + markPaid + '</div>';
+    return '<div class="pay-info-row">' + methodHtml + payBtn + '</div>';
   }
 
   // Mark-Fee-Paid control for unpaid cancellation fees (staff collect the fee).
@@ -760,14 +844,22 @@
     // AI summary label icon instead of the old ::before "✦" text
     var aiLabelIcon = '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.09 6.26L20 10l-5.91 1.74L12 18l-2.09-5.26L4 11l5.91-1.74z"/></svg>';
 
+    // Priority tooltip → the AI's suggested priority, when it made one.
+    var prioTip = job.aiSuggestedPriority
+      ? 'AI suggested: ' + (PRIORITY_LABEL[job.aiSuggestedPriority] || job.aiSuggestedPriority)
+      : '';
+    // Cancelled status tooltip → the recorded cancellation reason.
+    var statusTip = status === 'cancelled' ? cancelReason(job) : '';
+
     return '' +
       '<div class="job-top">' +
         '<div class="job-badges">' +
-          '<span class="badge prio prio-' + prio + '">' + (PRIO_BADGE_ICON[prio] || '') + PRIORITY_LABEL[prio] + '</span>' +
-          '<span class="badge status status-' + status + '" data-status-badge>' + (STATUS_BADGE_ICON[status] || '') + STATUS_LABEL[status] + '</span>' +
+          '<span class="badge prio prio-' + prio + '"' + tip(prioTip) + '>' + (PRIO_BADGE_ICON[prio] || '') + PRIORITY_LABEL[prio] + '</span>' +
+          '<span class="badge status status-' + status + '" data-status-badge' + tip(statusTip) + '>' + (STATUS_BADGE_ICON[status] || '') + STATUS_LABEL[status] + '</span>' +
           assignTag +
           paymentTagHtml(job) +
           cancellationFeeTagHtml(job) +
+          partsDepositTagsHtml(job) +
         '</div>' +
         '<div class="job-top-right">' +
           jobIdHtml +
@@ -885,41 +977,38 @@
   function visibleJobs() {
     var list = state.jobs.filter(function (j) { return jobInTab(j, state.tab); });
 
-    // Active tab: unified sub-filter pill (replaces old status dropdown + unassigned toggle)
+    // Active tab: unified sub-filter pill (replaces old status dropdown + unassigned toggle).
+    // "Pending" = assigned to a tech but not yet completed (assigned OR in-progress).
     if (state.tab === 'active') {
       var af = state.activeFilter;
       if (af === 'assigned')        list = list.filter(function (j) { return !jobIsUnassigned(j); });
       else if (af === 'unassigned') list = list.filter(function (j) { return jobIsUnassigned(j); });
-      else if (af === 'pending-review' || af === 'in-progress') {
-        list = list.filter(function (j) { return j.status === af; });
-      }
+      else if (af === 'pending')    list = list.filter(function (j) { return j.status === 'assigned' || j.status === 'in-progress'; });
+      else if (af === 'in-progress') list = list.filter(function (j) { return j.status === 'in-progress'; });
     }
 
     if (filters.priority && state.tab !== 'notes') {
       list = list.filter(function (j) { return (j.priority || 'normal') === filters.priority; });
     }
 
-    // Date range filter for completed/cancelled tabs
-    if ((state.tab === 'completed' || state.tab === 'cancelled') && (state.dateFrom || state.dateTo)) {
-      var from = state.dateFrom ? new Date(state.dateFrom).getTime() : 0;
-      var to = state.dateTo ? new Date(state.dateTo).getTime() + 86400000 : Infinity;
-      list = list.filter(function (j) {
-        var t = new Date(j.updatedAt || j.createdAt || 0).getTime();
-        return t >= from && t <= to;
-      });
-    }
+    // Unified date filter — applies to every tab, measured by the tab's own timestamp.
+    list = list.filter(function (j) { return passesDate(j, state.tab); });
 
     return list;
   }
 
+  // Tab count badges reflect only the last 24 hours (not all-time totals), each
+  // measured by the tab's own timestamp (created/completed/cancelled).
   function tabCounts() {
     var c = { active: 0, completed: 0, cancelled: 0, calls: 0, notes: 0 };
+    var cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    function recent(j, tab) { return new Date(jobDateForTab(j, tab) || 0).getTime() >= cutoff; }
     state.jobs.forEach(function (j) {
-      if (j.source === 'note') { c.notes++; return; }
-      if (j.source === 'call') c.calls++;
-      if (TAB_STATUSES.active.indexOf(j.status) !== -1) c.active++;
-      else if (j.status === 'completed') c.completed++;
-      else if (j.status === 'cancelled') c.cancelled++;
+      if (j.source === 'note') { if (recent(j, 'notes')) c.notes++; return; }
+      if (j.source === 'call' && recent(j, 'calls')) c.calls++;
+      if (TAB_STATUSES.active.indexOf(j.status) !== -1) { if (recent(j, 'active')) c.active++; }
+      else if (j.status === 'completed') { if (recent(j, 'completed')) c.completed++; }
+      else if (j.status === 'cancelled') { if (recent(j, 'cancelled')) c.cancelled++; }
     });
     return c;
   }
@@ -971,9 +1060,12 @@
     if (unassignedToggle) unassignedToggle.hidden = true;
     // New Call button
     if (newCallBtn) newCallBtn.hidden = state.tab !== 'calls';
-    // Date range filter — show on completed/cancelled
+    // Unified date filter — the preset buttons show on every tab; the custom
+    // From/To inputs appear only while the "Custom" preset is selected.
+    var presetGroup = $('datePresetGroup');
+    if (presetGroup) presetGroup.hidden = false;
     var dateGroup = $('dateRangeGroup');
-    if (dateGroup) dateGroup.hidden = (state.tab !== 'completed' && state.tab !== 'cancelled');
+    if (dateGroup) dateGroup.hidden = state.datePreset !== 'custom';
     // Stats/search bar hidden in archive
     var statsBar = $('statsBar');
     if (statsBar) statsBar.hidden = onArchive;
@@ -1056,13 +1148,15 @@
   }
 
   function renderArchive(animate) {
-    if (!state.archiveJobs.length) {
+    // Archive is date-filtered client-side by deletedAt (matches the other tabs).
+    var jobs = state.archiveJobs.filter(function (j) { return passesDate(j, 'archive'); });
+    if (!jobs.length) {
       paintQueue('<div class="queue-empty">' + esc(emptyMessage()) + '</div>', false);
       return;
     }
-    var html = state.archiveJobs.map(archiveCardHtml).join('');
+    var html = jobs.map(archiveCardHtml).join('');
     if (state.archiveTotal > state.archiveJobs.length) {
-      html += '<div class="pagination-info">Showing ' + state.archiveJobs.length + ' of ' + state.archiveTotal + ' archived jobs</div>';
+      html += '<div class="pagination-info">Showing ' + jobs.length + ' of ' + state.archiveTotal + ' archived jobs</div>';
     }
     paintQueue(html, animate);
   }
@@ -1073,7 +1167,7 @@
      reveal of the raw message, and any attached photos (thumbnails → lightbox).
      Photos auto-expire server-side; when gone we just show the text, no error. */
   function renderNotes(animate) {
-    var notes = state.jobs.filter(function (j) { return j.source === 'note'; });
+    var notes = state.jobs.filter(function (j) { return j.source === 'note' && passesDate(j, 'notes'); });
     if (!notes.length) { paintQueue('<div class="queue-empty">' + esc(emptyMessage()) + '</div>', false); return; }
     var groups = {};
     notes.forEach(function (j) {
@@ -1227,7 +1321,7 @@
   refreshBtn.addEventListener('click', function () { refresh(); });
   // Filters are client-side: changing one re-derives the view from the store (no
   // refetch) and exits search mode so the dropdown can't silently do nothing.
-  filterStatus.addEventListener('change', function () {
+  if (filterStatus) filterStatus.addEventListener('change', function () {
     if (searchActive) clearSearch();
     filters.status = filterStatus.value;
     render(true);
@@ -1274,21 +1368,36 @@
     });
   }
 
-  // Date-range filter (Completed / Cancelled tabs) — re-derives the view client-side.
-  var dateFromInput = $('dateFrom'), dateToInput = $('dateTo'), dateClearBtn = $('dateClear');
+  // Unified date filter — preset buttons (Today / Week / Month / Custom) apply to
+  // EVERY tab. "Custom" reveals the From/To inputs; the others hide them.
+  var datePresetGroup = $('datePresetGroup');
+  var dateFromInput = $('dateFrom'), dateToInput = $('dateTo');
+  if (datePresetGroup) {
+    datePresetGroup.addEventListener('click', function (e) {
+      var btn = e.target.closest && e.target.closest('[data-range]');
+      if (!btn) return;
+      var range = btn.getAttribute('data-range');
+      state.datePreset = range;
+      var btns = datePresetGroup.querySelectorAll('[data-range]');
+      for (var i = 0; i < btns.length; i++) {
+        var on = btns[i] === btn;
+        btns[i].classList.toggle('is-active', on);
+        btns[i].setAttribute('aria-pressed', on ? 'true' : 'false');
+      }
+      var dateGroup = $('dateRangeGroup');
+      if (dateGroup) dateGroup.hidden = range !== 'custom';
+      if (searchActive) clearSearch();
+      render(true);
+    });
+  }
   function applyDateRange() {
     state.dateFrom = dateFromInput ? dateFromInput.value : '';
     state.dateTo = dateToInput ? dateToInput.value : '';
+    if (searchActive) clearSearch();
     render(true);
   }
   if (dateFromInput) dateFromInput.addEventListener('change', applyDateRange);
   if (dateToInput) dateToInput.addEventListener('change', applyDateRange);
-  if (dateClearBtn) dateClearBtn.addEventListener('click', function () {
-    if (dateFromInput) dateFromInput.value = '';
-    if (dateToInput) dateToInput.value = '';
-    state.dateFrom = ''; state.dateTo = '';
-    render(true);
-  });
 
   // "Unassigned" toggle — filters to jobs that still need a technician.
   if (unassignedToggle) {
@@ -1388,8 +1497,19 @@
     if (priceBtn) { doSetPrice(priceBtn); return; }
     var markPaidBtn = e.target.closest('.btn-mark-paid');
     if (markPaidBtn) { doMarkPaid(markPaidBtn); return; }
+    var markUnpaidBtn = e.target.closest('.btn-mark-unpaid');
+    if (markUnpaidBtn) { doMarkUnpaid(markUnpaidBtn); return; }
     var markFeePaidBtn = e.target.closest('.btn-mark-fee-paid');
     if (markFeePaidBtn) { doMarkFeePaid(markFeePaidBtn); return; }
+    // Tag tooltip — tap a badge to toggle its speech bubble (mobile); hover on desktop.
+    var tipBadge = e.target.closest('.badge[data-tip]');
+    if (tipBadge) {
+      var wasOpen = tipBadge.classList.contains('tip-open');
+      closeAllTips();
+      if (!wasOpen) tipBadge.classList.add('tip-open');
+      return;
+    }
+    closeAllTips();
     var unassignBtn = e.target.closest('.btn-unassign');
     if (unassignBtn) { doUnassign(unassignBtn); return; }
     var noteToggle = e.target.closest('[data-notes-toggle]');
@@ -1411,6 +1531,10 @@
   queue.addEventListener('change', function (e) {
     var sel = e.target.closest && e.target.closest('.status-select');
     if (sel) doStatus(sel);
+  });
+  // Close any open tag tooltip when clicking outside a badge (mobile tap-away).
+  document.addEventListener('click', function (e) {
+    if (!(e.target.closest && e.target.closest('.badge[data-tip]'))) closeAllTips();
   });
   // Enter inside a price input saves it.
   queue.addEventListener('keydown', function (e) {
@@ -1744,6 +1868,29 @@
           toast((res.data && res.data.message) || 'Could not mark paid.', 'err');
         } else { btn.disabled = false; btn.textContent = label; }
       });
+  }
+
+  // Reverse a paid job back to pending (e.g. a settlement was logged in error).
+  function doMarkUnpaid(btn) {
+    var card = btn.closest('[data-id]'); if (!card) return;
+    var id = card.getAttribute('data-id');
+    btn.disabled = true; var label = btn.textContent; btn.textContent = '…';
+    authedFetch('/api/dispatch/' + id + '/mark-unpaid', { method: 'PATCH' })
+      .then(function (res) {
+        if (res.ok) {
+          reconcileJob(res.data);
+          toast('Payment reverted to pending', 'ok');
+        } else if (res.status !== 401) {
+          btn.disabled = false; btn.textContent = label;
+          toast((res.data && res.data.message) || 'Could not mark unpaid.', 'err');
+        } else { btn.disabled = false; btn.textContent = label; }
+      });
+  }
+
+  // Close every open tag tooltip (outside-click / re-render).
+  function closeAllTips() {
+    var open = document.querySelectorAll('.badge.tip-open');
+    for (var i = 0; i < open.length; i++) open[i].classList.remove('tip-open');
   }
 
   // Record that a cancelled job's cancellation fee has been collected.

@@ -844,7 +844,27 @@ body.is-embed .dash-main { max-width: none; }
   box-shadow: 0 4px 14px -6px rgba(39,224,245,.6);
 }
 
-/* ── Date-range filter (Completed / Cancelled) ── */
+/* ── Unified date filter — Today / Week / Month / Custom (all tabs) ── */
+.date-preset-group {
+  display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap;
+  padding: 3px; background: var(--panel-2); border: 1px solid var(--line-soft); border-radius: 999px;
+}
+.date-preset {
+  font: inherit; font-size: 12.5px; font-weight: 600; letter-spacing: .01em;
+  padding: 5px 13px; min-height: 30px;
+  background: transparent; color: var(--muted);
+  border: 1px solid transparent; border-radius: 999px; cursor: pointer;
+  transition: color .12s ease, background-color .12s ease, box-shadow .12s ease;
+}
+.date-preset:hover { color: var(--ink); }
+.date-preset:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.date-preset:active { transform: translateY(1px); }
+.date-preset.is-active {
+  color: var(--accent-ink); background: var(--accent);
+  box-shadow: 0 4px 14px -6px rgba(39,224,245,.6);
+}
+
+/* ── Custom date-range inputs (only shown when "Custom" is selected) ── */
 .date-range-group { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
 .date-range-group input[type=date] {
   font: inherit; color: var(--ink);
@@ -853,6 +873,49 @@ body.is-embed .dash-main { max-width: none; }
 }
 .date-range-group input[type=date]:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(39,224,245,.18); }
 .btn-date-clear { min-height: 36px; padding: 6px 11px; }
+
+/* ── Parts / Deposit chips (job cards) — gear = parts & materials, money = deposit ── */
+.badge.parts-tag   { text-transform: none; letter-spacing: .01em; color: #b7a4ff; border-color: rgba(150,120,255,.45); background: rgba(150,120,255,.13); font-variant-numeric: tabular-nums; }
+.badge.deposit-tag { text-transform: none; letter-spacing: .01em; color: #7ee2a4; border-color: rgba(67,214,127,.45); background: rgba(67,214,127,.12); font-variant-numeric: tabular-nums; }
+.badge.parts-tag svg, .badge.deposit-tag svg { flex: 0 0 auto; opacity: .92; }
+[data-theme="light"] .badge.parts-tag   { color: #5b3fb0; border-color: rgba(91,63,176,.4); background: rgba(150,120,255,.15); }
+[data-theme="light"] .badge.deposit-tag { color: #1f8a4c; border-color: rgba(31,138,76,.4); background: rgba(67,214,127,.16); }
+
+/* ── Mark-Unpaid button — subtle red-text ghost (less prominent than Mark Paid) ── */
+.btn-mark-unpaid { color: #ff9a9a; border-color: rgba(255,93,93,.32); }
+.btn-mark-unpaid:hover { color: #ffb3b3; border-color: rgba(255,93,93,.55); background: rgba(255,77,77,.08); }
+[data-theme="light"] .btn-mark-unpaid { color: #c0392b; border-color: rgba(192,57,43,.35); }
+[data-theme="light"] .btn-mark-unpaid:hover { background: rgba(255,77,77,.08); }
+
+/* ── Tag tooltip bubble — hover (desktop) + tap (.tip-open, mobile) ──────────
+   A small dark speech bubble with a cyan border, centred above the tag, with a
+   little arrow pointing down at it. Only animates opacity/transform. */
+.badge[data-tip] { position: relative; cursor: help; }
+.badge[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute; left: 50%; bottom: calc(100% + 9px);
+  transform: translateX(-50%) translateY(4px);
+  min-width: 90px; max-width: 240px; width: max-content;
+  padding: 7px 10px; border-radius: 8px;
+  background: var(--panel-3, #16191c); color: var(--ink);
+  border: 1px solid rgba(39,224,245,.55);
+  box-shadow: 0 8px 22px -8px rgba(0,0,0,.7);
+  font-size: 11.5px; font-weight: 600; letter-spacing: .01em; line-height: 1.35;
+  text-transform: none; white-space: normal; text-align: center;
+  opacity: 0; pointer-events: none; z-index: 40;
+  transition: opacity .14s ease, transform .14s cubic-bezier(.2,.7,.3,1.3);
+}
+.badge[data-tip]::before {
+  content: ""; position: absolute; left: 50%; bottom: calc(100% + 3px);
+  transform: translateX(-50%) translateY(4px);
+  border: 6px solid transparent; border-top-color: rgba(39,224,245,.55);
+  opacity: 0; pointer-events: none; z-index: 41;
+  transition: opacity .14s ease, transform .14s cubic-bezier(.2,.7,.3,1.3);
+}
+.badge[data-tip]:hover::after, .badge[data-tip]:focus-visible::after, .badge[data-tip].tip-open::after,
+.badge[data-tip]:hover::before, .badge[data-tip]:focus-visible::before, .badge[data-tip].tip-open::before {
+  opacity: 1; transform: translateX(-50%) translateY(0);
+}
 
 /* ── Audio-unlock hint (subtle, dismissed on first interaction) ── */
 .audio-hint {

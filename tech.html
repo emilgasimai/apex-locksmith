@@ -357,7 +357,13 @@ a{color:inherit;text-decoration:none}
 .cancel-fee-back:active{transform:scale(.985)}
 
 /* ── Job-header eye button (view signed agreement) ── */
-.agr-eye-btn{margin-left:auto;flex:none;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;padding:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--cyan);cursor:pointer;transition:border-color .15s,background .15s,transform .1s}
+.job-id-actions{margin-left:auto;display:inline-flex;align-items:center;gap:6px;flex:none}
+.agr-eye-btn{flex:none;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;padding:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--cyan);cursor:pointer;transition:border-color .15s,background .15s,transform .1s}
+/* Small parts/deposit value labels under the job-id row (shown when set) */
+.jhdr-vals{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:10px;margin:-4px 0 10px}
+.jhdr-vals[hidden]{display:none}
+.jhdr-val{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--cyan);font-variant-numeric:tabular-nums}
+.jhdr-val svg{width:13px;height:13px;flex:none;opacity:.9}
 .agr-eye-btn svg{width:18px;height:18px}
 .agr-eye-btn[hidden]{display:none}
 .agr-eye-btn:hover{border-color:var(--cyan);background:var(--cyan-dim)}
@@ -946,11 +952,24 @@ body.agreement-open{overflow:hidden}
           <div class="job-id-row">
             <span class="job-id-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></span>
             <span class="job-id" id="jId"></span>
-            <!-- Eye → signed agreement proof (shown only once the customer has signed) -->
-            <button type="button" class="agr-eye-btn" id="agrEyeBtn" hidden aria-label="View signed agreement" title="View signed agreement">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
-            </button>
+            <!-- Header action icons (parts cost · deposit · signed-agreement eye) -->
+            <span class="job-id-actions">
+              <!-- Gear → enter Parts & Materials cost (own assigned job only) -->
+              <button type="button" class="agr-eye-btn" id="partsBtn" hidden aria-label="Parts & materials cost" title="Parts & materials cost">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              </button>
+              <!-- Money → enter Customer Deposit (own assigned job only) -->
+              <button type="button" class="agr-eye-btn" id="depositBtn" hidden aria-label="Customer deposit" title="Customer deposit">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M14.6 9.2A2.3 2.3 0 0 0 12.4 8h-.9a1.9 1.9 0 0 0 0 3.8h1.1a1.9 1.9 0 0 1 0 3.8h-1a2.3 2.3 0 0 1-2.2-1.2"/></svg>
+              </button>
+              <!-- Eye → signed agreement proof (shown only once the customer has signed) -->
+              <button type="button" class="agr-eye-btn" id="agrEyeBtn" hidden aria-label="View signed agreement" title="View signed agreement">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </span>
           </div>
+          <!-- Small current-value labels for parts/deposit (shown when set) -->
+          <div class="jhdr-vals" id="jhdrVals" hidden></div>
           <div id="jStatusBadge" class="job-status-badge"></div>
           <div id="jAssignedNote" class="job-assigned-note" hidden></div>
           <div class="job-row"><span class="job-label">Customer</span><span class="job-val" id="jCustomer"></span></div>
@@ -1091,6 +1110,10 @@ body.agreement-open{overflow:hidden}
         <span class="night-chip-text">+$49 Night Fee</span>
         <span class="night-chip-state" id="nightChipState">Applied</span>
       </button>
+      <!-- Parts (+) and deposit (−) rows — filled from the amounts the tech entered
+           via the header gear/money icons; only shown when > 0. -->
+      <div class="price-row" id="pricePartsRow" hidden><span>Parts &amp; Materials</span><span id="pricePartsVal">$0.00</span></div>
+      <div class="price-row" id="priceDepositRow" hidden><span>Deposit</span><span id="priceDepositVal">$0.00</span></div>
       <div class="price-row price-total"><span>Total</span><span id="priceTotal">$0.00</span></div>
     </div>
     <div class="price-field" style="margin-top:16px;">
@@ -1215,6 +1238,61 @@ body.agreement-open{overflow:hidden}
   </div>
 </div>
 
+<!-- Parts & Materials Cost popup — opened by the gear icon in the job header -->
+<div id="partsModal" class="price-modal" hidden>
+  <div class="price-box" role="dialog" aria-modal="true" aria-labelledby="partsTitle">
+    <div class="price-head">
+      <div class="price-head-titles">
+        <h3 id="partsTitle" class="price-title">
+          <span class="price-title-ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            Parts &amp; Materials Cost
+          </span>
+        </h3>
+        <span class="price-jobid" id="partsJobId" hidden></span>
+      </div>
+      <button type="button" id="partsClose" class="price-close" aria-label="Close">&times;</button>
+    </div>
+    <label class="price-field">
+      <span class="price-field-label">Enter parts cost ($)</span>
+      <div class="price-input-wrap">
+        <span class="price-currency">$</span>
+        <input id="partsInput" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" autocomplete="off"/>
+      </div>
+    </label>
+    <div class="price-err" id="partsErr" hidden></div>
+    <button type="button" id="partsConfirm" class="price-confirm">Confirm</button>
+  </div>
+</div>
+
+<!-- Customer Deposit popup — opened by the money icon in the job header -->
+<div id="depositModal" class="price-modal" hidden>
+  <div class="price-box" role="dialog" aria-modal="true" aria-labelledby="depositTitle">
+    <div class="price-head">
+      <div class="price-head-titles">
+        <h3 id="depositTitle" class="price-title">
+          <span class="price-title-ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M14.6 9.2A2.3 2.3 0 0 0 12.4 8h-.9a1.9 1.9 0 0 0 0 3.8h1.1a1.9 1.9 0 0 1 0 3.8h-1a2.3 2.3 0 0 1-2.2-1.2"/></svg>
+            Customer Deposit
+          </span>
+        </h3>
+        <span class="price-jobid" id="depositJobId" hidden></span>
+      </div>
+      <button type="button" id="depositClose" class="price-close" aria-label="Close">&times;</button>
+    </div>
+    <label class="price-field">
+      <span class="price-field-label">Enter deposit amount ($)</span>
+      <div class="price-input-wrap">
+        <span class="price-currency">$</span>
+        <input id="depositInput" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" autocomplete="off"/>
+      </div>
+    </label>
+    <div class="price-err" id="depositErr" hidden></div>
+    <button type="button" id="depositConfirm" class="price-confirm">Confirm</button>
+  </div>
+</div>
+
+
 <!-- ==================== CUSTOMER AGREEMENT (full-screen) ==================== -->
 <!-- Opened by "Get Signature". The agreement text and the signature section share a
      SINGLE scroll area; the signature pad flows at the very END of the document, so
@@ -1338,6 +1416,10 @@ body.agreement-open{overflow:hidden}
   // Pricing popup (Finish flow)
   var priceModal   = document.getElementById('priceModal');
   var priceFee     = document.getElementById('priceFee');
+  var pricePartsRow    = document.getElementById('pricePartsRow');
+  var pricePartsVal    = document.getElementById('pricePartsVal');
+  var priceDepositRow  = document.getElementById('priceDepositRow');
+  var priceDepositVal  = document.getElementById('priceDepositVal');
   var priceTax     = document.getElementById('priceTax');
   var priceTotal   = document.getElementById('priceTotal');
   var priceErr     = document.getElementById('priceErr');
@@ -1862,6 +1944,8 @@ body.agreement-open{overflow:hidden}
     if (priceModal) { priceModal.classList.remove('is-open'); priceModal.hidden = true; }
     if (priceJobId) { priceJobId.hidden = true; priceJobId.textContent = ''; }
     if (agreementView && !agreementView.hidden) closeAgreement();
+    var pm = document.getElementById('partsModal'); if (pm) { pm.classList.remove('is-open'); pm.hidden = true; }
+    var dm = document.getElementById('depositModal'); if (dm) { dm.classList.remove('is-open'); dm.hidden = true; }
     confirmedServiceFee = null;
     clearPayment();
     if (slideEl) slideEl.hidden = true;
@@ -1968,6 +2052,13 @@ body.agreement-open{overflow:hidden}
     // line up at render time. Show it for any signed job the tech opens.
     if (agrEyeBtn) agrEyeBtn.hidden = !job.agreementSignedAt;
 
+    // Parts-cost + deposit entry icons — own assigned job only. isMine is read
+    // fresh from the session each render (learned from the eye-icon bug: never
+    // trust a stale module-level id). The backend also enforces ownership.
+    if (partsBtn) partsBtn.hidden = !isMine;
+    if (depositBtn) depositBtn.hidden = !isMine;
+    updateHdrVals(job);
+
     if (isOthers) {
       note.textContent = 'This job is already assigned to ' + (job.assignedTo || 'another technician') + '.';
       note.hidden = false;
@@ -2065,11 +2156,18 @@ body.agreement-open{overflow:hidden}
   function recalcPrice() {
     var fee = parseFloat(priceFee.value);
     if (!isFinite(fee) || fee < 0) fee = 0;
+    // Parts + deposit come from what the tech entered via the header gear/money
+    // icons (saved on the job), not from inputs in this popup.
+    var parts = (currentJob && Number(currentJob.partsCost) > 0) ? Number(currentJob.partsCost) : 0;
+    var deposit = (currentJob && Number(currentJob.depositAmount) > 0) ? Number(currentJob.depositAmount) : 0;
     var tax = Math.round(fee * PRICE_HST * 100) / 100;
     var night = (isNightNow() && nightFeeApplied) ? PRICE_NIGHT_FEE : 0;
     priceTax.textContent = money2(tax);
     syncNightChip();
-    priceTotal.textContent = money2(fee + tax + night);
+    // Parts (+) and deposit (−) breakdown rows — shown only when the job has them.
+    if (pricePartsRow) { pricePartsRow.hidden = !(parts > 0); if (pricePartsVal) pricePartsVal.textContent = '+' + money2(parts); }
+    if (priceDepositRow) { priceDepositRow.hidden = !(deposit > 0); if (priceDepositVal) priceDepositVal.textContent = '−' + money2(deposit); }
+    priceTotal.textContent = money2(fee + tax + night + parts - deposit);
   }
   if (nightFeeChip) {
     nightFeeChip.addEventListener('click', function () {
@@ -2086,7 +2184,7 @@ body.agreement-open{overflow:hidden}
     priceErr.hidden = true;
     nightFeeApplied = true;                  // default to applied each time the popup opens
     priceFee.value = (confirmedServiceFee != null ? confirmedServiceFee : '');
-    recalcPrice();
+    recalcPrice();   // reads parts/deposit already saved on the job
     priceModal.hidden = false;
     void priceModal.offsetWidth;
     priceModal.classList.add('is-open');
@@ -2550,7 +2648,8 @@ body.agreement-open{overflow:hidden}
     }
     var id = currentJob._id || currentJob.id;
     // applyNightFee reflects the night-fee chip; the server only charges it when
-    // it's genuinely after-hours AND the tech left it applied.
+    // it's genuinely after-hours AND the tech left it applied. (Parts cost and
+    // deposit are saved separately via the header icons, not sent here.)
     var res = await authFetch('/api/dispatch/' + id + '/complete', { method: 'PATCH', json: { serviceFee: confirmedServiceFee, paymentMethod: confirmedPayment, applyNightFee: nightFeeApplied } });
     if (res.status === 401) { clearSession(); showLogin(); return; }
     if (res.ok) {
@@ -2792,11 +2891,111 @@ body.agreement-open{overflow:hidden}
     agrProofClose.addEventListener('click', function () { closeModalEl(agrProofModal); });
     agrProofModal.addEventListener('click', function (e) { if (e.target === agrProofModal) closeModalEl(agrProofModal); });
   }
-  // Esc closes either popup
+
+  // ── Parts Cost (gear) + Customer Deposit (money) entry popups ──
+  // The tech taps the header icon, enters an amount, and it's saved to the job via
+  // PATCH /parts-cost or /deposit. The saved values then appear as breakdown rows in
+  // the "Finish & price job" popup and are folded into its total. Own job only
+  // (fresh isMine in renderJobCard; the backend also enforces ownership).
+  var partsBtn      = document.getElementById('partsBtn');
+  var depositBtn    = document.getElementById('depositBtn');
+  var partsModal    = document.getElementById('partsModal');
+  var partsInput    = document.getElementById('partsInput');
+  var partsConfirm  = document.getElementById('partsConfirm');
+  var partsClose    = document.getElementById('partsClose');
+  var partsErr      = document.getElementById('partsErr');
+  var partsJobId    = document.getElementById('partsJobId');
+  var depositModal  = document.getElementById('depositModal');
+  var depositInput  = document.getElementById('depositInput');
+  var depositConfirm= document.getElementById('depositConfirm');
+  var depositClose  = document.getElementById('depositClose');
+  var depositErr    = document.getElementById('depositErr');
+  var depositJobId  = document.getElementById('depositJobId');
+
+  var GEAR_MINI  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+  var MONEY_MINI = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M14.6 9.2A2.3 2.3 0 0 0 12.4 8h-.9a1.9 1.9 0 0 0 0 3.8h1.1a1.9 1.9 0 0 1 0 3.8h-1a2.3 2.3 0 0 1-2.2-1.2"/></svg>';
+
+  // Small current-value labels under the job-id row.
+  function updateHdrVals(job) {
+    var wrap = document.getElementById('jhdrVals');
+    if (!wrap) return;
+    var parts = (job && job.partsCost != null && Number(job.partsCost) > 0) ? Number(job.partsCost) : null;
+    var dep   = (job && job.depositAmount != null && Number(job.depositAmount) > 0) ? Number(job.depositAmount) : null;
+    var html = '';
+    if (parts != null) html += '<span class="jhdr-val">' + GEAR_MINI + '$' + parts.toFixed(2) + '</span>';
+    if (dep != null)   html += '<span class="jhdr-val">' + MONEY_MINI + '$' + dep.toFixed(2) + '</span>';
+    wrap.innerHTML = html;
+    wrap.hidden = !html;
+  }
+
+  function openAmountModal(kind) {
+    if (!currentJob) return;
+    var isParts = kind === 'parts';
+    var modal = isParts ? partsModal : depositModal;
+    var input = isParts ? partsInput : depositInput;
+    var jid   = isParts ? partsJobId : depositJobId;
+    var err   = isParts ? partsErr : depositErr;
+    var cur   = isParts ? currentJob.partsCost : currentJob.depositAmount;
+    if (err) err.hidden = true;
+    input.value = (cur != null && Number(cur) > 0) ? cur : '';   // prefill existing value
+    if (jid) { jid.textContent = 'JOB #' + (currentJob.jobId || '—'); jid.hidden = false; }
+    openModalEl(modal);
+    setTimeout(function () { try { input.focus(); } catch (e) {} }, 60);
+  }
+
+  async function submitAmount(kind) {
+    if (!currentJob) return;
+    var id = currentJob._id || currentJob.id;
+    if (!id) { toast('Missing job reference.', 'err'); return; }
+    var isParts = kind === 'parts';
+    var input = isParts ? partsInput : depositInput;
+    var err   = isParts ? partsErr : depositErr;
+    var btn   = isParts ? partsConfirm : depositConfirm;
+    var modal = isParts ? partsModal : depositModal;
+    var raw = (input.value || '').trim();
+    var n = Number(raw);
+    if (raw === '' || isNaN(n) || n < 0) {
+      if (err) { err.textContent = 'Enter a valid amount.'; err.hidden = false; }
+      input.focus(); return;
+    }
+    var path = isParts ? '/parts-cost' : '/deposit';
+    var body = isParts ? { partsCost: n } : { depositAmount: n };
+    var label = btn.textContent; btn.disabled = true; btn.textContent = 'Saving…';
+    var res = await authFetch('/api/dispatch/' + id + path, { method: 'PATCH', json: body });
+    btn.disabled = false; btn.textContent = label;
+    if (res.status === 401) { clearSession(); showLogin(); return; }
+    if (res.ok && res.data) {
+      currentJob = Object.assign({}, currentJob, res.data);
+      updateHdrVals(currentJob);   // refresh the header labels + the price popup reads it on open
+      closeModalEl(modal);
+      toast(isParts ? 'Parts cost saved' : 'Deposit saved', 'ok');
+    } else {
+      if (err) { err.textContent = (res.data && res.data.message) || 'Could not save — try again.'; err.hidden = false; }
+    }
+  }
+
+  if (partsBtn) partsBtn.addEventListener('click', function () { openAmountModal('parts'); });
+  if (depositBtn) depositBtn.addEventListener('click', function () { openAmountModal('deposit'); });
+  if (partsConfirm) partsConfirm.addEventListener('click', function () { submitAmount('parts'); });
+  if (depositConfirm) depositConfirm.addEventListener('click', function () { submitAmount('deposit'); });
+  if (partsInput) partsInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); submitAmount('parts'); } });
+  if (depositInput) depositInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); submitAmount('deposit'); } });
+  if (partsModal) {
+    partsClose.addEventListener('click', function () { closeModalEl(partsModal); });
+    partsModal.addEventListener('click', function (e) { if (e.target === partsModal) closeModalEl(partsModal); });
+  }
+  if (depositModal) {
+    depositClose.addEventListener('click', function () { closeModalEl(depositModal); });
+    depositModal.addEventListener('click', function (e) { if (e.target === depositModal) closeModalEl(depositModal); });
+  }
+
+  // Esc closes any of the header popups
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape') return;
     if (summaryModal && !summaryModal.hidden) closeModalEl(summaryModal);
     if (agrProofModal && !agrProofModal.hidden) closeModalEl(agrProofModal);
+    if (partsModal && !partsModal.hidden) closeModalEl(partsModal);
+    if (depositModal && !depositModal.hidden) closeModalEl(depositModal);
   });
 
   // ── Init ──
