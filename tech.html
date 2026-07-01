@@ -356,6 +356,32 @@ a{color:inherit;text-decoration:none}
 .cancel-fee-back:hover{border-color:var(--ink);color:var(--ink)}
 .cancel-fee-back:active{transform:scale(.985)}
 
+/* ── Job-header eye button (view signed agreement) ── */
+.agr-eye-btn{margin-left:auto;flex:none;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;padding:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--cyan);cursor:pointer;transition:border-color .15s,background .15s,transform .1s}
+.agr-eye-btn svg{width:18px;height:18px}
+.agr-eye-btn[hidden]{display:none}
+.agr-eye-btn:hover{border-color:var(--cyan);background:var(--cyan-dim)}
+.agr-eye-btn:active{transform:scale(.94)}
+.agr-eye-btn:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+
+/* ── AI summary "View Full" link ── */
+.ai-viewfull{display:inline-block;margin-top:6px;background:none;border:none;padding:0;color:var(--cyan);font:inherit;font-size:13px;font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.ai-viewfull[hidden]{display:none}
+.ai-viewfull:hover{opacity:.82}
+.ai-viewfull:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;border-radius:3px}
+
+/* ── Full AI summary popup ── */
+.summary-full-text{margin:0;font-size:14px;line-height:1.6;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere;max-height:60vh;overflow-y:auto}
+
+/* ── Signed-agreement proof popup ── */
+.agr-proof-box{max-width:440px}
+.agr-proof-body{max-height:64vh;overflow-y:auto}
+.agr-proof-loading,.agr-proof-empty{color:var(--muted);font-size:14px;text-align:center;padding:18px 0}
+.agr-proof-text{font-size:12.5px;line-height:1.6;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin:0 0 16px}
+.agr-proof-siglabel{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.agr-proof-sig{display:block;width:100%;height:auto;background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px}
+.agr-proof-signedat{display:block;margin-top:12px;font-size:12px;color:var(--muted)}
+
 /* ── Receipt popup (post-completion) — reuses the .price-modal / .price-box shell ── */
 .price-title-ico{display:inline-flex;align-items:center;gap:9px}
 .price-title-ico svg{width:19px;height:19px;color:var(--cyan);flex:none}
@@ -920,6 +946,10 @@ body.agreement-open{overflow:hidden}
           <div class="job-id-row">
             <span class="job-id-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></span>
             <span class="job-id" id="jId"></span>
+            <!-- Eye → signed agreement proof (shown only once the customer has signed) -->
+            <button type="button" class="agr-eye-btn" id="agrEyeBtn" hidden aria-label="View signed agreement" title="View signed agreement">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
           </div>
           <div id="jStatusBadge" class="job-status-badge"></div>
           <div id="jAssignedNote" class="job-assigned-note" hidden></div>
@@ -939,6 +969,7 @@ body.agreement-open{overflow:hidden}
               <span class="job-ai-summary" id="jSummary" hidden>
                 <span class="job-ai-tag"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.09 6.26L20 10l-5.91 1.74L12 18l-2.09-5.26L4 11l5.91-1.74z"/></svg>AI Summary</span>
                 <span class="job-ai-text" id="jSummaryText"></span>
+                <button type="button" class="ai-viewfull" id="jSummaryMore" hidden>View Full</button>
               </span>
             </span>
           </div>
@@ -1144,6 +1175,43 @@ body.agreement-open{overflow:hidden}
     <div class="price-err" id="cancelFeeErr" hidden></div>
     <button type="button" id="cancelFeeConfirm" class="cancel-fee-confirm">Confirm Cancellation</button>
     <button type="button" id="cancelFeeBack" class="cancel-fee-back">Back</button>
+  </div>
+</div>
+
+<!-- Full AI summary popup — opened by "View Full" when the summary is truncated -->
+<div id="summaryModal" class="price-modal" hidden>
+  <div class="price-box" role="dialog" aria-modal="true" aria-labelledby="summaryTitle">
+    <div class="price-head">
+      <div class="price-head-titles">
+        <h3 id="summaryTitle" class="price-title">
+          <span class="price-title-ico">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.09 6.26L20 10l-5.91 1.74L12 18l-2.09-5.26L4 11l5.91-1.74z"/></svg>
+            AI Summary
+          </span>
+        </h3>
+      </div>
+      <button type="button" id="summaryClose" class="price-close" aria-label="Close">&times;</button>
+    </div>
+    <p class="summary-full-text" id="summaryFullText"></p>
+  </div>
+</div>
+
+<!-- Signed-agreement proof popup — opened by the eye button in the job header -->
+<div id="agrProofModal" class="price-modal" hidden>
+  <div class="price-box agr-proof-box" role="dialog" aria-modal="true" aria-labelledby="agrProofTitle">
+    <div class="price-head">
+      <div class="price-head-titles">
+        <h3 id="agrProofTitle" class="price-title">
+          <span class="price-title-ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg>
+            Signed Agreement
+          </span>
+        </h3>
+        <span class="price-jobid" id="agrProofSignedAt" hidden></span>
+      </div>
+      <button type="button" id="agrProofClose" class="price-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="agr-proof-body" id="agrProofBody"><div class="agr-proof-loading">Loading…</div></div>
   </div>
 </div>
 
@@ -1832,16 +1900,34 @@ body.agreement-open{overflow:hidden}
   });
 
   // Details: the raw customer message AND the AI summary live in one section.
+  // First `n` words; flags whether it was cut so the caller shows "View Full".
+  function truncateWords(s, n) {
+    var words = String(s).trim().split(/\s+/);
+    if (words.length <= n) return { text: String(s).trim(), truncated: false };
+    return { text: words.slice(0, n).join(' ') + '…', truncated: true };
+  }
+  var fullSummaryText = '';   // complete AI summary, kept for the "View Full" popup
   function renderDetails(desc, summary) {
     var row = document.getElementById('jDescRow');
     var descEl = document.getElementById('jDesc');
     var sumWrap = document.getElementById('jSummary');
     var sumText = document.getElementById('jSummaryText');
+    var sumMore = document.getElementById('jSummaryMore');
     if (desc) { descEl.textContent = desc; descEl.hidden = false; }
     else { descEl.hidden = true; }
-    if (summary) { sumText.textContent = summary; sumWrap.hidden = false; }
-    else { sumWrap.hidden = true; }
-    row.hidden = !(desc || summary);
+    var hasSummary = !!(summary && summary.trim());
+    if (hasSummary) {
+      fullSummaryText = summary.trim();
+      var t = truncateWords(fullSummaryText, 40);   // show first 40 words
+      sumText.textContent = t.text;
+      sumMore.hidden = !t.truncated;                // "View Full" only when cut
+      sumWrap.hidden = false;
+    } else {
+      fullSummaryText = '';
+      sumMore.hidden = true;
+      sumWrap.hidden = true;
+    }
+    row.hidden = !(desc || hasSummary);
   }
 
   function renderJobCard(job) {
@@ -1874,6 +1960,10 @@ body.agreement-open{overflow:hidden}
     var isTerminal = job.status === 'completed' || job.status === 'cancelled';
     var isMine = jobTechId && myId && jobTechId === myId;
     var isOthers = jobTechId && !isMine;
+
+    // Eye button → signed-agreement proof. Only on the tech's own signed jobs
+    // (the backend restricts a technician to their own job's signature anyway).
+    if (agrEyeBtn) agrEyeBtn.hidden = !(job.agreementSignedAt && isMine);
 
     if (isOthers) {
       note.textContent = 'This job is already assigned to ' + (job.assignedTo || 'another technician') + '.';
@@ -2631,6 +2721,80 @@ body.agreement-open{overflow:hidden}
     cancelSubmitBtn.textContent = 'Confirm Cancellation';
     reasonBtns.forEach(function (b) { b.classList.remove('selected'); });
   }
+
+  // ── AI summary "View Full" + signed-agreement eye popups ──
+  var agrEyeBtn        = document.getElementById('agrEyeBtn');
+  var summaryModal     = document.getElementById('summaryModal');
+  var summaryFullText  = document.getElementById('summaryFullText');
+  var summaryClose     = document.getElementById('summaryClose');
+  var summaryMore      = document.getElementById('jSummaryMore');
+  var agrProofModal    = document.getElementById('agrProofModal');
+  var agrProofBody     = document.getElementById('agrProofBody');
+  var agrProofClose    = document.getElementById('agrProofClose');
+  var agrProofSignedAt = document.getElementById('agrProofSignedAt');
+
+  function openModalEl(m) { if (!m) return; m.hidden = false; void m.offsetWidth; m.classList.add('is-open'); }
+  function closeModalEl(m) {
+    if (!m) return;
+    m.classList.remove('is-open');
+    setTimeout(function () { if (!m.classList.contains('is-open')) m.hidden = true; }, 200);
+  }
+
+  // "View Full" → complete AI summary in a popup
+  if (summaryMore) summaryMore.addEventListener('click', function () {
+    summaryFullText.textContent = fullSummaryText || '';
+    openModalEl(summaryModal);
+  });
+  if (summaryModal) {
+    summaryClose.addEventListener('click', function () { closeModalEl(summaryModal); });
+    summaryModal.addEventListener('click', function (e) { if (e.target === summaryModal) closeModalEl(summaryModal); });
+  }
+
+  // Eye → signed-agreement proof (snapshotted text + signature image), fetched on demand
+  function fmtSignedAt(iso) { if (!iso) return ''; try { return new Date(iso).toLocaleString(); } catch (e) { return ''; } }
+  async function openAgreementProof() {
+    if (!currentJob) return;
+    var id = currentJob._id || currentJob.id;
+    if (!id) return;
+    agrProofSignedAt.hidden = true;
+    agrProofBody.innerHTML = '<div class="agr-proof-loading">Loading…</div>';
+    openModalEl(agrProofModal);
+    var res = await authFetch('/api/dispatch/' + id + '/agreement');
+    if (res.status === 401) { clearSession(); showLogin(); return; }
+    if (!res.ok) {
+      agrProofBody.innerHTML = '<div class="agr-proof-empty">' + esc((res.data && res.data.message) || 'Could not load the signed agreement.') + '</div>';
+      return;
+    }
+    var d = res.data || {};
+    if (!d.agreementSignedAt && !d.customerSignature && !d.agreementText) {
+      agrProofBody.innerHTML = '<div class="agr-proof-empty">No signed agreement on file for this job.</div>';
+      return;
+    }
+    var html = '';
+    if (d.agreementText) {
+      var pre = document.createElement('div'); pre.className = 'agr-proof-text'; pre.textContent = d.agreementText;
+      html += pre.outerHTML;
+    }
+    if (d.customerSignature) {
+      html += '<span class="agr-proof-siglabel">Customer signature</span>' +
+              '<img class="agr-proof-sig" src="' + esc(d.customerSignature) + '" alt="Customer signature"/>';
+    }
+    if (d.agreementSignedAt) {
+      html += '<span class="agr-proof-signedat">Signed ' + esc(fmtSignedAt(d.agreementSignedAt)) + '</span>';
+    }
+    agrProofBody.innerHTML = html || '<div class="agr-proof-empty">No signed agreement on file.</div>';
+  }
+  if (agrEyeBtn) agrEyeBtn.addEventListener('click', openAgreementProof);
+  if (agrProofModal) {
+    agrProofClose.addEventListener('click', function () { closeModalEl(agrProofModal); });
+    agrProofModal.addEventListener('click', function (e) { if (e.target === agrProofModal) closeModalEl(agrProofModal); });
+  }
+  // Esc closes either popup
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if (summaryModal && !summaryModal.hidden) closeModalEl(summaryModal);
+    if (agrProofModal && !agrProofModal.hidden) closeModalEl(agrProofModal);
+  });
 
   // ── Init ──
   var session = getSession();
