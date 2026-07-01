@@ -1961,9 +1961,12 @@ body.agreement-open{overflow:hidden}
     var isMine = jobTechId && myId && jobTechId === myId;
     var isOthers = jobTechId && !isMine;
 
-    // Eye button → signed-agreement proof. Only on the tech's own signed jobs
-    // (the backend restricts a technician to their own job's signature anyway).
-    if (agrEyeBtn) agrEyeBtn.hidden = !(job.agreementSignedAt && isMine);
+    // Eye button → signed-agreement proof. Gated on the job being SIGNED only.
+    // Access is enforced server-side (GET /:id/agreement returns 403 unless the
+    // job is the requesting technician's), so the frontend isMine check was
+    // redundant — and it was HIDING the eye whenever the id comparison didn't
+    // line up at render time. Show it for any signed job the tech opens.
+    if (agrEyeBtn) agrEyeBtn.hidden = !job.agreementSignedAt;
 
     if (isOthers) {
       note.textContent = 'This job is already assigned to ' + (job.assignedTo || 'another technician') + '.';
