@@ -285,4 +285,35 @@
     });
   })();
 
+  /* ── 7. Message FAB (WhatsApp + SMS) — same behaviour as the homepage (app.js):
+     tap to open the menu, tap-outside / Esc to close, close after picking an
+     option. Guarded by #msgFab. The button + menu styling lives in styles.css
+     (.msg-fab*), shared with the homepage. ─────────────────────────────────── */
+  (function messageFab() {
+    var fab = document.getElementById('msgFab');
+    if (!fab) return;
+    var btn = document.getElementById('msgFabToggle');
+    if (!btn) return;
+    function close() {
+      fab.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+    }
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var willOpen = !fab.classList.contains('open');
+      fab.classList.toggle('open', willOpen);
+      btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+    });
+    document.addEventListener('click', function (e) {
+      if (fab.classList.contains('open') && !fab.contains(e.target)) close();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && fab.classList.contains('open')) close();
+    });
+    // Close after picking an option (so the menu doesn't linger on return).
+    fab.querySelectorAll('.msg-fab-opt').forEach(function (opt) {
+      opt.addEventListener('click', function () { close(); });
+    });
+  })();
+
 })();
