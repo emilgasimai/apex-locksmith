@@ -32,6 +32,21 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://astonlocksmith.ca/locksmith-brampton</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://astonlocksmith.ca/locksmith-vaughan</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://astonlocksmith.ca/locksmith-richmond-hill</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://astonlocksmith.ca/legal</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>

@@ -11,7 +11,8 @@
        • © year · CITY · GTA · PRIVACY · TERMS · WARRANTY  (meta row)
    Editing this file updates the footer on ALL landing pages at once.
 
-   `data-city` = one of: scarborough | mississauga | north-york | etobicoke.
+   `data-city` = one of: scarborough | mississauga | north-york | etobicoke |
+                 brampton | vaughan | richmond-hill.
    ========================================================================== */
 (function () {
   'use strict';
@@ -25,12 +26,15 @@
 
   // slug → { name, region label for the meta row }
   var CITIES = {
-    'scarborough': { name: 'Scarborough', region: 'SCARBOROUGH · TORONTO · GTA' },
-    'mississauga': { name: 'Mississauga', region: 'MISSISSAUGA · PEEL · GTA' },
-    'north-york':  { name: 'North York',  region: 'NORTH YORK · TORONTO · GTA' },
-    'etobicoke':   { name: 'Etobicoke',   region: 'ETOBICOKE · TORONTO · GTA' }
+    'scarborough':   { name: 'Scarborough',   region: 'SCARBOROUGH · TORONTO · GTA' },
+    'mississauga':   { name: 'Mississauga',   region: 'MISSISSAUGA · PEEL · GTA' },
+    'north-york':    { name: 'North York',    region: 'NORTH YORK · TORONTO · GTA' },
+    'etobicoke':     { name: 'Etobicoke',     region: 'ETOBICOKE · TORONTO · GTA' },
+    'brampton':      { name: 'Brampton',      region: 'BRAMPTON · PEEL · GTA' },
+    'vaughan':       { name: 'Vaughan',       region: 'VAUGHAN · YORK · GTA' },
+    'richmond-hill': { name: 'Richmond Hill', region: 'RICHMOND HILL · YORK · GTA' }
   };
-  var ORDER = ['etobicoke', 'scarborough', 'mississauga', 'north-york'];
+  var ORDER = ['etobicoke', 'scarborough', 'mississauga', 'north-york', 'brampton', 'vaughan', 'richmond-hill'];
 
   var current = (mount.getAttribute('data-city') || '').toLowerCase();
   var meta = CITIES[current] || { name: 'Toronto', region: 'TORONTO · GTA' };
@@ -51,11 +55,11 @@
     '<div class="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-14 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 lg:gap-10">' +
       '<div class="flex-1 min-w-0">' +
         '<span class="hazard" style="color:#27E0F5;border-color:#27E0F5;background:transparent;">IF YOU\'RE LOCKED OUT</span>' +
-        '<div class="font-display uppercase mt-3.5" style="font-size:clamp(34px,5.4vw,60px);line-height:.92;letter-spacing:-.025em;">' +
+        '<div class="font-display uppercase mt-3.5" style="font-size:clamp(36px,5.6vw,64px);line-height:.92;letter-spacing:-.025em;">' +
           'Stop reading.<br/><span style="background:#27E0F5;color:#1A1A1A;padding:0 8px;display:inline-block;">Start</span> dialing.' +
         '</div>' +
       '</div>' +
-      '<a href="tel:' + PHONE_TEL + '" class="btn-hivis call-pulse flex flex-col shrink-0" style="padding:18px 26px;background:#27E0F5;color:#1A1A1A;text-decoration:none;">' +
+      '<a id="stopCallBtn" href="tel:' + PHONE_TEL + '" class="btn-hivis call-pulse flex flex-col shrink-0" style="padding:18px 26px;background:#27E0F5;color:#1A1A1A;text-decoration:none;">' +
         '<span class="font-mono" style="font-size:10px;letter-spacing:.24em;font-weight:700;">CALL DISPATCH</span>' +
         '<span class="font-display" style="font-size:clamp(26px,3.4vw,40px);line-height:1;letter-spacing:-.02em;white-space:nowrap;">' + PHONE_DISPLAY + '</span>' +
       '</a>' +

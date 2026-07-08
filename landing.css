@@ -19,6 +19,17 @@
 /* Centre all section h2 headings on landing pages */
 section .t-h2{ text-align:center; }
 
+/* The hero H1's cyan city highlight (e.g. "Scarborough" / "Mississauga") was
+   too large on narrow phones and spilled past the right edge — an 11-letter
+   single word can't wrap inside the inline-block highlight. Trim the hero H1 on
+   small screens so the whole city name stays on-screen. Landing-only (this file
+   isn't loaded on the homepage, whose hero has different, shorter copy). Uses
+   `section .t-h1` (0,1,1) to beat the styles.css mobile rule at the same
+   breakpoint. */
+@media (max-width:640px){
+  section .t-h1{ font-size:clamp(30px,9.5vw,44px); }
+}
+
 /* Centre the eyebrow labels above Why Us, Reviews, and Contact headings */
 .why-section .font-mono.t-cap,
 #reviews .font-mono.t-cap,
