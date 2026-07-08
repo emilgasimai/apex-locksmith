@@ -1,15 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- sitemap.xml — Aston Locksmith.
-     Single-page site (one indexable public URL — the homepage; section links
-     are in-page #anchors). The /admin, /dispatch and /tech apps are private and
-     excluded (also Disallowed in robots.txt).
-     ⚠️ When the custom domain is connected, update the <loc> below AND the
+     Homepage + city service-area landing pages (local SEO) are the indexable
+     public URLs; in-page section links are #anchors. The /admin, /dispatch and
+     /tech apps are private and excluded (also Disallowed in robots.txt).
+     ⚠️ When the custom domain is connected, update the <loc> values below AND the
         Sitemap line in robots.txt AND baseUrl in site-config.js. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://astonlocksmith.ca/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://astonlocksmith.ca/locksmith-etobicoke</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://astonlocksmith.ca/locksmith-scarborough</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://astonlocksmith.ca/locksmith-mississauga</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://astonlocksmith.ca/locksmith-north-york</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://astonlocksmith.ca/legal</loc>
