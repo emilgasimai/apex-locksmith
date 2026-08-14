@@ -362,6 +362,32 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
   #header.scrolled .logo-divider{ height:36px; }
 }
 
+/* New brand wordmark logo (SVG image, brand_assets/logo-wordmark.svg) — the
+   ASTON lockup with the keyhole "O". Replaces the old .neon-logo text lockup in
+   the header. Height-driven so it scales like the old wordmark, shrinking on
+   scroll and on phones to keep the previous header proportions. */
+.header-logo{
+  display:block; width:auto; height:30px;
+  transition:height .3s cubic-bezier(.2,.7,.3,1);
+}
+@media (min-width:768px){
+  .header-logo{ height:38px; }
+  #header.scrolled .header-logo{ height:30px; }
+}
+/* "LOCKSMITH" subtitle stacked under the ASTON wordmark — same weight/spacing/
+   colour as the old .neon-logo-sub. */
+.header-lockup{ display:inline-flex; flex-direction:column; align-items:center; line-height:.9; }
+.header-sub{
+  font-family:'Archivo Black',sans-serif; text-transform:uppercase;
+  font-size:11px; letter-spacing:.34em; margin-top:4px; padding-left:.34em;
+  color:#EDEDED; text-shadow:0 1px 1px rgba(0,0,0,.4);
+  transition:font-size .3s cubic-bezier(.2,.7,.3,1);
+}
+@media (min-width:768px){
+  .header-sub{ font-size:13px; }
+  #header.scrolled .header-sub{ font-size:11px; }
+}
+
 /* Brand wordmark echo below the WhatsApp/SMS buttons in the Reach-us grid.
    Hidden on mobile/tablet (single-column, no empty space); shown only once the
    2-column layout opens up at lg, where it fills the gap beside the form. */
