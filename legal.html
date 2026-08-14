@@ -52,18 +52,16 @@
     display:flex; align-items:center; justify-content:space-between; gap:16px;
   }
   .wordmark{display:flex; align-items:center; gap:11px; color:var(--ink); text-decoration:none}
-  .leg-wm-main{
-    font-family:'Archivo Black',sans-serif; font-size:20px; letter-spacing:.04em;
-    text-transform:uppercase; line-height:.92;
-    color:#27E0F5; text-shadow:0 0 5px rgba(39,224,245,.22),0 0 2px rgba(39,224,245,.3);
-  }
+  /* SVG ASTON wordmark (keyhole "O") + centered LOCKSMITH — mirrors index.html header. */
+  .leg-lockup{ display:inline-flex; flex-direction:column; align-items:center; line-height:.9; }
+  .leg-wm-img{ display:block; height:26px; width:auto; }
   .leg-wm-sub{
     font-family:'Archivo Black',sans-serif; font-size:9px; letter-spacing:.30em;
-    text-transform:uppercase; margin-top:3px; display:block;
+    text-transform:uppercase; margin-top:4px; padding-left:.30em; display:block;
     color:#EDEDED; text-shadow:0 1px 1px rgba(0,0,0,.4);
   }
   .back{
-    font-family:'Space Grotesk',monospace; font-size:11px; letter-spacing:.14em;
+    font-family:'Space Grotesk',sans-serif; font-size:11px; letter-spacing:.14em;
     text-transform:uppercase; color:var(--muted); display:inline-flex; align-items:center; gap:7px;
     padding:8px 13px; border:1px solid var(--border); border-radius:999px;
     transition:color .18s ease, border-color .18s ease, transform .18s ease;
@@ -75,18 +73,18 @@
   .wrap{max-width:860px; margin:0 auto; padding:42px 22px 90px}
   .doc-head{padding-bottom:26px; border-bottom:2px solid var(--cyan); margin-bottom:8px}
   .eyebrow{
-    font-family:'Space Grotesk',monospace; font-size:11px; letter-spacing:.26em;
+    font-family:'Space Grotesk',sans-serif; font-size:11px; letter-spacing:.26em;
     text-transform:uppercase; color:var(--cyan); font-weight:600; margin-bottom:14px;
   }
   h1{font-family:'Archivo Black',sans-serif; font-size:clamp(30px,5.4vw,46px); line-height:1.02; letter-spacing:-.02em}
-  .updated{font-family:'Space Grotesk',monospace; font-size:12px; color:var(--faint); letter-spacing:.08em; margin-top:14px}
+  .updated{font-family:'Space Grotesk',sans-serif; font-size:12px; color:var(--faint); letter-spacing:.08em; margin-top:14px}
 
   /* ── In-page nav ── */
   .legal-nav{
     display:flex; flex-wrap:wrap; gap:9px; margin:26px 0 4px;
   }
   .legal-nav a{
-    font-family:'Space Grotesk',monospace; font-size:12px; letter-spacing:.1em; text-transform:uppercase;
+    font-family:'Space Grotesk',sans-serif; font-size:12px; letter-spacing:.1em; text-transform:uppercase;
     color:var(--ink); padding:9px 16px; border:1px solid var(--border); border-radius:8px;
     background:var(--surface); transition:border-color .18s ease, color .18s ease, background .18s ease;
   }
@@ -101,13 +99,13 @@
   }
   section.legal:first-of-type{border-top:none}
   .sec-num{
-    font-family:'Space Grotesk',monospace; font-size:12px; letter-spacing:.2em;
+    font-family:'Space Grotesk',sans-serif; font-size:12px; letter-spacing:.2em;
     color:var(--ink); font-weight:600; margin-bottom:8px; opacity:.7;
   }
   h2{font-family:'Archivo Black',sans-serif; font-size:clamp(22px,3.6vw,30px); letter-spacing:-.01em; margin-bottom:6px; color:var(--cyan)}
   .lede{color:var(--muted); margin:10px 0 4px; font-size:15.5px}
   h3{
-    font-family:'Space Grotesk',monospace; font-size:14px; font-weight:600;
+    font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:600;
     letter-spacing:.04em; text-transform:uppercase; color:var(--ink);
     margin:26px 0 6px;
   }
@@ -144,7 +142,7 @@
   .k-outer{ padding:12px 20px 0; }
   .k-inner{ display:inline-flex; flex-direction:column; max-width:100%; }
   .k{
-    font-family:'Space Grotesk',monospace; font-size:10px; letter-spacing:.22em;
+    font-family:'Space Grotesk',sans-serif; font-size:10px; letter-spacing:.22em;
     text-transform:uppercase; color:var(--ink); opacity:.8;
   }
   .k-line{
@@ -157,7 +155,7 @@
   footer.legal-foot{
     max-width:860px; margin:0 auto; padding:26px 22px 50px;
     border-top:1px solid var(--hairline);
-    font-family:'Space Grotesk',monospace; font-size:11.5px; letter-spacing:.12em;
+    font-family:'Space Grotesk',sans-serif; font-size:11.5px; letter-spacing:.12em;
     text-transform:uppercase; color:var(--faint);
     display:flex; flex-wrap:wrap; gap:8px 18px; justify-content:space-between; align-items:center;
   }
@@ -176,8 +174,8 @@
   <div class="topbar-in">
     <div style="display:flex;align-items:center;gap:12px;">
       <a class="wordmark" href="index.html" aria-label="Aston Locksmith — home">
-        <span style="display:flex;flex-direction:column;align-items:flex-start;">
-          <span class="leg-wm-main">ASTON</span>
+        <span class="leg-lockup" aria-hidden="true">
+          <img src="brand_assets/logo-wordmark.svg" alt="" class="leg-wm-img"/>
           <span class="leg-wm-sub">LOCKSMITH</span>
         </span>
       </a>
