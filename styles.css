@@ -387,6 +387,16 @@ a:focus-visible, button:focus-visible { outline:2px solid #27E0F5; outline-offse
   .header-sub{ font-size:13px; }
   #header.scrolled .header-sub{ font-size:11px; }
 }
+/* Compact single-word ASTON wordmark (3a) for very small phones. Below 480px the
+   stacked wordmark + LOCKSMITH lockup is swapped for this tighter single mark so
+   the logo stops crowding the phone CTA. Inherits the .header-logo height
+   transition; keyhole "O" is a real cutout (mask), same as the full wordmark. */
+.header-logo-compact{ display:none; }
+@media (max-width:479.98px){
+  .header-lockup{ display:none; }
+  .header-logo-compact{ display:block; height:26px; }
+  #header.scrolled .header-logo-compact{ height:22px; }
+}
 
 /* Brand wordmark echo below the WhatsApp/SMS buttons in the Reach-us grid.
    Hidden on mobile/tablet (single-column, no empty space); shown only once the
