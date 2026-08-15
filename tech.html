@@ -101,6 +101,32 @@ a{color:inherit;text-decoration:none}
   transition:border-color .15s ease,box-shadow .15s ease;
 }
 .field input:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 2px rgba(39,224,245,.18)}
+/* Kill the browser autofill yellow/blue tint so fields stay on the dark theme.
+   The 1000px inset box-shadow repaints the field background; the 5000s transition
+   defeats the flash back to yellow. Two groups match the two input backgrounds:
+   .field / .lookup-row sit on --bg; the receipt/price wrap + cancel-note on --surface2. */
+.field input:-webkit-autofill,
+.field input:-webkit-autofill:hover,
+.field input:-webkit-autofill:focus,
+.lookup-row input:-webkit-autofill,
+.lookup-row input:-webkit-autofill:hover,
+.lookup-row input:-webkit-autofill:focus{
+  -webkit-box-shadow:0 0 0 1000px var(--bg) inset !important;
+  -webkit-text-fill-color:var(--ink) !important;
+  caret-color:var(--ink);
+  transition:background-color 5000s ease-in-out 0s;
+}
+.price-input-wrap input:-webkit-autofill,
+.price-input-wrap input:-webkit-autofill:hover,
+.price-input-wrap input:-webkit-autofill:focus,
+.cancel-other-input:-webkit-autofill,
+.cancel-other-input:-webkit-autofill:hover,
+.cancel-other-input:-webkit-autofill:focus{
+  -webkit-box-shadow:0 0 0 1000px var(--surface2) inset !important;
+  -webkit-text-fill-color:var(--ink) !important;
+  caret-color:var(--ink);
+  transition:background-color 5000s ease-in-out 0s;
+}
 
 /* ── Buttons ── */
 .btn{
