@@ -152,20 +152,6 @@
     'Every job backed by our satisfaction guarantee.':
       'Chaque travail est appuyé par notre garantie de satisfaction.',
 
-    /* ── Reviews ── */
-    'From our customers': 'Témoignages de clients',
-    'What our': 'Ce que nos',
-    'customers': 'clients',
-    'say': 'disent',
-    '2 weeks ago': 'il y a 2 semaines',
-    '1 month ago': 'il y a 1 mois',
-    '"Got locked out at 11pm with my dog inside. Tech was at my door in 14 minutes flat and had me back in within 5 more. Clean job, no damage to the lock, fair price. Saved as a contact."':
-      "« Enfermée dehors à 23 h avec mon chien à l'intérieur. Le technicien était à ma porte en 14 minutes pile et m'a fait rentrer en 5 de plus. Travail propre, aucun dommage à la serrure, prix juste. Enregistré dans mes contacts. »",
-    '"Had Aston rekey the whole house after closing. Marcus walked through every door and recommended swapping two deadbolts that were past their service life. No upsell pressure. Two-year warranty on the work."':
-      "« Aston a reclé toute la maison après l'achat. Marcus a vérifié chaque porte et a recommandé de remplacer deux pênes dormants en fin de vie. Aucune pression de vente. Garantie de deux ans sur le travail. »",
-    '"Used them for our coffee shop — master key system across four doors plus a safe combination change. Took maybe 90 minutes. Receipt was exactly the quote."':
-      '« On les a utilisés pour notre café — système à clé maîtresse sur quatre portes plus un changement de combinaison de coffre. Environ 90 minutes. La facture correspondait exactement au devis. »',
-
     /* ── Contact ── */
     'Reach us': 'Nous joindre',
     'Pick up': 'Décrochez',

@@ -49,12 +49,10 @@
       { id: 'c7', badge: 'SAME DAY', title: 'Security Systems',            desc: 'Camera installation, access control, and full security system setup for homes and businesses.', image: 'upscaledimages/securitycamera.webp', icon: ICONS.camera }
     ],
 
-    // ── Reviews ──
-    reviews: [
-      { id: 'r1', name: 'Dana R.',  rating: 5, text: 'Got locked out at 11pm with my dog inside. Tech was at my door in 14 minutes flat and had me back in within 5 more. Clean job, no damage to the lock, fair price. Saved as a contact.' },
-      { id: 'r2', name: 'Eli K.',   rating: 5, text: 'Had Aston rekey the whole house after closing. Marcus walked through every door and recommended swapping two deadbolts that were past their service life. No upsell pressure. Two-year warranty on the work.' },
-      { id: 'r3', name: 'Priya S.', rating: 5, text: 'Used them for our coffee shop — master key system across four doors plus a safe combination change. Took maybe 90 minutes. Receipt was exactly the quote.' }
-    ],
+    // ── Reviews ── (empty by design: no placeholder/fabricated reviews. Real
+    //   approved reviews render from GET /api/reviews; the admin-curated bundle
+    //   may add genuine ones. Until then the homepage shows an honest empty state.)
+    reviews: [],
 
     // ── Business info ──────────────────────────────────────────────────────
     //   Derived from site-config.js (window.SITE_CONFIG) — THE single source of
