@@ -40,11 +40,9 @@
     'TAP TO CALL': 'TOUCHEZ POUR APPELER',
     'NON-DESTRUCTIVE ENTRY': 'OUVERTURE NON DESTRUCTIVE',
     '4 YRS · EST. 2022': '4 ANS · DEPUIS 2022',
-    'LIVE · DISPATCH OPEN': 'EN DIRECT · RÉPARTITION OUVERTE',
-    'ON ROAD': 'EN ROUTE',
-    'to your door, anywhere in Toronto & GTA': 'à votre porte, partout à Toronto et dans le GTA',
-    'FASTEST · 11 MIN': 'PLUS RAPIDE · 11 MIN',
-    'NIGHT MAX · 24 MIN': 'MAX NUIT · 24 MIN',
+    'ESTIMATED ARRIVAL': 'ARRIVÉE ESTIMÉE',
+    'typical door-to-door across Toronto & GTA': 'porte-à-porte typique à Toronto et dans le GTA',
+    'General estimate — call for a live arrival time.': "Estimation générale — appelez pour connaître l'heure d'arrivée réelle.",
     'ZONE CHECK': 'VÉRIF. ZONE',
     'BY POSTAL': 'PAR CODE POSTAL',
     'We dispatch across Toronto & GTA. Enter your postal code.':
@@ -53,15 +51,14 @@
     'Format: A0A 0A0 · Try M5V 1A1 · L4W 0E1': 'Format : A0A 0A0 · Essayez M5V 1A1 · L4W 0E1',
     'USE MY LOCATION': 'UTILISER MA POSITION',
 
-    /* ── Trust strip ── */
-    'YRS / TORONTO': 'ANS / TORONTO',
-    'EST. 2022': 'DEPUIS 2022',
+    /* ── Trust strip (4-stat) ── */
+    'LOCALLY OWNED': 'PROPRIÉTÉ LOCALE',
+    '& OPERATED': '& EXPLOITÉE',
     'SATISFACTION': 'SATISFACTION',
     'GUARANTEED WORK': 'TRAVAIL GARANTI',
-    'M MEDIAN ETA': 'M ETA MÉDIAN',
+    'MIN AVG ETA': 'ETA MOY. (MIN)',
     '24/7 DISPATCH': 'RÉPARTITION 24/7',
-    'JOBS COMPLETED': 'INTERVENTIONS RÉALISÉES',
-    'AND COUNTING': 'ET ÇA CONTINUE',
+    'WE COME TO YOU': 'ON VIENT À VOUS',
 
     /* ── Service finder ── */
     "What's": "Qu'est-ce qui est",
@@ -75,9 +72,11 @@
     'Safe': 'Coffre-fort',
     'More': 'Plus',
     '▸ WHAT WE DO HERE': '▸ CE QUE NOUS FAISONS ICI',
-    'VETTED TECH': 'TECH. VÉRIFIÉ',
-    'Background-': 'Antécédents',
-    'checked': 'vérifiés',
+    'TRAINED TECH': 'TECH FORMÉ',
+    /* Service-finder badge "Trained tech. On call." is split across spans;
+       FR maps positionally so it renders "Tech formé. En service." */
+    'Trained': 'Tech',
+    'tech': 'formé',
     'On': 'En',
     'call': 'service',
 
@@ -90,8 +89,8 @@
     'BY APPT': 'SUR RDV',
     'HELP': 'AIDE',
     '24/7 Emergency Lockouts': "Ouvertures d'urgence 24/7",
-    'Home, office, car. 15-minute average response across Toronto & GTA.':
-      'Maison, bureau, voiture. Intervention en 15 minutes en moyenne à Toronto et dans le GTA.',
+    'Home, office, car. 25-35 minute average response across Toronto & GTA.':
+      'Maison, bureau, voiture. Intervention en 25-35 minutes en moyenne à Toronto et dans le GTA.',
     'Book it': 'Réservez',
     'Residential Rekey & Install': 'Recléage et installation résidentiels',
     'Rekey existing locks, install deadbolts, smart locks, mortise sets.':
@@ -143,7 +142,8 @@
     'Background Checked': 'Antécédents vérifiés',
     'Every technician is vetted, trained, and trusted in your home.':
       'Chaque technicien est contrôlé, formé et de confiance chez vous.',
-    '15 Min Avg ETA': 'ETA moyen de 15 min',
+    '25-35 Min Avg ETA': 'ETA moyen de 25-35 min',
+    '~25-35 Min Avg ETA': '~ETA moyen de 25-35 min',
     'Fast response across Toronto & GTA, 24/7.': 'Intervention rapide à Toronto et dans le GTA, 24/7.',
     '24/7 Available': 'Disponible 24/7',
     'Real humans answer the phone. Every call, every night.':

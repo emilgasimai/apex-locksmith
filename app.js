@@ -28,20 +28,25 @@ lockBtn.addEventListener('click', () => {
 window.addEventListener('scroll', () => { if (isOpen) positionMobileMenu(); }, { passive: true });
 document.querySelectorAll('.mobile-link').forEach(a => a.addEventListener('click', () => toggleLock(false)));
 
-// ── ETA drift ──
+// ── ETA drift (dormant) ──
+// The hero now shows a static, honest "25-35 MIN" estimate instead of a fake
+// live-drifting counter. This block only runs if those elements are present,
+// so it stays inert unless the live widget is ever reinstated.
 const etaEl = document.getElementById('eta');
 const techsEl = document.getElementById('techs');
 const fillEl = document.getElementById('etaFill');
-let eta = 14, techs = 4;
-function tick() {
-  eta = Math.max(11, Math.min(24, eta + (Math.random() < .5 ? -1 : 1)));
-  techs = Math.max(2, Math.min(7, techs + (Math.random() < .5 ? -1 : 1)));
-  etaEl.textContent = eta;
-  techsEl.textContent = techs;
-  fillEl.style.width = (((24 - eta) / (24 - 11)) * 100) + '%';
+if (etaEl && techsEl && fillEl) {
+  let eta = 14, techs = 4;
+  const tick = () => {
+    eta = Math.max(11, Math.min(24, eta + (Math.random() < .5 ? -1 : 1)));
+    techs = Math.max(2, Math.min(7, techs + (Math.random() < .5 ? -1 : 1)));
+    etaEl.textContent = eta;
+    techsEl.textContent = techs;
+    fillEl.style.width = (((24 - eta) / (24 - 11)) * 100) + '%';
+  };
+  setInterval(tick, 5800);
+  tick();
 }
-setInterval(tick, 5800);
-tick();
 
 // ── Service finder ──
 const PLANS = {
